@@ -176,93 +176,156 @@ app.post("/api/meshy/remesh", (req, res) => {
 
 app.get("/api/meshy/remesh/:id", (req, res) => meshyProxy(req, res, `/openapi/v1/remesh/${req.params.id}`, "GET"));
 
-// ── Cloudflare R2 Direct Storage ─────────────────────────────────────────────
-import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+// ── ObjectStore Worker Proxy ─────────────────────────────────────────────────
+// Canonical path: all uploads go through objectstore.grudge-studio.com
+// ─ D1 metadata is registered (shows up in catalog/search)
+// ─ R2 file is stored (served via assets.grudge-studio.com CDN)
+// ─ Same pattern as GDevelop's objectstoreProxy.ts
+const OBJECTSTORE_URL = (process.env.OBJECTSTORE_WORKER_URL || "https://objectstore.grudge-studio.com").replace(/\/$/, "");
+const OBJECTSTORE_KEY = process.env.OBJECTSTORE_API_KEY || process.env.INTERNAL_API_KEY || "";
+const CDN_BASE = process.env.PUBLIC_CDN_URL || "https://assets.grudge-studio.com";
 
-const R2_ENDPOINT = process.env.R2_ENDPOINT ?? "";
-const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY_ID ?? "";
-const R2_SECRET_KEY = process.env.R2_SECRET_ACCESS_KEY ?? "";
-const R2_BUCKET = process.env.R2_BUCKET ?? "grudge-assets";
-
-const s3 = R2_ENDPOINT ? new S3Client({
-  region: "auto",
-  endpoint: R2_ENDPOINT,
-  credentials: { accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY },
-}) : null;
-
-// Get presigned upload URL for direct browser uploads to R2
-app.post("/api/r2/presign-upload", async (req, res) => {
+async function objectstoreProxy(req: express.Request, res: express.Response, workerPath: string, injectKey = false) {
   try {
-    if (!s3) return res.status(503).json({ error: "R2 storage not configured" });
-    const { filename, contentType, category = "pipeline" } = req.body;
-    if (!filename) return res.status(400).json({ error: "filename required" });
+    const qs = Object.keys(req.query).length
+      ? "?" + new URLSearchParams(req.query as Record<string, string>).toString()
+      : "";
+    const url = `${OBJECTSTORE_URL}${workerPath}${qs}`;
+    const headers: Record<string, string> = {};
+    const ct = req.headers["content-type"];
+    if (ct) headers["Content-Type"] = ct;
+    if (req.headers.authorization) headers["Authorization"] = req.headers.authorization as string;
+    if (injectKey && OBJECTSTORE_KEY) headers["X-API-Key"] = OBJECTSTORE_KEY;
 
-    const key = `${category}/${Date.now()}-${filename}`;
-    const command = new PutObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: key,
-      ContentType: contentType || "application/octet-stream",
-    });
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-    res.json({ uploadUrl, key, bucket: R2_BUCKET });
-  } catch (e: any) { log.error("R2 presign error:", e.message); res.status(500).json({ error: "Presign failed" }); }
-});
+    const fetchOpts: RequestInit = { method: req.method, headers };
+    if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
+      // For JSON endpoints, forward the parsed body
+      if (ct?.includes("application/json")) {
+        fetchOpts.body = JSON.stringify(req.body);
+      }
+    }
 
-// Upload from URL — download file from Meshy/external and store in R2
-app.post("/api/r2/upload-from-url", async (req, res) => {
+    const upstream = await fetch(url, fetchOpts);
+    const contentType = upstream.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const data = await upstream.json();
+      res.status(upstream.status).json(data);
+    } else {
+      const buffer = Buffer.from(await upstream.arrayBuffer());
+      res.status(upstream.status);
+      if (contentType) res.set("Content-Type", contentType);
+      res.send(buffer);
+    }
+  } catch (e: any) {
+    log.error("ObjectStore proxy error:", e.message);
+    res.status(502).json({ error: "ObjectStore worker unreachable", detail: e.message });
+  }
+}
+
+// ObjectStore health
+app.get("/api/objectstore/health", (req, res) => objectstoreProxy(req, res, "/health"));
+
+// List / search assets (public reads)
+app.get("/api/objectstore/assets", (req, res) => objectstoreProxy(req, res, "/v1/assets"));
+
+// Get single asset metadata
+app.get("/api/objectstore/assets/:id", (req, res) => objectstoreProxy(req, res, `/v1/assets/${req.params.id}`));
+
+// Stream asset file (CDN)
+app.get("/api/objectstore/assets/:id/file", (req, res) => objectstoreProxy(req, res, `/v1/assets/${req.params.id}/file`));
+
+// Upload asset (auth required — injects API key)
+app.post("/api/objectstore/assets", (req, res) => objectstoreProxy(req, res, "/v1/assets", true));
+
+// Delete asset (auth required)
+app.delete("/api/objectstore/assets/:id", (req, res) => objectstoreProxy(req, res, `/v1/assets/${req.params.id}`, true));
+
+// ── Upload from URL via ObjectStore (pipeline convenience) ────────────────
+// Downloads from Meshy/external, uploads to ObjectStore Worker → D1+R2
+app.post("/api/objectstore/upload-from-url", async (req, res) => {
   try {
-    if (!s3) return res.status(503).json({ error: "R2 storage not configured" });
-    const { url, filename, category = "pipeline", metadata = {} } = req.body;
+    const { url, filename, category = "pipeline", tags = [], metadata = {} } = req.body;
     if (!url || !filename) return res.status(400).json({ error: "url and filename required" });
 
-    // Download the file
     const upstream = await fetch(url);
-    if (!upstream.ok) return res.status(502).json({ error: `Failed to download: ${upstream.status}` });
+    if (!upstream.ok) return res.status(502).json({ error: `Download failed: ${upstream.status}` });
     const buffer = Buffer.from(await upstream.arrayBuffer());
     const mime = upstream.headers.get("content-type") || "application/octet-stream";
 
-    const key = `${category}/${Date.now()}-${filename}`;
-    await s3.send(new PutObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: key,
-      Body: buffer,
-      ContentType: mime,
-      Metadata: {
-        source: "grudge-pipeline",
-        originalUrl: url.slice(0, 200),
-        ...Object.fromEntries(Object.entries(metadata).map(([k, v]) => [k, String(v)])),
-      },
-    }));
+    // Build multipart form for ObjectStore Worker
+    const boundary = `----Pipeline${Date.now()}`;
+    const encoder = new TextEncoder();
 
-    const publicUrl = `${R2_ENDPOINT}/${R2_BUCKET}/${key}`;
-    res.json({ key, bucket: R2_BUCKET, size: buffer.length, mime, publicUrl });
-  } catch (e: any) { log.error("R2 upload-from-url error:", e.message); res.status(500).json({ error: "Upload failed" }); }
+    const filePreamble = encoder.encode(
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`
+    );
+    const fieldParts = [
+      `\r\n--${boundary}\r\nContent-Disposition: form-data; name="filename"\r\n\r\n${filename}`,
+      `\r\n--${boundary}\r\nContent-Disposition: form-data; name="category"\r\n\r\n${category}`,
+      `\r\n--${boundary}\r\nContent-Disposition: form-data; name="tags"\r\n\r\n${JSON.stringify([...tags, "pipeline"])}`,
+      `\r\n--${boundary}\r\nContent-Disposition: form-data; name="metadata"\r\n\r\n${JSON.stringify({ source: "grudge-pipeline", originalUrl: url.slice(0, 200), ...metadata })}`,
+    ].join("");
+    const ending = `\r\n--${boundary}--\r\n`;
+
+    const fieldBytes = encoder.encode(fieldParts);
+    const endBytes = encoder.encode(ending);
+    const body = new Uint8Array(filePreamble.length + buffer.length + fieldBytes.length + endBytes.length);
+    body.set(filePreamble, 0);
+    body.set(new Uint8Array(buffer), filePreamble.length);
+    body.set(fieldBytes, filePreamble.length + buffer.length);
+    body.set(endBytes, filePreamble.length + buffer.length + fieldBytes.length);
+
+    const headers: Record<string, string> = {
+      "Content-Type": `multipart/form-data; boundary=${boundary}`,
+    };
+    if (OBJECTSTORE_KEY) headers["X-API-Key"] = OBJECTSTORE_KEY;
+
+    const workerRes = await fetch(`${OBJECTSTORE_URL}/v1/assets`, {
+      method: "POST", headers, body,
+    });
+    const data = await workerRes.json() as any;
+
+    if (!workerRes.ok) return res.status(workerRes.status).json(data);
+
+    // Return with CDN URL
+    res.status(201).json({
+      ...data,
+      cdnUrl: `${CDN_BASE}/${data.key}`,
+      source: "grudge-pipeline",
+    });
+  } catch (e: any) {
+    log.error("ObjectStore upload-from-url error:", e.message);
+    res.status(500).json({ error: "Upload failed", detail: e.message });
+  }
 });
 
-// List objects in R2 bucket
-app.get("/api/r2/list", async (req, res) => {
+// R2 status (checks both ObjectStore Worker and direct S3)
+import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+
+const R2_ENDPOINT = process.env.R2_ENDPOINT ?? "";
+const s3 = R2_ENDPOINT ? new S3Client({
+  region: "auto",
+  endpoint: R2_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID ?? "",
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "",
+  },
+}) : null;
+
+app.get("/api/r2/status", async (_req, res) => {
+  let objectstoreOk = false;
   try {
-    if (!s3) return res.status(503).json({ error: "R2 storage not configured" });
-    const { prefix = "", limit = "50" } = req.query as Record<string, string>;
-    const result = await s3.send(new ListObjectsV2Command({
-      Bucket: R2_BUCKET,
-      Prefix: prefix,
-      MaxKeys: Math.min(parseInt(limit) || 50, 200),
-    }));
-    const objects = (result.Contents ?? []).map(o => ({
-      key: o.Key, size: o.Size, lastModified: o.LastModified?.toISOString(),
-    }));
-    res.json({ objects, count: objects.length, prefix });
-  } catch (e: any) { log.error("R2 list error:", e.message); res.status(500).json({ error: "List failed" }); }
+    const r = await fetch(`${OBJECTSTORE_URL}/health`);
+    objectstoreOk = r.ok;
+  } catch {}
+  res.json({
+    objectstore: { url: OBJECTSTORE_URL, connected: objectstoreOk },
+    s3Direct: { configured: !!s3, endpoint: R2_ENDPOINT ? "connected" : "not set" },
+    cdn: CDN_BASE,
+  });
 });
 
-// R2 health check
-app.get("/api/r2/status", (_req, res) => {
-  res.json({ configured: !!s3, endpoint: R2_ENDPOINT ? "connected" : "not set", bucket: R2_BUCKET });
-});
-
-// ── Grudge catalog proxy (no DB needed) ──────────────────────────────────────
+// ── Grudge catalog proxy (assets-api.grudge-studio.com) ─────────────────
 const ASSETS_API = process.env.GRUDGE_ASSETS_API_URL ?? "https://assets-api.grudge-studio.com";
 
 app.get("/api/assets/browse", async (req, res) => {
@@ -281,40 +344,62 @@ app.get("/api/assets/categories", async (_req, res) => {
 });
 
 // ── GDevelop Pipeline Integration ────────────────────────────────────────────
-// Called by GDevelop Assistant to push pipeline-generated assets into its system
+// Push pipeline assets to GDevelop via ObjectStore (canonical path)
 const GDEVELOP_URL = process.env.GDEVELOP_URL ?? "https://gdevelop-assistant.vercel.app";
 
 app.post("/api/gdevelop/push-asset", async (req, res) => {
   try {
-    const { assetName, meshUrl, rigUrl, thumbnailUrl, category, tags, metadata } = req.body;
+    const { assetName, meshUrl, rigUrl, thumbnailUrl, category = "model", tags = [], metadata = {} } = req.body;
     if (!assetName || !meshUrl) return res.status(400).json({ error: "assetName and meshUrl required" });
 
-    // First upload to R2 if configured
-    let r2Key = null;
-    if (s3 && meshUrl) {
+    // Upload through ObjectStore Worker (registers in D1 + stores in R2)
+    let uploadResult: any = null;
+    try {
       const ext = meshUrl.split(".").pop()?.split("?")[0] || "glb";
       const filename = `${assetName.replace(/\s+/g, "_").toLowerCase()}.${ext}`;
-      try {
-        const upstream = await fetch(meshUrl);
-        if (upstream.ok) {
-          const buffer = Buffer.from(await upstream.arrayBuffer());
-          r2Key = `gdevelop/${Date.now()}-${filename}`;
-          await s3.send(new PutObjectCommand({
-            Bucket: R2_BUCKET, Key: r2Key, Body: buffer,
-            ContentType: upstream.headers.get("content-type") || "model/gltf-binary",
-            Metadata: { source: "grudge-pipeline", assetName, ...(metadata ? Object.fromEntries(Object.entries(metadata).map(([k, v]) => [k, String(v)])) : {}) },
-          }));
-        }
-      } catch (e: any) { log.error("R2 upload during GDevelop push:", e.message); }
-    }
+
+      const upstream = await fetch(meshUrl);
+      if (upstream.ok) {
+        const buffer = Buffer.from(await upstream.arrayBuffer());
+        const mime = upstream.headers.get("content-type") || "model/gltf-binary";
+
+        const boundary = `----GDPush${Date.now()}`;
+        const encoder = new TextEncoder();
+        const filePreamble = encoder.encode(
+          `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mime}\r\n\r\n`
+        );
+        const fields = encoder.encode([
+          `\r\n--${boundary}\r\nContent-Disposition: form-data; name="filename"\r\n\r\n${filename}`,
+          `\r\n--${boundary}\r\nContent-Disposition: form-data; name="category"\r\n\r\n${category}`,
+          `\r\n--${boundary}\r\nContent-Disposition: form-data; name="tags"\r\n\r\n${JSON.stringify([...tags, "pipeline", "gdevelop"])}`,
+          `\r\n--${boundary}\r\nContent-Disposition: form-data; name="metadata"\r\n\r\n${JSON.stringify({ source: "grudge-pipeline", assetName, ...metadata })}`,
+        ].join(""));
+        const end = encoder.encode(`\r\n--${boundary}--\r\n`);
+
+        const body = new Uint8Array(filePreamble.length + buffer.length + fields.length + end.length);
+        body.set(filePreamble, 0);
+        body.set(new Uint8Array(buffer), filePreamble.length);
+        body.set(fields, filePreamble.length + buffer.length);
+        body.set(end, filePreamble.length + buffer.length + fields.length);
+
+        const headers: Record<string, string> = {
+          "Content-Type": `multipart/form-data; boundary=${boundary}`,
+        };
+        if (OBJECTSTORE_KEY) headers["X-API-Key"] = OBJECTSTORE_KEY;
+
+        const r = await fetch(`${OBJECTSTORE_URL}/v1/assets`, { method: "POST", headers, body });
+        if (r.ok) uploadResult = await r.json();
+      }
+    } catch (e: any) { log.error("ObjectStore upload during GDevelop push:", e.message); }
 
     res.json({
       pushed: true,
       asset: {
         name: assetName,
-        meshUrl: r2Key ? `${R2_ENDPOINT}/${R2_BUCKET}/${r2Key}` : meshUrl,
+        meshUrl: uploadResult ? `${CDN_BASE}/${uploadResult.key}` : meshUrl,
         rigUrl, thumbnailUrl, category, tags,
-        r2Key,
+        objectstoreId: uploadResult?.id,
+        cdnKey: uploadResult?.key,
         source: "grudge-pipeline",
       },
     });
