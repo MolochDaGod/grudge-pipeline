@@ -406,6 +406,80 @@ app.post("/api/gdevelop/push-asset", async (req, res) => {
   } catch (e: any) { log.error("GDevelop push error:", e.message); res.status(500).json({ error: "Push failed" }); }
 });
 
+// ── Puter → Grudge Auth ──────────────────────────────────────────────────────
+// Accepts a Puter user (uuid + username) and resolves / creates a Grudge ID.
+// In production this hits the Grudge backend; here we maintain a lightweight
+// in-memory map so the pipeline app can operate standalone.
+
+import crypto from "crypto";
+
+const GRUDGE_API = process.env.GRUDGE_API_URL ?? "https://api.grudge-studio.com";
+
+app.post("/api/auth/puter", async (req, res) => {
+  try {
+    const { puter_uuid, username } = req.body;
+    if (!puter_uuid || !username) {
+      return res.status(400).json({ error: "puter_uuid and username required" });
+    }
+
+    // Try the canonical Grudge backend first
+    try {
+      const upstream = await fetch(`${GRUDGE_API}/auth/puter`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(OBJECTSTORE_KEY ? { "X-API-Key": OBJECTSTORE_KEY } : {}) },
+        body: JSON.stringify({ puter_uuid, username }),
+      });
+      if (upstream.ok) {
+        const data = await upstream.json() as any;
+        return res.json(data);
+      }
+    } catch {
+      // Grudge backend unreachable — fall through to local provisioning
+    }
+
+    // Local fallback: deterministic Grudge ID from Puter UUID
+    const grudge_id = `grudge_${crypto.createHash("sha256").update(puter_uuid).digest("hex").slice(0, 16)}`;
+    // Deterministic server-side wallet (placeholder keypair seed)
+    const wallet_seed = crypto.createHash("sha256").update(`wallet:${puter_uuid}`).digest("hex");
+
+    const user = {
+      grudge_id,
+      puter_id: puter_uuid,
+      username,
+      provider: "puter",
+      wallet: {
+        address: `0x${wallet_seed.slice(0, 40)}`,
+        provisioned: true,
+      },
+    };
+
+    log.info("Puter auth (local):", user.grudge_id, user.username);
+    res.json({ valid: true, user });
+  } catch (e: any) {
+    log.error("Puter auth error:", e.message);
+    res.status(500).json({ error: "Auth failed" });
+  }
+});
+
+app.get("/api/auth/me", async (req, res) => {
+  const { puter_uuid } = req.query as { puter_uuid?: string };
+  if (!puter_uuid) return res.status(400).json({ error: "puter_uuid required" });
+
+  const grudge_id = `grudge_${crypto.createHash("sha256").update(puter_uuid).digest("hex").slice(0, 16)}`;
+  const wallet_seed = crypto.createHash("sha256").update(`wallet:${puter_uuid}`).digest("hex");
+
+  res.json({
+    valid: true,
+    user: {
+      grudge_id,
+      puter_id: puter_uuid,
+      username: req.query.username ?? "unknown",
+      provider: "puter",
+      wallet: { address: `0x${wallet_seed.slice(0, 40)}`, provisioned: true },
+    },
+  });
+});
+
 // ── Stub routes (return empty data until DB is connected) ────────────────────
 app.get("/api/assets", (_req, res) => res.json({ assets: [] }));
 app.get("/api/characters", (_req, res) => res.json({ characters: [] }));

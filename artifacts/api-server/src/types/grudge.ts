@@ -3,9 +3,10 @@
 // Auth
 export interface GrudgeUser {
   grudge_id: string;
+  puter_id: string;
   username: string;
   email?: string;
-  provider?: string;
+  provider: "puter" | string;
 }
 
 export interface GrudgeVerifyResponse {

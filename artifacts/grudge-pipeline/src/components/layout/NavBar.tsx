@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Layers, Database, Map, ListTodo, Settings, Cpu, Music, Home } from "lucide-react";
+import { Layers, Database, Map, ListTodo, Settings, Cpu, Music, Home, LogOut, Wallet } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuthStore } from "../../hooks/use-grudge-auth";
 
@@ -16,6 +16,8 @@ const NAV_ITEMS = [
 export function NavBar() {
   const [location] = useLocation();
   const user = useAuthStore((s) => s.user);
+  const wallet = useAuthStore((s) => s.wallet);
+  const logout = useAuthStore((s) => s.logout);
 
   return (
     <nav className="bg-black/60 border-b border-panel-border backdrop-blur-sm">
@@ -50,12 +52,30 @@ export function NavBar() {
           })}
         </div>
 
-        {/* User info */}
+        {/* User info + wallet + logout */}
         <div className="flex items-center gap-2">
           {user ? (
-            <span className="text-[10px] font-mono text-primary/70 border border-primary/20 px-2 py-1 rounded">
-              {user.username}
-            </span>
+            <>
+              {wallet?.address && (
+                <span
+                  className="text-[9px] font-mono text-accent/60 border border-accent/20 px-1.5 py-0.5 rounded hidden lg:flex items-center gap-1"
+                  title={wallet.address}
+                >
+                  <Wallet className="w-3 h-3" />
+                  {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
+                </span>
+              )}
+              <span className="text-[10px] font-mono text-primary/70 border border-primary/20 px-2 py-1 rounded">
+                {user.username}
+              </span>
+              <button
+                onClick={logout}
+                className="text-muted hover:text-destructive transition-colors p-1 rounded hover:bg-white/5"
+                title="Sign out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </>
           ) : (
             <span className="text-[10px] font-mono text-muted border border-panel-border px-2 py-1 rounded">
               OFFLINE

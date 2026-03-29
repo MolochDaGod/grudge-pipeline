@@ -2,8 +2,10 @@
 
 export interface GrudgeUser {
   grudge_id: string;
+  puter_id: string;
   username: string;
   email?: string;
+  provider: "puter";
 }
 
 // Pipeline asset as stored locally
