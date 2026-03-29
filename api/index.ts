@@ -176,6 +176,92 @@ app.post("/api/meshy/remesh", (req, res) => {
 
 app.get("/api/meshy/remesh/:id", (req, res) => meshyProxy(req, res, `/openapi/v1/remesh/${req.params.id}`, "GET"));
 
+// ── Cloudflare R2 Direct Storage ─────────────────────────────────────────────
+import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const R2_ENDPOINT = process.env.R2_ENDPOINT ?? "";
+const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY_ID ?? "";
+const R2_SECRET_KEY = process.env.R2_SECRET_ACCESS_KEY ?? "";
+const R2_BUCKET = process.env.R2_BUCKET ?? "grudge-assets";
+
+const s3 = R2_ENDPOINT ? new S3Client({
+  region: "auto",
+  endpoint: R2_ENDPOINT,
+  credentials: { accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY },
+}) : null;
+
+// Get presigned upload URL for direct browser uploads to R2
+app.post("/api/r2/presign-upload", async (req, res) => {
+  try {
+    if (!s3) return res.status(503).json({ error: "R2 storage not configured" });
+    const { filename, contentType, category = "pipeline" } = req.body;
+    if (!filename) return res.status(400).json({ error: "filename required" });
+
+    const key = `${category}/${Date.now()}-${filename}`;
+    const command = new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      ContentType: contentType || "application/octet-stream",
+    });
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    res.json({ uploadUrl, key, bucket: R2_BUCKET });
+  } catch (e: any) { log.error("R2 presign error:", e.message); res.status(500).json({ error: "Presign failed" }); }
+});
+
+// Upload from URL — download file from Meshy/external and store in R2
+app.post("/api/r2/upload-from-url", async (req, res) => {
+  try {
+    if (!s3) return res.status(503).json({ error: "R2 storage not configured" });
+    const { url, filename, category = "pipeline", metadata = {} } = req.body;
+    if (!url || !filename) return res.status(400).json({ error: "url and filename required" });
+
+    // Download the file
+    const upstream = await fetch(url);
+    if (!upstream.ok) return res.status(502).json({ error: `Failed to download: ${upstream.status}` });
+    const buffer = Buffer.from(await upstream.arrayBuffer());
+    const mime = upstream.headers.get("content-type") || "application/octet-stream";
+
+    const key = `${category}/${Date.now()}-${filename}`;
+    await s3.send(new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: mime,
+      Metadata: {
+        source: "grudge-pipeline",
+        originalUrl: url.slice(0, 200),
+        ...Object.fromEntries(Object.entries(metadata).map(([k, v]) => [k, String(v)])),
+      },
+    }));
+
+    const publicUrl = `${R2_ENDPOINT}/${R2_BUCKET}/${key}`;
+    res.json({ key, bucket: R2_BUCKET, size: buffer.length, mime, publicUrl });
+  } catch (e: any) { log.error("R2 upload-from-url error:", e.message); res.status(500).json({ error: "Upload failed" }); }
+});
+
+// List objects in R2 bucket
+app.get("/api/r2/list", async (req, res) => {
+  try {
+    if (!s3) return res.status(503).json({ error: "R2 storage not configured" });
+    const { prefix = "", limit = "50" } = req.query as Record<string, string>;
+    const result = await s3.send(new ListObjectsV2Command({
+      Bucket: R2_BUCKET,
+      Prefix: prefix,
+      MaxKeys: Math.min(parseInt(limit) || 50, 200),
+    }));
+    const objects = (result.Contents ?? []).map(o => ({
+      key: o.Key, size: o.Size, lastModified: o.LastModified?.toISOString(),
+    }));
+    res.json({ objects, count: objects.length, prefix });
+  } catch (e: any) { log.error("R2 list error:", e.message); res.status(500).json({ error: "List failed" }); }
+});
+
+// R2 health check
+app.get("/api/r2/status", (_req, res) => {
+  res.json({ configured: !!s3, endpoint: R2_ENDPOINT ? "connected" : "not set", bucket: R2_BUCKET });
+});
+
 // ── Grudge catalog proxy (no DB needed) ──────────────────────────────────────
 const ASSETS_API = process.env.GRUDGE_ASSETS_API_URL ?? "https://assets-api.grudge-studio.com";
 
@@ -192,6 +278,47 @@ app.get("/api/assets/categories", async (_req, res) => {
     const response = await fetch(`${ASSETS_API}/assets/catalog/categories`);
     res.status(response.ok ? 200 : response.status).json(await response.json());
   } catch { res.status(500).json({ error: "Categories unavailable" }); }
+});
+
+// ── GDevelop Pipeline Integration ────────────────────────────────────────────
+// Called by GDevelop Assistant to push pipeline-generated assets into its system
+const GDEVELOP_URL = process.env.GDEVELOP_URL ?? "https://gdevelop-assistant.vercel.app";
+
+app.post("/api/gdevelop/push-asset", async (req, res) => {
+  try {
+    const { assetName, meshUrl, rigUrl, thumbnailUrl, category, tags, metadata } = req.body;
+    if (!assetName || !meshUrl) return res.status(400).json({ error: "assetName and meshUrl required" });
+
+    // First upload to R2 if configured
+    let r2Key = null;
+    if (s3 && meshUrl) {
+      const ext = meshUrl.split(".").pop()?.split("?")[0] || "glb";
+      const filename = `${assetName.replace(/\s+/g, "_").toLowerCase()}.${ext}`;
+      try {
+        const upstream = await fetch(meshUrl);
+        if (upstream.ok) {
+          const buffer = Buffer.from(await upstream.arrayBuffer());
+          r2Key = `gdevelop/${Date.now()}-${filename}`;
+          await s3.send(new PutObjectCommand({
+            Bucket: R2_BUCKET, Key: r2Key, Body: buffer,
+            ContentType: upstream.headers.get("content-type") || "model/gltf-binary",
+            Metadata: { source: "grudge-pipeline", assetName, ...(metadata ? Object.fromEntries(Object.entries(metadata).map(([k, v]) => [k, String(v)])) : {}) },
+          }));
+        }
+      } catch (e: any) { log.error("R2 upload during GDevelop push:", e.message); }
+    }
+
+    res.json({
+      pushed: true,
+      asset: {
+        name: assetName,
+        meshUrl: r2Key ? `${R2_ENDPOINT}/${R2_BUCKET}/${r2Key}` : meshUrl,
+        rigUrl, thumbnailUrl, category, tags,
+        r2Key,
+        source: "grudge-pipeline",
+      },
+    });
+  } catch (e: any) { log.error("GDevelop push error:", e.message); res.status(500).json({ error: "Push failed" }); }
 });
 
 // ── Stub routes (return empty data until DB is connected) ────────────────────
