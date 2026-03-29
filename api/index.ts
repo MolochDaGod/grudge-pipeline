@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import express from "express";
+import express, { type Request, type Response } from "express";
 import cors from "cors";
 
 // ── Lightweight logger for serverless (no pino dep needed) ───────────────────
@@ -207,9 +207,14 @@ app.get("/api/batch/summary", (_req, res) => res.json({ total: 0, queued: 0, inP
 app.post("/api/batch/generate", (req, res) => res.status(201).json({ batchSize: 0, jobs: [] }));
 
 // ── 404 fallback ─────────────────────────────────────────────────────────────
-app.use("/api/*", (_req, res) => res.status(404).json({ error: "Not found" }));
+app.use((_req: Request, res: Response) => res.status(404).json({ error: "Not found" }));
 
 // ── Export for Vercel serverless ─────────────────────────────────────────────
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  return app(req as any, res as any);
+  return new Promise<void>((resolve, reject) => {
+    app(req as any, res as any, (err?: any) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
 }
