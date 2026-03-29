@@ -1,0 +1,16 @@
+{
+  "name": "grudge-pipeline-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "pnpm --filter @workspace/grudge-pipeline run dev",
+    "dev:backend": "pnpm --filter @workspace/api-server run dev",
+    "build:frontend": "pnpm --filter @workspace/grudge-pipeline run build",
+    "build:backend": "pnpm --filter @workspace/api-server run build",
+    "db:push": "pnpm --filter @workspace/db push"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}
