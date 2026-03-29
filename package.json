@@ -10,7 +10,16 @@
     "db:push": "pnpm --filter @workspace/db push"
   },
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9"
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@vercel/node": "^5.0.0",
+    "express": "^5.0.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.19",
+    "typescript": "^5.9.0"
   }
 }
