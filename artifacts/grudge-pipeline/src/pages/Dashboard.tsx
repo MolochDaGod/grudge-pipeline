@@ -47,9 +47,9 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-widest text-primary">COMMAND CENTER</h1>
+          <h1 className="text-2xl font-bold tracking-widest text-primary">GRUDGE WEB ENGINE</h1>
           <p className="text-sm text-muted font-mono mt-1">
-            Grudge Pipeline — Asset rendering, rigging, and deployment
+            Import, retarget, render, and deploy assets to Grudge Studio
           </p>
         </div>
 

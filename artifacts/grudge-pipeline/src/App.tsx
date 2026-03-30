@@ -6,6 +6,8 @@ import { GrudgeLogin } from "./components/auth/GrudgeLogin";
 import { useAuthStore } from "./hooks/use-grudge-auth";
 import Dashboard from "./pages/Dashboard";
 import Pipeline from "./pages/Pipeline";
+import Retarget from "./pages/Retarget";
+import Renderer from "./pages/Renderer";
 import Assets from "./pages/Assets";
 import Scenes from "./pages/Scenes";
 import Animations from "./pages/Animations";
@@ -37,6 +39,8 @@ function AppRouter() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/pipeline" component={Pipeline} />
+        <Route path="/retarget" component={Retarget} />
+        <Route path="/renderer" component={Renderer} />
         <Route path="/assets" component={Assets} />
         <Route path="/scenes" component={Scenes} />
         <Route path="/animations" component={Animations} />

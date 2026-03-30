@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Settings as SettingsIcon, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Settings as SettingsIcon, CheckCircle, XCircle, RefreshCw, Wallet } from "lucide-react";
 import { useAuthStore } from "../hooks/use-grudge-auth";
 
 export default function Settings() {
-  const { user, token, setAuth, clearAuth } = useAuthStore();
-  const [loginToken, setLoginToken] = useState("");
+  const user = useAuthStore((s) => s.user);
+  const wallet = useAuthStore((s) => s.wallet);
+  const logout = useAuthStore((s) => s.logout);
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<Record<string, boolean | null>>({
     api: null,
@@ -12,7 +13,7 @@ export default function Settings() {
     auth: null,
   });
 
-  const checkEndpoint = async (name: string, url: string) => {
+  const checkEndpoint = async (_name: string, url: string) => {
     try {
       const res = await fetch(url, { method: "GET" });
       return res.ok;
@@ -30,13 +31,6 @@ export default function Settings() {
     ]);
     setStatus({ api, assets, auth });
     setChecking(false);
-  };
-
-  const handleTokenLogin = () => {
-    if (!loginToken.trim()) return;
-    // Store token — real verification happens on API calls
-    setAuth(loginToken.trim(), { grudge_id: "pending", username: "verifying..." });
-    setLoginToken("");
   };
 
   return (
@@ -83,7 +77,7 @@ export default function Settings() {
 
         {/* Auth */}
         <div className="border border-panel-border rounded-lg p-4 bg-black/20">
-          <div className="text-xs font-mono text-muted tracking-widest mb-4">AUTHENTICATION</div>
+          <div className="text-xs font-mono text-muted tracking-widest mb-4">AUTHENTICATION (GRUDGE ID via PUTER)</div>
           {user ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -92,11 +86,19 @@ export default function Settings() {
                   Logged in as <span className="text-primary">{user.username}</span>
                 </span>
               </div>
-              <div className="text-[10px] font-mono text-muted">
-                Grudge ID: {user.grudge_id}
+              <div className="text-[10px] font-mono text-muted space-y-1">
+                <div>Grudge ID: <span className="text-foreground">{user.grudge_id}</span></div>
+                <div>Puter ID: <span className="text-foreground">{user.puter_id}</span></div>
+                <div>Provider: <span className="text-foreground">{user.provider}</span></div>
               </div>
+              {wallet?.address && (
+                <div className="flex items-center gap-2 text-[10px] font-mono text-accent/70">
+                  <Wallet className="w-3.5 h-3.5" />
+                  Server Wallet: {wallet.address}
+                </div>
+              )}
               <button
-                onClick={clearAuth}
+                onClick={logout}
                 className="px-3 py-1.5 text-xs font-mono text-red-400 border border-red-400/30 rounded hover:bg-red-400/10 transition-all"
               >
                 Sign Out
@@ -105,27 +107,9 @@ export default function Settings() {
           ) : (
             <div className="space-y-3">
               <p className="text-[11px] text-muted font-mono">
-                Paste your Grudge JWT token to authenticate. Get one from{" "}
-                <a href="https://id.grudge-studio.com" target="_blank" className="text-primary underline">
-                  id.grudge-studio.com
-                </a>
+                Sign in via the Grudge Login button to authenticate with your Puter account.
+                Your Grudge ID and server-side wallet will be provisioned automatically.
               </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={loginToken}
-                  onChange={(e) => setLoginToken(e.target.value)}
-                  placeholder="eyJ..."
-                  className="flex-1 bg-black/40 border border-panel-border rounded px-3 py-2 text-sm font-mono text-foreground focus:border-primary/50 outline-none"
-                />
-                <button
-                  onClick={handleTokenLogin}
-                  disabled={!loginToken.trim()}
-                  className="px-4 py-2 text-xs font-mono text-primary border border-primary/30 rounded hover:bg-primary/10 disabled:opacity-50 transition-all"
-                >
-                  Connect
-                </button>
-              </div>
             </div>
           )}
         </div>

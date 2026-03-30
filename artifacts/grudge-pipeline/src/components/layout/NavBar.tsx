@@ -1,11 +1,13 @@
 import { Link, useLocation } from "wouter";
-import { Layers, Database, Map, ListTodo, Settings, Cpu, Music, Home, LogOut, Wallet } from "lucide-react";
+import { Layers, Database, Map, ListTodo, Settings, Cpu, Music, Home, LogOut, Wallet, Bone, Palette } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuthStore } from "../../hooks/use-grudge-auth";
 
 const NAV_ITEMS = [
   { path: "/", label: "Dashboard", icon: Home },
   { path: "/pipeline", label: "Pipeline", icon: Cpu },
+  { path: "/retarget", label: "Retarget", icon: Bone },
+  { path: "/renderer", label: "Renderer", icon: Palette },
   { path: "/assets", label: "Assets", icon: Database },
   { path: "/scenes", label: "Scenes", icon: Map },
   { path: "/animations", label: "Animations", icon: Music },
@@ -26,7 +28,7 @@ export function NavBar() {
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Layers className="w-5 h-5 text-primary" />
           <span className="font-bold text-sm tracking-[0.3em] text-primary">
-            GRUDGE PIPELINE
+            GRUDGE ENGINE
           </span>
         </Link>
 
