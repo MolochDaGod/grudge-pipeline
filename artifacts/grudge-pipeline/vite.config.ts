@@ -22,6 +22,15 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
+    // Babylon.js produces large chunks — raise the warning limit
+    chunkSizeWarningLimit: 4000,
+  },
+  // Babylon.js WASM and shader file support
+  assetsInclude: ["**/*.wasm", "**/*.fx"],
+  optimizeDeps: {
+    // Babylon modules need to be excluded from Vite's dep optimizer
+    // to avoid issues with WASM loading and tree-shaking
+    exclude: ["@babylonjs/havok"],
   },
   server: {
     port,
