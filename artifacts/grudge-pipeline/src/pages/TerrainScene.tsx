@@ -38,6 +38,7 @@ import { WaterMaterial } from "@babylonjs/materials/water/waterMaterial";
 
 import "@babylonjs/loaders/glTF";
 import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
+import { SceneLoaderFlags } from "@babylonjs/core/Loading/sceneLoaderFlags";
 
 // ── Procedural terrain albedo texture (height + slope based) ─────────
 
@@ -180,7 +181,24 @@ export default function TerrainScene() {
     const terrainNormal = createTerrainNormal(scene);
 
     // ── Load Terrain.glb ──
+    // The FBX→GLB conversion preserved broken texture references from Unity
+    // (all 236 terrain texture GUIDs are missing in the source project).
+    // We skip material loading entirely since we replace all materials with
+    // procedural PBR terrain textures anyway.
+    const prevLogLevel = SceneLoaderFlags.loggingLevel;
+    SceneLoaderFlags.loggingLevel = 0; // suppress texture warnings
+
+    // Configure GLTF loader to skip materials (geometry only)
+    SceneLoader.OnPluginActivatedObservable.addOnce((plugin) => {
+      if (plugin.name === "gltf") {
+        (plugin as any).skipMaterials = true;
+        (plugin as any).compileMaterials = false;
+      }
+    });
+
     SceneLoader.ImportMeshAsync("", "/models/", "Terrain.glb", scene).then((result) => {
+      SceneLoaderFlags.loggingLevel = prevLogLevel;
+
       const root = result.meshes[0];
       root.name = "terrain_root";
 
@@ -204,14 +222,10 @@ export default function TerrainScene() {
         terrainMat.roughness = 0.85;         // rough natural surface
         terrainMat.ambientColor = new Color3(0.15, 0.15, 0.15);
 
-        // Two-sided rendering for terrain edges
         terrainMat.backFaceCulling = true;
 
-        // Apply
         mesh.material = terrainMat;
         mesh.receiveShadows = true;
-
-        // Add to shadow caster list
         csg.addShadowCaster(mesh);
       });
 
@@ -226,11 +240,12 @@ export default function TerrainScene() {
       camera.setTarget(center);
       camera.radius = maxDim * 0.8;
 
-      // Stop embedded animations (this terrain has character anims baked in)
+      // Stop embedded animations (character anims baked into the FBX scene)
       scene.animationGroups.forEach((g) => g.stop());
 
       console.log(`Terrain loaded: ${result.meshes.length} meshes, bounds: ${size.x.toFixed(0)}×${size.y.toFixed(0)}×${size.z.toFixed(0)}`);
     }).catch((err) => {
+      SceneLoaderFlags.loggingLevel = prevLogLevel;
       console.error("Failed to load Terrain.glb:", err);
     });
 
