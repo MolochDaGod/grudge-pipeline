@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Pipeline from "./pages/Pipeline";
 import Retarget from "./pages/Retarget";
 import Renderer from "./pages/Renderer";
+import TerrainScene from "./pages/TerrainScene";
 import Assets from "./pages/Assets";
 import Scenes from "./pages/Scenes";
 import Animations from "./pages/Animations";
@@ -41,6 +42,7 @@ function AppRouter() {
         <Route path="/pipeline" component={Pipeline} />
         <Route path="/retarget" component={Retarget} />
         <Route path="/renderer" component={Renderer} />
+        <Route path="/terrain" component={TerrainScene} />
         <Route path="/assets" component={Assets} />
         <Route path="/scenes" component={Scenes} />
         <Route path="/animations" component={Animations} />

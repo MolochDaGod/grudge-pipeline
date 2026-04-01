@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Layers, Database, Map, ListTodo, Settings, Cpu, Music, Home, LogOut, Wallet, Bone, Palette } from "lucide-react";
+import { Layers, Database, Map, ListTodo, Settings, Cpu, Music, Home, LogOut, Wallet, Bone, Palette, Mountain } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuthStore } from "../../hooks/use-grudge-auth";
 
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { path: "/pipeline", label: "Pipeline", icon: Cpu },
   { path: "/retarget", label: "Retarget", icon: Bone },
   { path: "/renderer", label: "Renderer", icon: Palette },
+  { path: "/terrain", label: "Terrain", icon: Mountain },
   { path: "/assets", label: "Assets", icon: Database },
   { path: "/scenes", label: "Scenes", icon: Map },
   { path: "/animations", label: "Animations", icon: Music },
