@@ -1,0 +1,11 @@
+attackmotion/
+_organized/
+_converted/
+_optimized/
+grudge-export/
+tmp/
+node_modules/
+*.zip
+*.fbx
+*.blend
+*.max
