@@ -68,6 +68,46 @@ See [docs/AVATAR-SPEC.md](docs/AVATAR-SPEC.md) for full spec.
 - **Registry**: `api/v1/models3d.json` (1,053+ models)
 - **SDK**: `@grudge-studio/core`
 
+## 3D Model Viewer
+
+**Live:** [grudge-pipeline.vercel.app](https://grudge-pipeline.vercel.app)
+
+The web viewer loads the model registry (`models3d.json`) and resolves GLB files through a 4-step fallback chain:
+
+1. **R2 CDN** (`assets.grudge-studio.com`) — fastest, has CORS `*`
+2. **R2 Worker** (`grudgeassets.grudge.workers.dev`) — API endpoint
+3. **GitHack CDN** (`raw.githack.com`) — raw GitHub with proper CORS
+4. **GitHub Pages** (`molochdagod.github.io/ObjectStore`) — last resort (most models too large for git)
+
+Models with Draco compression are automatically decoded using Google's Draco WASM decoder.
+
+### Features
+- Search and filter 1,053+ GLB models by category
+- Three.js viewer with orbit controls, wireframe, auto-rotate
+- Animation playback with clip selector
+- Drag & drop local GLB/GLTF files for preview
+- Pagination (60 per page)
+- R2 health status indicator
+
+### Using the Viewer Locally
+
+```bash
+# Serve the web/ directory
+npx serve web
+# Open http://localhost:3000
+```
+
+The viewer will load `api/pipeline-models.json` (from local pipeline output) or fall back to ObjectStore's `api/v1/models3d.json`.
+
+### How Model Loading Works
+
+When you click a model card, the viewer:
+1. Sends HEAD requests to each URL in the fallback chain
+2. Uses the first URL that returns HTTP 200
+3. Loads the GLB with Three.js GLTFLoader + DRACOLoader
+4. Auto-fits the camera to the model bounding box
+5. Auto-plays the first animation if present
+
 ## Docs
 
 - [Best Practices](docs/BEST-PRACTICES.md)
