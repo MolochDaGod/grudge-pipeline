@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grudge Pipeline — Asset Processing Hub</title>
+  <link rel="stylesheet" href="css/pipeline.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>⚔️ Grudge Pipeline</h1>
+      <p class="subtitle">Asset Processing Hub — Convert, Optimize, Avatar-Rig, Validate, Sync</p>
+    </header>
+
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-item"><span class="stat-label">Total Models</span><span class="stat-value" id="totalModels">—</span></div>
+      <div class="stat-item"><span class="stat-label">Categories</span><span class="stat-value" id="totalCategories">—</span></div>
+      <div class="stat-item"><span class="stat-label">Total Size</span><span class="stat-value" id="totalSize">—</span></div>
+      <div class="stat-item"><span class="stat-label">Pipeline Ver</span><span class="stat-value">1.0.0</span></div>
+    </div>
+
+    <div class="controls">
+      <input type="text" class="search-box" id="searchBox" placeholder="Search models by name, category, format...">
+      <div class="filter-row" id="categoryFilters"></div>
+    </div>
+
+    <div class="results-header">
+      <span class="results-title" id="resultsTitle">All Models</span>
+      <span class="results-count" id="resultsCount"></span>
+    </div>
+
+    <div class="model-grid" id="modelGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none">No models found. Run the pipeline first.</div>
+
+    <!-- 3D Viewer Overlay -->
+    <div class="viewer-overlay" id="viewerOverlay">
+      <div class="viewer-header">
+        <span class="viewer-title" id="viewerTitle">Model Viewer</span>
+        <span class="viewer-info" id="viewerInfo"></span>
+        <button class="viewer-close" onclick="closeViewer()">✕ Close</button>
+      </div>
+      <div class="viewer-canvas-wrap" id="viewerCanvasWrap"></div>
+      <div class="viewer-controls">
+        <button class="viewer-btn" onclick="toggleWireframe()">Wireframe</button>
+        <button class="viewer-btn" onclick="toggleAutoRotate()">Auto Rotate</button>
+        <select class="anim-select-3d" id="animSelect" onchange="playAnimation(this.value)" style="display:none">
+          <option value="">— Animations —</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/model-browser.js"></script>
+</body>
+</html>

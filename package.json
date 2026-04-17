@@ -1,0 +1,35 @@
+{
+  "name": "@grudge-studio/pipeline",
+  "version": "1.0.0",
+  "description": "Grudge Studio Asset Pipeline — convert, optimize, avatar-rig, validate, and sync 3D assets",
+  "type": "module",
+  "scripts": {
+    "pipeline": "node pipeline/batch.mjs all",
+    "pipeline:convert": "node pipeline/batch.mjs convert",
+    "pipeline:optimize": "node pipeline/batch.mjs optimize",
+    "pipeline:avatar": "node pipeline/batch.mjs avatar",
+    "pipeline:validate": "node pipeline/batch.mjs validate",
+    "ingest": "node ingest/scan-assets.mjs",
+    "sync:objectstore": "node sync/to-objectstore.mjs",
+    "sync:r2": "node sync/to-r2.mjs",
+    "sync:verify": "node sync/verify.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.3.0",
+    "@gltf-transform/extensions": "^4.3.0",
+    "@gltf-transform/functions": "^4.3.0",
+    "draco3dgltf": "^1.5.7",
+    "obj2gltf": "^4.1.0",
+    "sharp": "^0.33.5",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.3.0"
+  },
+  "author": "Racalvin The Pirate King <grudge-studio>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MolochDaGod/grudge-pipeline.git"
+  }
+}

@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Large asset files (not tracked in git)
+attackmotion/
+*.zip
+*.fbx
+*.blend
+*.max
+
+# Pipeline output (regenerated)
+_organized/
+_converted/
+_optimized/
+
+# Temp
+tmp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+
+# Vercel
+.vercel/
