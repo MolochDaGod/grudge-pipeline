@@ -180,7 +180,7 @@ app.get("/api/meshy/remesh/:id", (req, res) => meshyProxy(req, res, `/openapi/v1
 // Canonical path: all uploads go through objectstore.grudge-studio.com
 // ─ D1 metadata is registered (shows up in catalog/search)
 // ─ R2 file is stored (served via assets.grudge-studio.com CDN)
-// ─ Same pattern as GDevelop's objectstoreProxy.ts
+// ─ Same pattern as grudgeDot's objectstoreProxy.ts
 const OBJECTSTORE_URL = (process.env.OBJECTSTORE_WORKER_URL || "https://objectstore.grudge-studio.com").replace(/\/$/, "");
 const OBJECTSTORE_KEY = process.env.OBJECTSTORE_API_KEY || process.env.INTERNAL_API_KEY || "";
 const CDN_BASE = process.env.PUBLIC_CDN_URL || "https://assets.grudge-studio.com";
@@ -343,11 +343,11 @@ app.get("/api/assets/categories", async (_req, res) => {
   } catch { res.status(500).json({ error: "Categories unavailable" }); }
 });
 
-// ── GDevelop Pipeline Integration ────────────────────────────────────────────
-// Push pipeline assets to GDevelop via ObjectStore (canonical path)
-const GDEVELOP_URL = process.env.GDEVELOP_URL ?? "https://gdevelop-assistant.vercel.app";
+// ── grudgeDot Pipeline Integration ────────────────────────────────────────────
+// Push pipeline assets to grudgeDot via ObjectStore (canonical path)
+const GRUDGEDOT_URL = process.env.GRUDGEDOT_URL ?? "https://grudgedot-launcher.vercel.app";
 
-app.post("/api/gdevelop/push-asset", async (req, res) => {
+app.post("/api/grudgedot/push-asset", async (req, res) => {
   try {
     const { assetName, meshUrl, rigUrl, thumbnailUrl, category = "model", tags = [], metadata = {} } = req.body;
     if (!assetName || !meshUrl) return res.status(400).json({ error: "assetName and meshUrl required" });
@@ -371,7 +371,7 @@ app.post("/api/gdevelop/push-asset", async (req, res) => {
         const fields = encoder.encode([
           `\r\n--${boundary}\r\nContent-Disposition: form-data; name="filename"\r\n\r\n${filename}`,
           `\r\n--${boundary}\r\nContent-Disposition: form-data; name="category"\r\n\r\n${category}`,
-          `\r\n--${boundary}\r\nContent-Disposition: form-data; name="tags"\r\n\r\n${JSON.stringify([...tags, "pipeline", "gdevelop"])}`,
+          `\r\n--${boundary}\r\nContent-Disposition: form-data; name="tags"\r\n\r\n${JSON.stringify([...tags, "pipeline", "grudgedot"])}`,
           `\r\n--${boundary}\r\nContent-Disposition: form-data; name="metadata"\r\n\r\n${JSON.stringify({ source: "grudge-pipeline", assetName, ...metadata })}`,
         ].join(""));
         const end = encoder.encode(`\r\n--${boundary}--\r\n`);
@@ -390,7 +390,7 @@ app.post("/api/gdevelop/push-asset", async (req, res) => {
         const r = await fetch(`${OBJECTSTORE_URL}/v1/assets`, { method: "POST", headers, body });
         if (r.ok) uploadResult = await r.json();
       }
-    } catch (e: any) { log.error("ObjectStore upload during GDevelop push:", e.message); }
+    } catch (e: any) { log.error("ObjectStore upload during grudgeDot push:", e.message); }
 
     res.json({
       pushed: true,
@@ -403,7 +403,7 @@ app.post("/api/gdevelop/push-asset", async (req, res) => {
         source: "grudge-pipeline",
       },
     });
-  } catch (e: any) { log.error("GDevelop push error:", e.message); res.status(500).json({ error: "Push failed" }); }
+  } catch (e: any) { log.error("grudgeDot push error:", e.message); res.status(500).json({ error: "Push failed" }); }
 });
 
 // ── Puter → Grudge Auth ──────────────────────────────────────────────────────
