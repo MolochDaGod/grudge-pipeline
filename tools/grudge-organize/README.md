@@ -23,6 +23,12 @@ Runs locally on your own machine (Windows, macOS, or Linux). Only Node.js
    to delete and reclaim space fast.
 4. **Reports** — writes `repos.csv`, `duplicates.csv`, `largest.csv`,
    `stale.csv`, and a full `report.json` you can review before changing anything.
+5. **Consolidate (`--consolidate=<dir>`)** — builds **one deduplicated copy** of
+   every scanned file (≥ `--min-size`) into `<dir>`, keeping a single instance
+   per unique content hash. This is **fully non-destructive** — it only ever
+   *copies*, so it is safe to run against live repos and gives you one organized
+   asset library (e.g. on `F:`) to push to object storage. Also writes
+   `consolidated-index.csv` (hash → canonical copy → every source location).
 
 ## Safety model
 
@@ -46,6 +52,9 @@ node tools/grudge-organize/grudge-organize.mjs --apply
 
 # Limit scope for a faster first pass
 node tools/grudge-organize/grudge-organize.mjs --drives=D:\,F:\
+
+# Build ONE deduplicated copy of every asset into F:\assets (non-destructive)
+node tools/grudge-organize/grudge-organize.mjs --include-repo-files --consolidate=F:\assets --apply
 ```
 
 ### Flags
@@ -57,7 +66,8 @@ node tools/grudge-organize/grudge-organize.mjs --drives=D:\,F:\
 - `--stale-days=<n>` — flag files older than n days as old/legacy (default `180`)
 - `--include-repo-files` — also scan files *inside* git repos (default off)
 - `--exclude=<a,b,..>` — extra directory names to skip
-- `--apply` — actually perform the moves (otherwise dry-run)
+- `--consolidate=<dir>` — build one deduped copy of every file into `<dir>` (non-destructive copy; lower `--min-size=1` to include small files too)
+- `--apply` — actually perform the moves / copies (otherwise dry-run)
 - `--help` — print built-in help
 
 ## Recommended workflow

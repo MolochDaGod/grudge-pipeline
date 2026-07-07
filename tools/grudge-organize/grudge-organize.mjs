@@ -27,7 +27,9 @@
  *   --stale-days=<n>       Flag files older than n days     (default 180)
  *   --include-repo-files   Also scan files inside git repos (default off)
  *   --exclude=<a,b,..>     Extra directory names to skip
- *   --apply                Actually perform moves (otherwise dry-run)
+ *   --consolidate=<dir>    Build ONE deduped copy of every file into <dir>
+ *                          (non-destructive: only ever COPIES; e.g. F:\assets)
+ *   --apply                Actually perform moves / copies (otherwise dry-run)
  * ------------------------------------------------------------------------
  */
 
@@ -73,6 +75,7 @@ const MIN_SIZE = ARGS['min-size'] ? parseInt(ARGS['min-size'], 10) : 64 * 1024;
 const STALE_DAYS = ARGS['stale-days'] ? parseInt(ARGS['stale-days'], 10) : 180;
 const APPLY = !!ARGS.apply;
 const INCLUDE_REPO_FILES = !!ARGS['include-repo-files'];
+const CONSOLIDATE = ARGS.consolidate ? String(ARGS.consolidate) : null;
 
 let REPORT_DIR = ARGS['report-dir']
   ? String(ARGS['report-dir'])
@@ -260,6 +263,54 @@ function buildDuplicateSets() {
   return sets;
 }
 
+// ------------------------------------------------------ consolidate (copy) -
+// Builds ONE deduplicated copy of every scanned file into destDir. This is
+// fully NON-DESTRUCTIVE: it only ever reads sources and writes into destDir,
+// so it is safe to run against live repos (it will not break asset references).
+function consolidate(destDir) {
+  console.log('-'.repeat(72));
+  console.log('CONSOLIDATE — one deduplicated copy of every file into:');
+  console.log(`  ${destDir}`);
+  const all = [];
+  for (const arr of filesBySize.values()) for (const f of arr) all.push(f);
+  // canonical preference: preferred drive, then shortest path, then lexicographic
+  all.sort((a, b) => {
+    const pa = onPreferredDrive(a.path), pb = onPreferredDrive(b.path);
+    if (pa !== pb) return pa ? -1 : 1;
+    if (a.path.length !== b.path.length) return a.path.length - b.path.length;
+    return a.path < b.path ? -1 : 1;
+  });
+  const byHash = new Map();   // hash -> [recs], first entry is the canonical pick
+  let i = 0;
+  for (const f of all) {
+    if (++i % 500 === 0) process.stderr.write(`  hashing ${i}/${all.length}\r`);
+    const h = sha256(f.path); if (!h) continue;
+    const g = byHash.get(h) || []; g.push(f); byHash.set(h, g);
+  }
+  process.stderr.write('\r');
+  let uniq = 0, uniqBytes = 0, dropped = 0, droppedBytes = 0, copied = 0, copyErr = 0;
+  const idx = [['hash', 'size_bytes', 'copies', 'canonical_dest', 'sources']];
+  for (const [h, group] of byHash) {
+    const canonical = group[0];
+    const rel = path.relative(rootOf(canonical.path), canonical.path);
+    const dest = path.join(destDir, rel);
+    uniq++; uniqBytes += canonical.size;
+    dropped += group.length - 1; droppedBytes += canonical.size * (group.length - 1);
+    if (APPLY) {
+      try { if (!fs.existsSync(dest)) { ensureDir(path.dirname(dest)); fs.copyFileSync(canonical.path, dest); copied++; } }
+      catch { copyErr++; }
+    }
+    idx.push([h, canonical.size, group.length, path.relative(destDir, dest), group.map(g => g.path).join(' | ')]);
+  }
+  fs.writeFileSync(path.join(REPORT_DIR, 'consolidated-index.csv'), csv(idx));
+  console.log(`  unique files             : ${uniq} (${fmtBytes(uniqBytes)})`);
+  console.log(`  redundant copies folded  : ${dropped} (${fmtBytes(droppedBytes)} saved vs keeping all)`);
+  if (APPLY) console.log(`  files copied into library: ${copied}${copyErr ? ` (${copyErr} errors)` : ''}`);
+  else console.log('  DRY-RUN: nothing copied. Re-run with --apply to build the library.');
+  console.log(`  index written            : ${path.join(REPORT_DIR, 'consolidated-index.csv')}`);
+  console.log('  (source files are never modified — this only ever COPIES.)');
+}
+
 // ------------------------------------------------------------------ main ---
 function main() {
   console.log('='.repeat(72));
@@ -383,6 +434,9 @@ function main() {
   console.log('  - largest.csv      (biggest files — reclaim space fast)');
   console.log(`  - stale.csv        (files older than ${STALE_DAYS}d — old/legacy candidates)`);
   console.log('  - report.json      (full machine-readable plan)');
+
+  // --- consolidate mode: non-destructive single-copy library, then stop ---
+  if (CONSOLIDATE) { consolidate(CONSOLIDATE); return; }
 
   // --- apply ---
   if (!APPLY) {
