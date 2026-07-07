@@ -24,6 +24,7 @@
  *   --canonical=<path>     Authoritative repo home         (default F:\github)
  *   --report-dir=<path>    Where reports + quarantine go    (default F:\_organization\<ts>)
  *   --min-size=<bytes>     Ignore dup files smaller than    (default 65536 = 64KB)
+ *   --stale-days=<n>       Flag files older than n days     (default 180)
  *   --include-repo-files   Also scan files inside git repos (default off)
  *   --exclude=<a,b,..>     Extra directory names to skip
  *   --apply                Actually perform moves (otherwise dry-run)
@@ -69,6 +70,7 @@ const CANONICAL = ARGS.canonical
   : (isWin ? 'F:\\github' : path.join(DRIVES[0] || process.cwd(), 'github'));
 
 const MIN_SIZE = ARGS['min-size'] ? parseInt(ARGS['min-size'], 10) : 64 * 1024;
+const STALE_DAYS = ARGS['stale-days'] ? parseInt(ARGS['stale-days'], 10) : 180;
 const APPLY = !!ARGS.apply;
 const INCLUDE_REPO_FILES = !!ARGS['include-repo-files'];
 
@@ -159,6 +161,22 @@ const repos = [];
 const filesBySize = new Map();   // size -> [{path,size,mtime}]
 let scannedDirs = 0, scannedFiles = 0;
 
+// space / aging trackers (report-only — never used to delete anything)
+let totalBytes = 0, staleCount = 0, staleBytes = 0;
+const STALE_CUTOFF = Date.now() - STALE_DAYS * 86400000;
+const TOP_KEEP = 1000;
+const bigFiles = [];    // bounded top-N largest {path,size,mtime}
+const staleFiles = [];  // bounded top-N largest-among-old {path,size,mtime}
+function considerBig(rec) {
+  bigFiles.push(rec);
+  if (bigFiles.length > TOP_KEEP * 4) { bigFiles.sort((a, b) => b.size - a.size); bigFiles.length = TOP_KEEP; }
+}
+function considerStale(rec) {
+  staleFiles.push(rec);
+  if (staleFiles.length > TOP_KEEP * 4) { staleFiles.sort((a, b) => b.size - a.size); staleFiles.length = TOP_KEEP; }
+}
+function ageDays(mtimeMs) { return Math.floor((Date.now() - mtimeMs) / 86400000); }
+
 function walk(root) {
   const stack = [root];
   while (stack.length) {
@@ -181,10 +199,15 @@ function walk(root) {
       } else if (e.isFile()) {
         scannedFiles++;
         let st; try { st = fs.statSync(full); } catch { continue; }
-        if (!st.isFile() || st.size < MIN_SIZE) continue;
+        if (!st.isFile()) continue;
+        totalBytes += st.size;
+        if (st.size < MIN_SIZE) continue;
+        const rec = { path: full, size: st.size, mtime: st.mtimeMs };
         const arr = filesBySize.get(st.size) || [];
-        arr.push({ path: full, size: st.size, mtime: st.mtimeMs });
+        arr.push(rec);
         filesBySize.set(st.size, arr);
+        considerBig(rec);
+        if (st.mtimeMs <= STALE_CUTOFF) { staleCount++; staleBytes += st.size; considerStale(rec); }
       }
     }
   }
@@ -297,6 +320,14 @@ function main() {
   console.log('DUPLICATE FILES');
   console.log(`  duplicate sets          : ${dupSets.length}`);
   console.log(`  reclaimable space       : ${fmtBytes(wasted)}`);
+  const topBig = [...bigFiles].sort((a, b) => b.size - a.size).slice(0, 10);
+  console.log('SPACE / OLD FILES (report only)');
+  console.log(`  data scanned            : ${fmtBytes(totalBytes)}`);
+  console.log(`  old files (>${STALE_DAYS}d)         : ${staleCount} using ${fmtBytes(staleBytes)}`);
+  if (topBig.length) {
+    console.log('  largest files:');
+    for (const f of topBig) console.log(`    ${fmtBytes(f.size).padStart(9)}  (${ageDays(f.mtime)}d)  ${f.path}`);
+  }
   console.log('-'.repeat(72));
 
   // --- write reports ---
@@ -318,9 +349,19 @@ function main() {
   for (const s of dupSets) for (const d of s.dups) dupRows.push([s.hash, s.size, s.keeper.path, d.path]);
   fs.writeFileSync(path.join(REPORT_DIR, 'duplicates.csv'), csv(dupRows));
 
+  const bigSorted = [...bigFiles].sort((a, b) => b.size - a.size).slice(0, TOP_KEEP);
+  const bigRows = [['size_bytes', 'age_days', 'path']];
+  for (const f of bigSorted) bigRows.push([f.size, ageDays(f.mtime), f.path]);
+  fs.writeFileSync(path.join(REPORT_DIR, 'largest.csv'), csv(bigRows));
+
+  const staleSorted = [...staleFiles].sort((a, b) => b.size - a.size).slice(0, TOP_KEEP);
+  const staleRows = [['size_bytes', 'age_days', 'path']];
+  for (const f of staleSorted) staleRows.push([f.size, ageDays(f.mtime), f.path]);
+  fs.writeFileSync(path.join(REPORT_DIR, 'stale.csv'), csv(staleRows));
+
   fs.writeFileSync(path.join(REPORT_DIR, 'report.json'), JSON.stringify({
     generated: new Date().toISOString(), mode: APPLY ? 'apply' : 'dry-run',
-    drives: DRIVES, canonical: CANONICAL, minSize: MIN_SIZE,
+    drives: DRIVES, canonical: CANONICAL, minSize: MIN_SIZE, staleDays: STALE_DAYS,
     repos: repoRecords,
     plan: {
       moveIntoCanonical: plan.moveIntoCanonical.map(x => ({ from: x.repo.path, to: x.dest })),
@@ -329,11 +370,18 @@ function main() {
     },
     duplicateSets: dupSets.map(s => ({ hash: s.hash, size: s.size, keep: s.keeper.path, move: s.dups.map(d => d.path) })),
     reclaimableBytes: wasted,
+    space: {
+      totalBytes, staleCount, staleBytes,
+      largest: bigSorted.slice(0, 100).map(f => ({ size: f.size, ageDays: ageDays(f.mtime), path: f.path })),
+      stale: staleSorted.slice(0, 100).map(f => ({ size: f.size, ageDays: ageDays(f.mtime), path: f.path })),
+    },
   }, null, 2));
 
   console.log(`Reports written to: ${REPORT_DIR}`);
   console.log('  - repos.csv        (every repo + which project it belongs to)');
   console.log('  - duplicates.csv   (keeper vs redundant copies)');
+  console.log('  - largest.csv      (biggest files — reclaim space fast)');
+  console.log(`  - stale.csv        (files older than ${STALE_DAYS}d — old/legacy candidates)`);
   console.log('  - report.json      (full machine-readable plan)');
 
   // --- apply ---
@@ -343,6 +391,7 @@ function main() {
     console.log(`  * move ${plan.moveIntoCanonical.length} repo(s) into ${CANONICAL}`);
     console.log(`  * quarantine ${plan.quarantineRepo.length} redundant clone(s) + ${dupSets.reduce((n, s) => n + s.dups.length, 0)} duplicate file(s)`);
     console.log('  Nothing is ever deleted — items are moved to <report-dir>/quarantine.');
+    console.log(`  For old/legacy cleanup, review largest.csv + stale.csv and delete by hand.`);
     return;
   }
 
