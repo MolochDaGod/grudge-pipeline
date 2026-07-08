@@ -35,29 +35,12 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { parseArgs, printHelpFromSource, sha256, csvCell, csv, fmtBytes, ensureDir, rootOf } from './lib.mjs';
 
 // ---------------------------------------------------------------- args ----
-function parseArgs(argv) {
-  const a = { _: [] };
-  for (const tok of argv) {
-    if (tok.startsWith('--')) {
-      const [k, ...rest] = tok.slice(2).split('=');
-      a[k] = rest.length ? rest.join('=') : true;
-    } else a._.push(tok);
-  }
-  return a;
-}
 const ARGS = parseArgs(process.argv.slice(2));
-
-function printHelp() {
-  const banner = fs.readFileSync(new URL(import.meta.url)).toString()
-    .split('\n').filter(l => l.startsWith(' *') || l.startsWith('/**'))
-    .map(l => l.replace(/^\/\*\*| \*\/?/, '').replace(/^ /, '')).join('\n');
-  console.log(banner);
-}
-if (ARGS.help || ARGS.h) { printHelp(); process.exit(0); }
+if (ARGS.help || ARGS.h) { printHelpFromSource(import.meta.url); process.exit(0); }
 
 const isWin = process.platform === 'win32';
 const STAMP = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
@@ -96,7 +79,6 @@ function isUnder(child, parent) {
   const paSep = pa.endsWith(path.sep) ? pa : pa + path.sep;
   return c === pa || c.startsWith(paSep);
 }
-function rootOf(p) { return path.parse(path.resolve(p)).root; }
 function driveTag(p) { return rootOf(p).replace(/[:\\/]/g, '') || 'root'; }
 
 const PREF_ROOT = rootOf(CANONICAL);              // e.g. 'F:\'
@@ -116,18 +98,6 @@ function normRemote(url) {
   return u.replace(/\/+$/, '');
 }
 
-function sha256(file) {
-  try {
-    const h = crypto.createHash('sha256');
-    const fd = fs.openSync(file, 'r');
-    const buf = Buffer.alloc(1 << 20);
-    try { let n; while ((n = fs.readSync(fd, buf, 0, buf.length, null)) > 0) h.update(buf.subarray(0, n)); }
-    finally { fs.closeSync(fd); }
-    return h.digest('hex');
-  } catch { return ''; }
-}
-
-function ensureDir(d) { fs.mkdirSync(d, { recursive: true }); }
 function copyRecursive(src, dest) {
   const st = fs.lstatSync(src);
   if (st.isDirectory()) {
@@ -150,14 +120,6 @@ function quarantineDest(srcPath) {
   const rel = path.relative(rootOf(srcPath), srcPath);
   return path.join(QUARANTINE, driveTag(srcPath), rel);
 }
-
-function fmtBytes(n) {
-  const u = ['B', 'KB', 'MB', 'GB', 'TB']; let i = 0;
-  while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
-  return `${n.toFixed(i ? 1 : 0)} ${u[i]}`;
-}
-function csvCell(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; }
-function csv(rows) { return rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n'; }
 
 // ------------------------------------------------------- filesystem walk ---
 const repos = [];

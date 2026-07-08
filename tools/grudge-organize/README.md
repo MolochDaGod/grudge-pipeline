@@ -82,28 +82,43 @@ node tools/grudge-organize/grudge-organize.mjs --include-repo-files --consolidat
 ## Offloading assets to object storage (`grudge-asset-offload.mjs`)
 The biggest, systemic bloat is heavy binary assets (textures, models, zips)
 mirrored across deploy folders and repos. The durable fix is to host **one
-copy** in object storage and reference it by URL. This companion tool uploads
-each unique asset to your **Cloudflare R2** bucket using **content-addressed**
-keys (`assets/<sha256>.<ext>`), so every duplicate across every repo collapses
-to a single object automatically.
+copy** in object storage and reference it by URL. This companion tool folds
+every duplicate across every repo into a single **content-addressed** object
+(`assets/<sha256>.<ext>`) and uploads it through the **proper API + data path**.
 It is **safe by default** (dry-run) and **never edits or deletes your files** —
 it only uploads copies and writes a manifest you use to update references.
+### Upload targets
+- **`--target=api` (default)** — uploads via the Grudge **ObjectStore Worker**
+  (`POST {OBJECTSTORE_WORKER_URL}/v1/assets`, multipart), the same canonical
+  path `grudge-pipeline` uses. Each asset is **registered in the D1 catalog**
+  with a proper `category` (inferred: texture/model/audio/video/archive),
+  `tags`, and `metadata` (sha256, size, source paths), stored in R2, and served
+  via the CDN. This is proper API + data usage, not a raw blob dump.
+- **`--target=r2`** — fallback that writes straight to an R2 bucket with the S3
+  API (no catalog registration), for when the Worker is unavailable.
 ```bash
 # 1) Dry-run: inventory + manifest (no credentials needed)
 node tools/grudge-organize/grudge-asset-offload.mjs --repo=F:\github\Dungeon-Crawler-Quest
-# 2) Upload one copy of each unique asset to R2 (needs R2_* env vars)
+# 2) Upload one copy of each unique asset via the catalog API
 node tools/grudge-organize/grudge-asset-offload.mjs --repo=F:\github\Dungeon-Crawler-Quest --apply
 ```
-Required env for `--apply`: `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`,
-`R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (and `R2_PUBLIC_BASE_URL` for the manifest
-URLs). These match `grudge-pipeline`'s `.env.example`.
+Env for `--apply` (api): `OBJECTSTORE_WORKER_URL`, `OBJECTSTORE_API_KEY`
+(or `INTERNAL_API_KEY`), `PUBLIC_CDN_URL`. For `--target=r2`: `R2_ENDPOINT`,
+`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`.
+These match `grudge-pipeline`'s `.env.example` and `api/index.ts`.
 Outputs (in `--report-dir`): `offload-manifest.csv` / `.json`
-(source path -> object key -> public URL) and `gitignore-suggestions.txt`.
+(source path -> object key -> category -> public URL), `gitignore-suggestions.txt`,
+and (after `--apply --target=api`) `upload-results.json` with the catalog id +
+CDN URL per asset.
 Recommended sequence:
 1. Dry-run and review `offload-manifest.csv`.
 2. `--apply` to upload; confirm the URLs load in a browser.
 3. Update code references from local paths to the object-storage URLs.
 4. After verifying, `git rm` the local copies and add the gitignore entries.
+## Shared code
+Both CLIs share one module, `lib.mjs` (arg parsing, SHA-256, CSV, byte
+formatting, path helpers), so there is a single source of truth and no
+duplicated helper logic across the tools.
 ## Reclaiming git *clone* size (advanced / destructive)
 Deleting big files in a normal commit stops future bloat but the blobs stay in
 history, so `git clone` size is unchanged. To actually shrink the repo you must
