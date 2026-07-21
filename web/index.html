@@ -3,76 +3,212 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grudge Pipeline — 3D Model Browser</title>
+  <title>Grudge Pipeline — Asset Browser</title>
   <link rel="stylesheet" href="css/pipeline.css">
 </head>
 <body>
   <div class="container">
     <header class="header">
-      <h1>⚔️ Grudge Pipeline</h1>
-      <p class="subtitle">3D Model Browser — 1,053+ GLB models powered by Three.js
-        <span class="r2-status checking" id="r2Status"><span class="r2-dot"></span> Checking R2…</span>
-      </p>
+      <div>
+        <h1>Grudge Pipeline</h1>
+        <p class="subtitle">
+          Fleet asset browser — UUID verify · snapshot thumbs · anim-on-character
+          <span class="r2-status checking" id="r2Status"><span class="r2-dot"></span> Catalog…</span>
+        </p>
+      </div>
+      <div class="header-links">
+        <a href="https://assets.grudge-studio.com" target="_blank" rel="noreferrer">CDN</a>
+        <a href="https://open.grudge-studio.com" target="_blank" rel="noreferrer">Open</a>
+        <a href="https://api.grudge-studio.com/assets?limit=5" target="_blank" rel="noreferrer">D1 API</a>
+      </div>
     </header>
 
     <div class="stats-bar" id="statsBar">
-      <div class="stat-item"><span class="stat-label">Total Models</span><span class="stat-value" id="totalModels">—</span></div>
-      <div class="stat-item"><span class="stat-label">Categories</span><span class="stat-value" id="totalCategories">—</span></div>
-      <div class="stat-item"><span class="stat-label">Total Size</span><span class="stat-value" id="totalSize">—</span></div>
-      <div class="stat-item"><span class="stat-label">Pipeline</span><span class="stat-value">v1.0</span></div>
-    </div>
-
-    <!-- Drop zone -->
-    <div class="drop-zone" id="dropZone">
-      <div style="font-size:3rem;margin-bottom:8px;opacity:0.4;">📦</div>
-      <div style="color:var(--text-dim);font-size:0.9rem;">Drag & drop a GLB/GLTF file to preview in 3D</div>
-      <input type="file" id="fileInput" accept=".glb,.gltf" style="display:none;">
+      <div class="stat-item"><span class="stat-label">Assets</span><span class="stat-value" id="totalModels">—</span></div>
+      <div class="stat-item"><span class="stat-label">Groups</span><span class="stat-value" id="totalCategories">—</span></div>
+      <div class="stat-item"><span class="stat-label">Visible</span><span class="stat-value" id="visibleCount">—</span></div>
+      <div class="stat-item"><span class="stat-label">Sources</span><span class="stat-value" id="sourceCount">—</span></div>
+      <div class="stat-item"><span class="stat-label">UUID OK</span><span class="stat-value" id="uuidOkCount">—</span></div>
+      <div class="stat-item"><span class="stat-label">Thumbs</span><span class="stat-value" id="thumbCount">—</span></div>
     </div>
 
     <div class="controls">
-      <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search models by name, category...">
-      <div class="filter-row" id="categoryFilters"></div>
+      <div class="search-row">
+        <input type="search" class="search-box" id="searchBox"
+          placeholder="Search name, path, group, uuid, bones… (e.g. sword walk bip001 glb)"
+          autocomplete="off" spellcheck="false">
+        <select id="sortSelect" class="sort-select" title="Sort">
+          <option value="name">Name</option>
+          <option value="group">Group</option>
+          <option value="size">Size</option>
+          <option value="format">Format</option>
+          <option value="uuid">UUID status</option>
+        </select>
+      </div>
+      <div class="action-row">
+        <button type="button" class="action-btn" id="btnVerifyUuid" title="Verify grudgeUuid format + D1 / r2Key hash">
+          Verify UUIDs
+        </button>
+        <button type="button" class="action-btn" id="btnSnapPage" title="Render 3D snapshots for this page">
+          Snapshot page
+        </button>
+        <button type="button" class="action-btn" id="btnSnapVisible" title="Queue snapshots for all filtered (capped)">
+          Snapshot filtered
+        </button>
+        <span class="action-status" id="actionStatus"></span>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-label">Kind</div>
+        <div class="filter-row" id="kindFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Group</div>
+        <div class="filter-row" id="categoryFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Format</div>
+        <div class="filter-row" id="formatFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Source</div>
+        <div class="filter-row" id="sourceFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">UUID</div>
+        <div class="filter-row" id="uuidFilters"></div>
+      </div>
     </div>
 
-    <!-- Loading -->
-    <div class="loading" id="loadingState"><div class="spinner"></div><p>Loading model catalog…</p></div>
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">📦</div>
+      <div class="drop-text">Drop GLB / GLTF / FBX to preview · animations play on grudge6 character</div>
+      <input type="file" id="fileInput" accept=".glb,.gltf,.fbx" style="display:none">
+    </div>
 
-    <!-- Results -->
-    <div id="resultsArea" style="display:none;">
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+      <p>Loading fleet catalog (D1 + ObjectStore + grudge6)…</p>
+    </div>
+
+    <div id="resultsArea" style="display:none">
       <div class="results-header">
-        <span class="results-title" id="resultsTitle">All Models</span>
+        <span class="results-title" id="resultsTitle">All assets</span>
         <span class="results-count" id="resultsCount"></span>
       </div>
       <div class="model-grid" id="modelGrid"></div>
       <div class="pagination" id="pagination"></div>
     </div>
-    <div class="empty-state" id="emptyState" style="display:none;">
-      <div style="font-size:4rem;margin-bottom:12px;opacity:0.3;">🔍</div>
-      <h3>No models found</h3>
-      <p>Try adjusting your search or filters</p>
-    </div>
 
-    <!-- 3D Viewer Overlay -->
-    <div class="viewer-overlay" id="viewerOverlay">
-      <div class="viewer-header">
-        <span class="viewer-title" id="viewerTitle">Model Viewer</span>
-        <span class="viewer-info" id="viewerInfo"></span>
-        <button class="viewer-close" onclick="closeViewer()">✕ Close</button>
-      </div>
-      <div class="viewer-canvas-wrap" id="viewerCanvasWrap">
-        <div class="viewer-loading" id="viewerLoading"><div class="spinner"></div><p>Loading model…</p></div>
-      </div>
-      <div class="viewer-controls">
-        <button class="viewer-btn" onclick="toggleWireframe()">Wireframe</button>
-        <button class="viewer-btn" onclick="toggleAutoRotate()">Auto Rotate</button>
-        <select class="anim-select-3d" id="animSelect" onchange="playAnimation(this.value)" style="display:none">
-          <option value="">— Animations —</option>
-        </select>
-      </div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <h3>No assets match</h3>
+      <p>Clear filters or try a different search token</p>
     </div>
   </div>
 
-  <!-- Three.js CDN -->
+  <!-- 3D Viewer -->
+  <div class="viewer-overlay" id="viewerOverlay">
+    <div class="viewer-header">
+      <span class="viewer-title" id="viewerTitle">Viewer</span>
+      <span class="viewer-info" id="viewerInfo"></span>
+      <button type="button" class="viewer-close" id="viewerCloseBtn">✕ Close</button>
+    </div>
+    <div class="viewer-body">
+      <div class="viewer-canvas-wrap" id="viewerCanvasWrap">
+        <div class="viewer-loading" id="viewerLoading">
+          <div class="spinner"></div>
+          <p>Loading…</p>
+        </div>
+      </div>
+      <aside class="viewer-side" id="viewerSide">
+        <h3>Use in fleet</h3>
+        <div class="use-panel" id="usePanel">
+          <div class="use-row">
+            <label>grudgeUuid</label>
+            <code id="useUuid">—</code>
+            <button type="button" class="copy-btn" data-copy="useUuid">Copy</button>
+          </div>
+          <div class="use-row">
+            <label>r2Key</label>
+            <code id="useR2">—</code>
+            <button type="button" class="copy-btn" data-copy="useR2">Copy</button>
+          </div>
+          <div class="use-row">
+            <label>cdnUrl</label>
+            <code id="useCdn">—</code>
+            <button type="button" class="copy-btn" data-copy="useCdn">Copy</button>
+          </div>
+          <div class="use-row">
+            <label>anim pack</label>
+            <code id="useAnimPack">—</code>
+            <button type="button" class="copy-btn" data-copy="useAnimPack">Copy</button>
+          </div>
+          <div class="use-row">
+            <label>meshName</label>
+            <code id="useMeshName">—</code>
+            <button type="button" class="copy-btn" data-copy="useMeshName">Copy</button>
+          </div>
+          <div class="use-ready" id="useReady"></div>
+          <label class="use-snippet-label">Import snippet</label>
+          <textarea id="useSnippet" class="use-snippet" readonly rows="7"></textarea>
+          <div class="use-actions">
+            <button type="button" class="action-btn" id="btnCopySnippet">Copy snippet</button>
+            <button type="button" class="action-btn" id="btnCopyAll">Copy all fields</button>
+            <button type="button" class="action-btn" id="btnShareLink">Copy deep link</button>
+          </div>
+          <p class="use-flash" id="useFlash" hidden></p>
+        </div>
+
+        <h3>Deploy check</h3>
+        <dl class="diag" id="diagList">
+          <div><dt>Height</dt><dd id="diagHeight">—</dd></div>
+          <div><dt>Feet minY</dt><dd id="diagFeet">—</dd></div>
+          <div><dt>Art forward</dt><dd id="diagForward">+Z</dd></div>
+          <div><dt>Bones</dt><dd id="diagBones">—</dd></div>
+          <div><dt>Pelvis</dt><dd id="diagPelvis">—</dd></div>
+          <div><dt>Hands</dt><dd id="diagHands">—</dd></div>
+          <div><dt>Materials</dt><dd id="diagMats">—</dd></div>
+          <div><dt>Textures</dt><dd id="diagTex">—</dd></div>
+          <div><dt>Mode</dt><dd id="diagMode">—</dd></div>
+        </dl>
+
+        <h3>Multipack meshes <span class="mesh-count" id="meshCount"></span></h3>
+        <div class="mesh-toolbar">
+          <button type="button" class="viewer-btn" id="btnMeshAll">All</button>
+          <button type="button" class="viewer-btn" id="btnMeshNone">None</button>
+          <button type="button" class="viewer-btn" id="btnMeshSolo" title="Solo selected">Solo</button>
+        </div>
+        <div class="mesh-list" id="meshList"><em class="dim">Load a multipack to isolate meshName</em></div>
+
+        <h3>Bone names</h3>
+        <div class="bone-list" id="boneList"></div>
+        <h3>Clips</h3>
+        <div class="clip-list" id="clipList"></div>
+      </aside>
+    </div>
+    <div class="viewer-controls">
+      <button type="button" class="viewer-btn" id="btnWire">Wireframe</button>
+      <button type="button" class="viewer-btn" id="btnRotate">Auto rotate</button>
+      <button type="button" class="viewer-btn" id="btnGrid">Grid</button>
+      <label class="viewer-check">
+        <input type="checkbox" id="chkAnimOnChar" checked>
+        Play anims on character
+      </label>
+      <select class="anim-select-3d" id="previewRace" title="Character kit for anim clips">
+        <option value="western-kingdoms">WK (human)</option>
+        <option value="barbarians">Barbarian</option>
+        <option value="high-elves">Elf</option>
+        <option value="dwarves">Dwarf</option>
+        <option value="orcs">Orc</option>
+        <option value="undead">Undead</option>
+      </select>
+      <select class="anim-select-3d" id="animSelect" style="display:none">
+        <option value="">— Animations —</option>
+      </select>
+    </div>
+  </div>
+
   <script type="importmap">
   {
     "imports": {
