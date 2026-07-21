@@ -1,32 +1,54 @@
 /**
- * Category-aware deploy checks & scale rules for fleet assets.
+ * Category-aware deploy checks — human-relative SI world scale.
  *
- * Characters use ~1.7–1.8 m height. Projectiles / arrows must NOT —
- * a 0.6–0.9 m shaft is correct. Each kind has its own best-practice
- * profile: scale axis, meter range, physics layer, scripts, bones, tex.
+ * Yardstick: HUMAN_HEIGHT_M = 1.8 m (average adult). All kinds report
+ * metres and human-multiples so the panel knows what it's looking at.
+ *
+ * @see worldScale.js
+ * @see characterDeploy.js
  */
+import {
+  HUMAN_HEIGHT_M,
+  WORLD_REFERENCE_M,
+  WORLD_SIZE_BANDS,
+  computeWorldScale,
+  humanRelativeLabel,
+  diagnoseUnitScale,
+} from './worldScale.js';
 
-/** @typedef {'character'|'creature'|'weapon'|'projectile'|'prop'|'environment'|'animation'|'vfx'|'ui'|'other'} AssetKind */
+export { HUMAN_HEIGHT_M, humanRelativeLabel, diagnoseUnitScale, computeWorldScale };
+
+/**
+ * @typedef {'character'|'creature'|'weapon'|'projectile'|'prop'|'buildable'|'building'|'boat'|'vehicle'|'island'|'town'|'environment'|'animation'|'vfx'|'ui'|'other'} AssetKind
+ */
 
 /**
  * @typedef {object} DeployProfile
  * @property {AssetKind} kind
  * @property {string} label
  * @property {'height'|'longest'} scaleAxis
- * @property {number|null} targetMeters  preferred size when normalizing (null = never force)
- * @property {[number, number]} okRange  green band in meters
- * @property {[number, number]} warnRange  yellow band; outside = fail
- * @property {boolean} normalizeToTarget  if true and size outside okRange, fit to targetMeters
- * @property {boolean} unitFixCm  if measure looks like cm (>> okRange), scale ×0.01
+ * @property {number|null} targetMeters
+ * @property {[number, number]} okRange
+ * @property {[number, number]} warnRange
+ * @property {boolean} normalizeToTarget
+ * @property {boolean} unitFixCm
+ * @property {number} expectedM  reference for 100× detection
  * @property {'feet'|'bottom'|'center'} ground
  * @property {boolean} requirePelvis
  * @property {boolean} requireHands
  * @property {boolean} requireBones
  * @property {boolean} requireTexture
- * @property {string} physicsLayer  Forge / Rapier semantic layer
+ * @property {string} physicsLayer
  * @property {string[]} scriptHints
  * @property {string[]} notes
  */
+
+function band(kind) {
+  return WORLD_SIZE_BANDS[kind] || WORLD_SIZE_BANDS.other;
+}
+function ref(kind) {
+  return WORLD_REFERENCE_M[kind] || WORLD_REFERENCE_M.other;
+}
 
 /** @type {Record<string, DeployProfile>} */
 export const DEPLOY_PROFILES = {
@@ -34,9 +56,10 @@ export const DEPLOY_PROFILES = {
     kind: 'character',
     label: 'Character / hero',
     scaleAxis: 'height',
-    targetMeters: 1.8,
-    okRange: [1.55, 2.05],
-    warnRange: [1.4, 2.4],
+    targetMeters: HUMAN_HEIGHT_M,
+    expectedM: ref('character').expectedM,
+    okRange: band('character').ok,
+    warnRange: band('character').warn,
     normalizeToTarget: true,
     unitFixCm: true,
     ground: 'feet',
@@ -45,20 +68,21 @@ export const DEPLOY_PROFILES = {
     requireBones: true,
     requireTexture: true,
     physicsLayer: 'Player',
-    scriptHints: ['player-rpg', 'player-deathmatch', 'AnimationDirector gait'],
+    scriptHints: ['player-rpg', 'AnimationDirector'],
     notes: [
-      'Y-up, feet on y=0, art-forward +Z',
-      'Bip001 pelvis / hands for equip',
-      'Convert: --height 1.7 --cm-to-m + race atlas',
+      `World yardstick: human = ${HUMAN_HEIGHT_M} m`,
+      'Y-up, feet y=0, art-forward +Z',
+      'Convert: --height 1.7 --cm-to-m',
     ],
   },
   creature: {
     kind: 'creature',
-    label: 'Creature / NPC beast',
+    label: 'Creature / beast',
     scaleAxis: 'height',
     targetMeters: null,
-    okRange: [0.25, 4.5],
-    warnRange: [0.1, 8],
+    expectedM: ref('creature').expectedM,
+    okRange: band('creature').ok,
+    warnRange: band('creature').warn,
     normalizeToTarget: false,
     unitFixCm: true,
     ground: 'feet',
@@ -68,15 +92,16 @@ export const DEPLOY_PROFILES = {
     requireTexture: true,
     physicsLayer: 'NPC',
     scriptHints: ['enemy-rpg', 'nav-agent'],
-    notes: ['Do not force 1.8 m — author size is intentional'],
+    notes: ['Sized vs human — wolf ~0.7 m, horse ~1.6 m at withers, troll multi-human'],
   },
   weapon: {
     kind: 'weapon',
     label: 'Held weapon',
     scaleAxis: 'longest',
     targetMeters: null,
-    okRange: [0.25, 2.8],
-    warnRange: [0.12, 4.0],
+    expectedM: ref('weapon').expectedM,
+    okRange: band('weapon').ok,
+    warnRange: band('weapon').warn,
     normalizeToTarget: false,
     unitFixCm: true,
     ground: 'bottom',
@@ -85,20 +110,17 @@ export const DEPLOY_PROFILES = {
     requireBones: false,
     requireTexture: true,
     physicsLayer: 'Item',
-    scriptHints: ['equip hand bone R_hand_container', 'weapon anim pack'],
-    notes: [
-      'Relative to hand — never height-normalize to 1.8 m',
-      'Convert: no --height 1.7; embed atlas',
-    ],
+    scriptHints: ['hand bone attach'],
+    notes: ['Sword ~1 m — never character-fit to 1.8 m'],
   },
   projectile: {
     kind: 'projectile',
     label: 'Projectile (arrow / bolt / shell)',
     scaleAxis: 'longest',
     targetMeters: null,
-    // Medieval arrow ~0.7–0.9 m; bolts shorter; tower shells vary
-    okRange: [0.2, 1.2],
-    warnRange: [0.08, 2.0],
+    expectedM: ref('projectile').expectedM,
+    okRange: band('projectile').ok,
+    warnRange: band('projectile').warn,
     normalizeToTarget: false,
     unitFixCm: true,
     ground: 'center',
@@ -107,20 +129,17 @@ export const DEPLOY_PROFILES = {
     requireBones: false,
     requireTexture: true,
     physicsLayer: 'Projectile',
-    scriptHints: ['projectile script', 'ccd on Rapier body', 'layer Projectile'],
-    notes: [
-      'Arrows are ~0.6–0.9 m — NOT 1.8 m',
-      'Spawn along flight axis; do not character-fit',
-      'Texture atlas required (no 1×1 placeholders)',
-    ],
+    scriptHints: ['layer Projectile', 'CCD'],
+    notes: ['Arrow ~0.6–0.9 m (~0.4× human) — NOT 1.8 m'],
   },
   prop: {
     kind: 'prop',
-    label: 'Prop / deployable',
+    label: 'Prop / furniture / crate',
     scaleAxis: 'longest',
     targetMeters: null,
-    okRange: [0.05, 6],
-    warnRange: [0.02, 15],
+    expectedM: ref('prop').expectedM,
+    okRange: band('prop').ok,
+    warnRange: band('prop').warn,
     normalizeToTarget: false,
     unitFixCm: true,
     ground: 'bottom',
@@ -129,16 +148,96 @@ export const DEPLOY_PROFILES = {
     requireBones: false,
     requireTexture: true,
     physicsLayer: 'Default',
-    scriptHints: ['pickup-trigger', 'resource-node'],
-    notes: ['Match tile/SI units; box collider OK'],
+    scriptHints: ['pickup-trigger'],
+    notes: ['Crate ~0.5–1 m; barrel ~0.9 m; must match human reach'],
   },
-  environment: {
-    kind: 'environment',
-    label: 'Environment / building / terrain',
+  buildable: {
+    kind: 'buildable',
+    label: 'Buildable / placeable structure',
+    scaleAxis: 'height',
+    targetMeters: null,
+    expectedM: ref('buildable').expectedM,
+    okRange: band('buildable').ok,
+    warnRange: band('buildable').warn,
+    normalizeToTarget: false,
+    unitFixCm: true,
+    ground: 'bottom',
+    requirePelvis: false,
+    requireHands: false,
+    requireBones: false,
+    requireTexture: true,
+    physicsLayer: 'Terrain',
+    scriptHints: ['snap grid 1 m', 'kenney-build'],
+    notes: ['Walls ~2.5–3.5 m (door fits human); foundation tiles 1–2 m'],
+  },
+  building: {
+    kind: 'building',
+    label: 'Building / house / tower',
+    scaleAxis: 'height',
+    targetMeters: null,
+    expectedM: ref('building').expectedM,
+    okRange: band('building').ok,
+    warnRange: band('building').warn,
+    normalizeToTarget: false,
+    unitFixCm: true,
+    ground: 'bottom',
+    requirePelvis: false,
+    requireHands: false,
+    requireBones: false,
+    requireTexture: true,
+    physicsLayer: 'Terrain',
+    scriptHints: ['navmesh', 'surface Walk'],
+    notes: [
+      '1-storey ~3–4 m (≈2 humans); 2-storey ~6–8 m; tower multi-storey',
+      'Door clear height ≥ 2.0 m so 1.8 m human walks through',
+    ],
+  },
+  boat: {
+    kind: 'boat',
+    label: 'Boat / ship',
     scaleAxis: 'longest',
     targetMeters: null,
-    okRange: [1, 500],
-    warnRange: [0.5, 2000],
+    expectedM: ref('boat').expectedM,
+    okRange: band('boat').ok,
+    warnRange: band('boat').warn,
+    normalizeToTarget: false,
+    unitFixCm: true,
+    ground: 'bottom',
+    requirePelvis: false,
+    requireHands: false,
+    requireBones: false,
+    requireTexture: true,
+    physicsLayer: 'Default',
+    scriptHints: ['water layer', 'float Y'],
+    notes: ['Rowboat ~4–6 m LOA; coastal ship ~20–40 m; deck height vs human rail'],
+  },
+  vehicle: {
+    kind: 'vehicle',
+    label: 'Vehicle / cart / siege',
+    scaleAxis: 'longest',
+    targetMeters: null,
+    expectedM: ref('vehicle').expectedM,
+    okRange: band('vehicle').ok,
+    warnRange: band('vehicle').warn,
+    normalizeToTarget: false,
+    unitFixCm: true,
+    ground: 'bottom',
+    requirePelvis: false,
+    requireHands: false,
+    requireBones: false,
+    requireTexture: true,
+    physicsLayer: 'Default',
+    scriptHints: ['siege / mount'],
+    notes: ['Cart ~3–4 m; catapult base ~3–5 m; wheel height ~1 m'],
+  },
+  island: {
+    kind: 'island',
+    label: 'Island / zone terrain',
+    scaleAxis: 'longest',
+    targetMeters: null,
+    expectedM: ref('island').expectedM,
+    okRange: band('island').ok,
+    warnRange: band('island').warn,
     normalizeToTarget: false,
     unitFixCm: false,
     ground: 'bottom',
@@ -147,16 +246,55 @@ export const DEPLOY_PROFILES = {
     requireBones: false,
     requireTexture: true,
     physicsLayer: 'Terrain',
-    scriptHints: ['navmesh bake', 'surface Walk'],
-    notes: ['Large author scale OK; trimesh/heightfield carefully'],
+    scriptHints: ['heightfield', 'sector'],
+    notes: ['Hundreds of metres; human is a speck — do NOT fit to 1.8 m'],
+  },
+  town: {
+    kind: 'town',
+    label: 'Town / block / encampment',
+    scaleAxis: 'longest',
+    targetMeters: null,
+    expectedM: ref('town_block').expectedM,
+    okRange: band('town').ok,
+    warnRange: band('town').warn,
+    normalizeToTarget: false,
+    unitFixCm: true,
+    ground: 'bottom',
+    requirePelvis: false,
+    requireHands: false,
+    requireBones: false,
+    requireTexture: true,
+    physicsLayer: 'Terrain',
+    scriptHints: ['navmesh', 'spawn points'],
+    notes: ['Streets ≥ 3–4 m wide; blocks tens of metres'],
+  },
+  environment: {
+    kind: 'environment',
+    label: 'Environment / nature / large set',
+    scaleAxis: 'longest',
+    targetMeters: null,
+    expectedM: ref('environment').expectedM,
+    okRange: band('environment').ok,
+    warnRange: band('environment').warn,
+    normalizeToTarget: false,
+    unitFixCm: true,
+    ground: 'bottom',
+    requirePelvis: false,
+    requireHands: false,
+    requireBones: false,
+    requireTexture: true,
+    physicsLayer: 'Terrain',
+    scriptHints: ['navmesh'],
+    notes: ['Trees 5–25 m; cliffs large — size vs human silhouette'],
   },
   animation: {
     kind: 'animation',
-    label: 'Animation clip',
+    label: 'Animation (preview on human host)',
     scaleAxis: 'height',
-    targetMeters: 1.8,
-    okRange: [1.55, 2.05],
-    warnRange: [1.4, 2.4],
+    targetMeters: HUMAN_HEIGHT_M,
+    expectedM: HUMAN_HEIGHT_M,
+    okRange: band('animation').ok,
+    warnRange: band('animation').warn,
     normalizeToTarget: true,
     unitFixCm: true,
     ground: 'feet',
@@ -165,16 +303,17 @@ export const DEPLOY_PROFILES = {
     requireBones: true,
     requireTexture: false,
     physicsLayer: 'IgnoreRaycast',
-    scriptHints: ['play on grudge6 race kit', 'rematch Bip001'],
-    notes: ['Preview on character host — not empty armature'],
+    scriptHints: ['play on grudge6 kit'],
+    notes: ['Host must be 1.8 m human scale'],
   },
   vfx: {
     kind: 'vfx',
-    label: 'VFX / effect mesh',
+    label: 'VFX mesh',
     scaleAxis: 'longest',
     targetMeters: null,
-    okRange: [0.05, 8],
-    warnRange: [0.01, 20],
+    expectedM: ref('vfx').expectedM,
+    okRange: band('vfx').ok,
+    warnRange: band('vfx').warn,
     normalizeToTarget: false,
     unitFixCm: true,
     ground: 'center',
@@ -183,16 +322,17 @@ export const DEPLOY_PROFILES = {
     requireBones: false,
     requireTexture: false,
     physicsLayer: 'IgnoreRaycast',
-    scriptHints: ['spawn_vfx_prefab'],
-    notes: ['Scale is design-driven'],
+    scriptHints: ['spawn_vfx'],
+    notes: ['Design scale; report human-relative for AoE readability'],
   },
   ui: {
     kind: 'ui',
-    label: 'UI / 2D sheet',
+    label: 'UI / 2D',
     scaleAxis: 'longest',
     targetMeters: null,
-    okRange: [0.01, 2],
-    warnRange: [0.001, 5],
+    expectedM: ref('ui').expectedM,
+    okRange: band('ui').ok,
+    warnRange: band('ui').warn,
     normalizeToTarget: false,
     unitFixCm: false,
     ground: 'center',
@@ -209,8 +349,9 @@ export const DEPLOY_PROFILES = {
     label: 'Unclassified',
     scaleAxis: 'longest',
     targetMeters: null,
-    okRange: [0.05, 20],
-    warnRange: [0.01, 100],
+    expectedM: 2,
+    okRange: band('other').ok,
+    warnRange: band('other').warn,
     normalizeToTarget: false,
     unitFixCm: true,
     ground: 'bottom',
@@ -220,12 +361,11 @@ export const DEPLOY_PROFILES = {
     requireTexture: false,
     physicsLayer: 'Default',
     scriptHints: [],
-    notes: ['Classify asset (kind) for stricter checks'],
+    notes: ['Classify kind so 100× / human-relative checks apply'],
   },
 };
 
 /**
- * Infer kind with projectile/arrow priority over generic weapon.
  * @param {object} m
  * @returns {AssetKind}
  */
@@ -233,48 +373,77 @@ export function inferAssetKind(m) {
   if (!m) return 'other';
   const c = `${m.category || ''} ${m.group || ''} ${m.path || ''} ${m.name || ''} ${m.kind || ''}`.toLowerCase();
 
-  // Explicit first
-  if (m.kind && DEPLOY_PROFILES[m.kind] && m.kind !== 'other' && m.kind !== 'weapon') {
-    // re-check projectile override even if labeled weapon
-  }
-
   if (m.isBakedClip || c.includes('/anims/') || c.includes('animation') || m.scaleProfile === 'animation_clip') {
     return 'animation';
   }
-
-  // Projectiles before weapons (arrow/bolt/shell)
   if (
     /(?:^|[\s/_-])arrow(?:s)?(?:$|[\s/_-])/.test(c) ||
     c.includes('_arrow_') ||
-    c.includes('arrow_b') ||
-    c.includes('arrow_c') ||
     c.includes('projectile') ||
     c.includes('shell_arrow') ||
     c.includes('shell_ballista') ||
     c.includes('shell_cannon') ||
-    c.includes('shell_fire') ||
-    c.includes('crossbow_bolt') ||
-    c.includes('/bolts/') ||
-    (c.includes('bolt') && (c.includes('ammo') || c.includes('projectile') || c.includes('shell')))
+    c.includes('crossbow_bolt')
   ) {
     return 'projectile';
   }
-
   if (
     c.includes('weapon') ||
     c.includes('sword') ||
     c.includes('axe') ||
     c.includes('dagger') ||
-    c.includes('staff') ||
     c.includes('shield') ||
-    c.includes('hammer') ||
-    c.includes('/bow/') ||
-    c.includes('bows/') ||
     (c.includes('bow') && !c.includes('arrow'))
   ) {
     return 'weapon';
   }
-
+  if (c.includes('island') || c.includes('archipelago') || c.includes('zone_terrain')) {
+    return 'island';
+  }
+  if (c.includes('town') || c.includes('village') || c.includes('encampment') || c.includes('city_block')) {
+    return 'town';
+  }
+  if (
+    c.includes('boat') ||
+    c.includes('ship') ||
+    c.includes('vessel') ||
+    c.includes('galley') ||
+    c.includes('sloop')
+  ) {
+    return 'boat';
+  }
+  if (
+    c.includes('cart') ||
+    c.includes('wagon') ||
+    c.includes('vehicle') ||
+    c.includes('catapult') ||
+    c.includes('siege') ||
+    c.includes('boltthrower')
+  ) {
+    return 'vehicle';
+  }
+  if (
+    c.includes('buildable') ||
+    c.includes('placeable') ||
+    c.includes('foundation') ||
+    c.includes('wall_piece') ||
+    c.includes('kenney') ||
+    c.includes('prototype_kit')
+  ) {
+    return 'buildable';
+  }
+  if (
+    c.includes('building') ||
+    c.includes('house') ||
+    c.includes('tower') ||
+    c.includes('fortress') ||
+    c.includes('castle') ||
+    c.includes('barn') ||
+    c.includes('church') ||
+    c.includes('keep')
+  ) {
+    return 'building';
+  }
   if (
     c.includes('character') ||
     c.includes('grudge6/races') ||
@@ -284,116 +453,63 @@ export function inferAssetKind(m) {
   ) {
     return 'character';
   }
-
-  if (c.includes('creature') || c.includes('monster') || c.includes('animal') || c.includes('mount') || c.includes('cavalry')) {
+  if (c.includes('creature') || c.includes('monster') || c.includes('animal') || c.includes('mount') || c.includes('horse')) {
     return 'creature';
   }
-
   if (
     c.includes('environment') ||
     c.includes('terrain') ||
-    c.includes('building') ||
-    c.includes('tower') ||
-    c.includes('fortress') ||
     c.includes('nature') ||
-    c.includes('map-')
+    c.includes('tree') ||
+    c.includes('rock') ||
+    c.includes('cliff')
   ) {
     return 'environment';
   }
-
-  if (c.includes('vfx') || c.includes('effect') || c.includes('particle') || c.includes('fx/')) {
-    return 'vfx';
-  }
-
-  if (c.includes('prop') || c.includes('crate') || c.includes('furniture') || c.includes('pickup')) {
+  if (c.includes('vfx') || c.includes('effect') || c.includes('fx/')) return 'vfx';
+  if (c.includes('prop') || c.includes('crate') || c.includes('furniture') || c.includes('barrel')) {
     return 'prop';
   }
-
-  if (c.includes('ui/') || c.includes('icon') || c.includes('hud')) return 'ui';
-
+  if (c.includes('ui/') || c.includes('icon')) return 'ui';
   if (m.kind && DEPLOY_PROFILES[m.kind]) return /** @type {AssetKind} */ (m.kind);
   return 'other';
 }
 
-/**
- * @param {object} entry
- * @returns {DeployProfile}
- */
 export function getDeployProfile(entry) {
   const kind = inferAssetKind(entry);
   return DEPLOY_PROFILES[kind] || DEPLOY_PROFILES.other;
 }
 
-/**
- * Measure size for a profile (height vs longest edge).
- * @param {{ x: number, y: number, z: number }} size
- * @param {DeployProfile} profile
- */
 export function measureSize(size, profile) {
   if (profile.scaleAxis === 'height') return size.y || 0;
   return Math.max(size.x || 0, size.y || 0, size.z || 0);
 }
 
 /**
- * Decide uniform scale factor for deploy/preview.
- * Never force projectiles/weapons to character height.
- *
- * @param {number} measure  current meters on scaleAxis
- * @param {DeployProfile} profile
- * @returns {{ scale: number, reason: string, unitFixed: boolean, normalized: boolean }}
+ * Uniform scale for deploy — uses worldScale 100× detection.
+ * Unit decade is NEVER limited to 12× (that broke 100× correction).
  */
 export function computeDeployScale(measure, profile) {
-  let scale = 1;
-  let unitFixed = false;
-  let normalized = false;
-  let reason = 'author units kept';
-
-  if (!measure || !Number.isFinite(measure) || measure <= 0) {
-    return { scale: 1, reason: 'invalid measure', unitFixed: false, normalized: false };
-  }
-
-  // cm → m when clearly authored in centimeters
-  if (profile.unitFixCm) {
-    // e.g. 63 cm arrow stored as 63.0, or 180 cm hero
-    if (measure > 15 && measure < 500) {
-      scale *= 0.01;
-      measure *= 0.01;
-      unitFixed = true;
-      reason = 'cm→m (×0.01)';
-    } else if (measure >= 500) {
-      // mm or raw export junk
-      const pow = Math.pow(10, Math.round(Math.log10(1 / measure)));
-      // prefer decade steps toward ~1 m
-      const target = profile.targetMeters || 1;
-      const decade = Math.pow(10, Math.round(Math.log10(target / measure)));
-      scale *= decade;
-      measure *= decade;
-      unitFixed = true;
-      reason = `unit decade ×${decade}`;
-    }
-  }
-
-  // Character/anim: fit to target when outside ok band
-  if (
-    profile.normalizeToTarget &&
-    profile.targetMeters &&
-    (measure < profile.okRange[0] || measure > profile.okRange[1])
-  ) {
-    const fit = profile.targetMeters / measure;
-    const clamped = Math.min(12, Math.max(0.02, fit));
-    scale *= clamped;
-    measure *= clamped;
-    normalized = true;
-    reason = (unitFixed ? reason + ' · ' : '') + `fit → ${profile.targetMeters} m`;
-  }
-
-  return { scale, reason, unitFixed, normalized };
+  const result = computeWorldScale(measure, {
+    expectedM: profile.expectedM || HUMAN_HEIGHT_M,
+    targetM: profile.targetMeters,
+    normalizeToTarget: !!profile.normalizeToTarget,
+    okRange: profile.okRange,
+    maxFitClamp: 12,
+    minFitClamp: 0.02,
+  });
+  return {
+    scale: result.scale,
+    reason: result.reason,
+    unitFixed: result.unitScale !== 1,
+    normalized: result.normalized,
+    unitKind: result.unitKind,
+    afterM: result.afterM,
+    humanLabel: result.humanLabel,
+    ratio: result.ratio,
+  };
 }
 
-/**
- * Status for a numeric metric against ok/warn ranges.
- * @returns {'ok'|'warn'|'fail'}
- */
 export function bandStatus(value, okRange, warnRange) {
   if (value >= okRange[0] && value <= okRange[1]) return 'ok';
   if (value >= warnRange[0] && value <= warnRange[1]) return 'warn';
@@ -401,30 +517,7 @@ export function bandStatus(value, okRange, warnRange) {
 }
 
 /**
- * @typedef {object} CheckItem
- * @property {string} id
- * @property {string} label
- * @property {'ok'|'warn'|'fail'|'info'|'na'} status
- * @property {string} detail
- */
-
-/**
- * Build checklist after deployModel.
- *
  * @param {object} opts
- * @param {object} opts.entry
- * @param {DeployProfile} opts.profile
- * @param {number} opts.measure  post-scale size on profile axis
- * @param {{ x: number, y: number, z: number }} opts.size
- * @param {number} opts.minY
- * @param {string|null} opts.pelvis
- * @param {string|null} opts.handR
- * @param {string|null} opts.handL
- * @param {string[]} opts.bones
- * @param {{ mats?: number, withMap?: number, brokenMaps?: number, rebound?: number }} opts.mats
- * @param {string} opts.scaleReason
- * @param {boolean} opts.unitFixed
- * @param {boolean} opts.normalized
  */
 export function runDeployChecks(opts) {
   const {
@@ -441,50 +534,94 @@ export function runDeployChecks(opts) {
     scaleReason = '',
     unitFixed = false,
     normalized = false,
+    unitKind = '',
+    humanLabel = '',
   } = opts;
 
-  /** @type {CheckItem[]} */
+  /** @type {{ id: string, label: string, status: string, detail: string }[]} */
   const checks = [];
 
-  // Kind classification
+  checks.push({
+    id: 'yardstick',
+    label: 'World yardstick',
+    status: 'info',
+    detail: `1 unit = 1 m · human = ${HUMAN_HEIGHT_M} m · SI only`,
+  });
+
   checks.push({
     id: 'kind',
     label: 'Category',
     status: profile.kind === 'other' ? 'warn' : 'ok',
-    detail: `${profile.label} (${profile.kind})`,
+    detail: `${profile.label} (${profile.kind}) · expected ~${profile.expectedM} m`,
   });
 
-  // Scale / size
   const sizeStatus = bandStatus(measure, profile.okRange, profile.warnRange);
   const axisLabel = profile.scaleAxis === 'height' ? 'height' : 'longest edge';
+  const humans = measure / HUMAN_HEIGHT_M;
   checks.push({
     id: 'scale',
     label: `Scale (${axisLabel})`,
     status: sizeStatus,
-    detail: `${measure.toFixed(3)} m · ok ${profile.okRange[0]}–${profile.okRange[1]} m` +
-      (profile.targetMeters ? ` · target ${profile.targetMeters} m` : ' · no character-fit') +
-      (scaleReason ? ` · ${scaleReason}` : ''),
+    detail:
+      `${measure.toFixed(3)} m = ${humans.toFixed(2)}× human · ok ${profile.okRange[0]}–${profile.okRange[1]} m` +
+      (profile.targetMeters ? ` · target ${profile.targetMeters} m` : ' · no force-to-human') +
+      (scaleReason ? ` · ${scaleReason}` : '') +
+      (humanLabel ? ` · ${humanLabel}` : ''),
   });
+
+  // Explicit 100× detector report
+  const unitDiag = diagnoseUnitScale(measure, profile.expectedM || HUMAN_HEIGHT_M);
+  if (unitKind === 'x100' || unitDiag.kind === 'x100') {
+    checks.push({
+      id: 'unit-100x',
+      label: '100× unit error',
+      status: unitFixed || Math.abs(unitDiag.unitScale - 1) < 1e-9 ? 'warn' : 'fail',
+      detail: unitDiag.detail,
+    });
+  } else if (unitDiag.kind !== 'ok' && unitDiag.unitScale !== 1) {
+    checks.push({
+      id: 'unit-scale',
+      label: 'Unit scale',
+      status: unitFixed ? 'warn' : 'fail',
+      detail: unitDiag.detail,
+    });
+  } else {
+    checks.push({
+      id: 'unit-scale',
+      label: 'Unit scale',
+      status: 'ok',
+      detail: unitDiag.detail || 'SI metres',
+    });
+  }
 
   if (profile.kind === 'projectile' && measure > 1.5) {
     checks.push({
       id: 'scale-projectile-oversized',
       label: 'Projectile size',
       status: 'fail',
-      detail: `${measure.toFixed(2)} m is character-scale — arrows should be ~0.6–0.9 m. Do not fit to 1.8 m.`,
+      detail: `${measure.toFixed(2)} m is character-scale — arrows ~0.6–0.9 m. Never fit to ${HUMAN_HEIGHT_M} m.`,
     });
   }
 
-  if (normalized && (profile.kind === 'weapon' || profile.kind === 'projectile')) {
+  if (normalized && (profile.kind === 'weapon' || profile.kind === 'projectile' || profile.kind === 'building' || profile.kind === 'boat' || profile.kind === 'island')) {
     checks.push({
       id: 'bad-normalize',
       label: 'Normalize policy',
       status: 'fail',
-      detail: 'This kind must not be height-normalized to a hero. Check deploy profile.',
+      detail: `${profile.kind} must not be height-normalized to a hero. Use human-relative bands only.`,
     });
   }
 
-  // Grounding
+  // Buildings: door human clearance heuristic on height
+  if (profile.kind === 'building' && measure > 0 && measure < 2.0) {
+    checks.push({
+      id: 'building-too-short',
+      label: 'Building height',
+      status: 'fail',
+      detail: `${measure.toFixed(2)} m tall — shorter than human (${HUMAN_HEIGHT_M} m). Check 100× / cm units.`,
+    });
+  }
+
   if (profile.ground === 'feet' || profile.ground === 'bottom') {
     const gOk = Math.abs(minY) < 0.08;
     const gWarn = Math.abs(minY) < 0.25;
@@ -499,11 +636,10 @@ export function runDeployChecks(opts) {
       id: 'ground',
       label: 'Grounding',
       status: 'info',
-      detail: 'center spawn (projectile/vfx) — feet-on-floor not required',
+      detail: 'center spawn — feet-on-floor not required',
     });
   }
 
-  // Skeleton
   if (profile.requireBones) {
     checks.push({
       id: 'bones',
@@ -516,7 +652,7 @@ export function runDeployChecks(opts) {
       id: 'bones',
       label: 'Skeleton',
       status: 'na',
-      detail: bones.length ? `${bones.length} bones (optional for this kind)` : 'not required',
+      detail: bones.length ? `${bones.length} bones (optional)` : 'not required',
     });
   }
 
@@ -525,10 +661,9 @@ export function runDeployChecks(opts) {
       id: 'pelvis',
       label: 'Pelvis / hips',
       status: pelvis ? 'ok' : 'fail',
-      detail: pelvis || 'missing — need Bip001 Pelvis for equip/ground',
+      detail: pelvis || 'missing Bip001 Pelvis',
     });
   }
-
   if (profile.requireHands) {
     const both = handR && handL;
     checks.push({
@@ -539,39 +674,21 @@ export function runDeployChecks(opts) {
     });
   }
 
-  // Textures
   const withMap = mats.withMap ?? 0;
   const matCount = mats.mats ?? 0;
-  const broken = mats.brokenMaps ?? 0;
   if (profile.requireTexture) {
     let texStatus = 'fail';
     let texDetail = 'no maps';
-    if (withMap > 0 && broken === 0) {
+    if (withMap > 0 && !(mats.brokenMaps > 0)) {
       texStatus = 'ok';
       texDetail = `${withMap}/${matCount} mapped`;
     } else if (mats.rebound > 0) {
       texStatus = 'warn';
-      texDetail = `rebound ${mats.rebound} atlas — re-bake GLB for production`;
-    } else if (withMap === 0) {
-      texStatus = 'fail';
-      texDetail = 'untextured / 1×1 placeholder — yellow in viewer';
+      texDetail = `rebound ${mats.rebound} — re-bake for production`;
     }
-    checks.push({
-      id: 'texture',
-      label: 'Textures',
-      status: texStatus,
-      detail: texDetail,
-    });
-  } else {
-    checks.push({
-      id: 'texture',
-      label: 'Textures',
-      status: withMap > 0 ? 'ok' : 'info',
-      detail: withMap > 0 ? `${withMap}/${matCount} mapped` : 'optional for this kind',
-    });
+    checks.push({ id: 'texture', label: 'Textures', status: texStatus, detail: texDetail });
   }
 
-  // Physics layer
   checks.push({
     id: 'layer',
     label: 'Physics layer',
@@ -579,52 +696,48 @@ export function runDeployChecks(opts) {
     detail: profile.physicsLayer,
   });
 
-  // Scripts
   if (profile.scriptHints.length) {
     checks.push({
       id: 'scripts',
-      label: 'Script / runtime hints',
+      label: 'Script / runtime',
       status: 'info',
       detail: profile.scriptHints.join(' · '),
     });
   }
 
-  // UUID / CDN
   if (entry?.grudgeUuid) {
     checks.push({
       id: 'uuid',
       label: 'grudgeUuid',
       status: entry.uuidStatus === 'ok' || entry.uuidStatus === 'derived' ? 'ok' : 'warn',
-      detail: `${entry.grudgeUuid} (${entry.uuidStatus || '?'})`,
+      detail: `${entry.grudgeUuid}`,
     });
   } else {
     checks.push({
       id: 'uuid',
       label: 'grudgeUuid',
       status: 'warn',
-      detail: 'missing — register for fleet Use panel',
+      detail: 'missing',
     });
   }
 
-  // Notes
   for (const n of profile.notes) {
-    checks.push({
-      id: `note-${n.slice(0, 12)}`,
-      label: 'Best practice',
-      status: 'info',
-      detail: n,
-    });
+    checks.push({ id: `note-${n.slice(0, 16)}`, label: 'Best practice', status: 'info', detail: n });
   }
 
   const summary = {
     kind: profile.kind,
     label: profile.label,
     measure,
+    humans: measure / HUMAN_HEIGHT_M,
+    humanHeightM: HUMAN_HEIGHT_M,
     size: { x: size.x, y: size.y, z: size.z },
     axis: profile.scaleAxis,
     okRange: profile.okRange,
+    expectedM: profile.expectedM,
     physicsLayer: profile.physicsLayer,
     unitFixed,
+    unitKind,
     normalized,
     scaleReason,
     fail: checks.filter((c) => c.status === 'fail').length,
@@ -636,10 +749,7 @@ export function runDeployChecks(opts) {
   return { profile, checks, summary };
 }
 
-/**
- * Score 0–100 for Use panel readiness (category-aware).
- */
-export function deployScore(summary, checks) {
+export function deployScore(summary) {
   if (!summary) return 0;
   let score = 40;
   score += Math.min(30, summary.ok * 5);

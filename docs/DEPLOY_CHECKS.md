@@ -1,7 +1,10 @@
-# Category deploy checks
+# Category deploy checks + world SI scale
 
 Fleet assets are **not** all characters. Deploy validation and preview scale
 must follow **kind-specific** best practices.
+
+**Yardstick:** `HUMAN_HEIGHT_M = 1.8` · **1 unit = 1 metre**.  
+See also `web/js/worldScale.js` and skill **`grudge-world-scale`**.
 
 ## Why
 

@@ -26,10 +26,12 @@ import * as THREE from 'three';
 export const CHARACTER_TARGET_HEIGHT_M = 1.8;
 export const CHARACTER_ART_FORWARD = new THREE.Vector3(0, 0, 1);
 
-const MAX_SCALE = 12;
-const MIN_SCALE = 0.02;
+/** Aesthetic fit clamp only — unit decade (100×) is applied separately and NOT clamped here. */
+const MAX_FIT = 12;
+const MIN_FIT = 0.02;
 const MIN_NATIVE_M = 0.05;
 const MAX_NATIVE_M = 50;
+const HUMAN_HEIGHT_M = 1.8;
 
 export function prepareSkinnedMeasure(root) {
   root.updateWorldMatrix(true, true);
@@ -94,7 +96,11 @@ function powerOfTenToward(reference, current) {
 }
 
 /**
- * Height fit + unit snap. Does NOT set facing or final ground (caller does full deploy).
+ * Height fit + unit snap toward {@link CHARACTER_TARGET_HEIGHT_M} (1.8 m human).
+ *
+ * KILL: clamping the **unit decade** (100×) to 12 — that left heroes wrong and
+ * made the deploy check unable to "see" real metres. Unit snap is unclamped;
+ * only the residual aesthetic fit is limited to [MIN_FIT, MAX_FIT].
  */
 export function fitCharacterHeight(model, targetM = CHARACTER_TARGET_HEIGHT_M, authorScale = 1) {
   model.scale.set(1, 1, 1);
@@ -103,23 +109,45 @@ export function fitCharacterHeight(model, targetM = CHARACTER_TARGET_HEIGHT_M, a
 
   const nativeHeight = bodyBox(model).getSize(new THREE.Vector3()).y || 1;
   let unitFix = 1;
-  if (nativeHeight < MIN_NATIVE_M || nativeHeight > MAX_NATIVE_M) {
+
+  // Always diagnose vs human 1.8 m — catch 100× even when native is "in band" wrong
+  const ratio = nativeHeight / (targetM || HUMAN_HEIGHT_M);
+  if (ratio >= 70 && ratio <= 140) {
+    unitFix = 0.01; // classic cm-as-m / 100×
+  } else if (ratio >= 1 / 140 && ratio <= 1 / 70) {
+    unitFix = 100;
+  } else if (ratio >= 7 && ratio <= 14) {
+    unitFix = 0.1;
+  } else if (ratio >= 1 / 14 && ratio <= 1 / 7) {
+    unitFix = 10;
+  } else if (nativeHeight < MIN_NATIVE_M || nativeHeight > MAX_NATIVE_M) {
     unitFix = powerOfTenToward(targetM, nativeHeight);
+  } else if (nativeHeight > 15 && nativeHeight < 500) {
+    // Absolute cm band (e.g. 180) even if ratio vs 1.8 is exactly 100
+    unitFix = 0.01;
   }
+
   model.scale.setScalar(unitFix);
   prepareSkinnedMeasure(model);
   const midH = bodyBox(model).getSize(new THREE.Vector3()).y || targetM;
   let fit = midH > 1e-6 ? (targetM / midH) * authorScale : authorScale;
   if (!Number.isFinite(fit) || fit <= 0) fit = 1;
-  fit = Math.min(MAX_SCALE, Math.max(MIN_SCALE, fit));
+  // Residual fit only — unitFix already applied unclamped
+  fit = Math.min(MAX_FIT, Math.max(MIN_FIT, fit));
   model.scale.setScalar(unitFix * fit);
   prepareSkinnedMeasure(model);
   model.userData.grudgeHeightFit = true;
+  model.userData.grudgeUnitFix = unitFix;
+  model.userData.grudgeNativeHeight = nativeHeight;
+  const heightM = bodyBox(model).getSize(new THREE.Vector3()).y || targetM;
   return {
     scale: unitFix * fit,
     nativeHeight,
     unitFix,
-    heightM: bodyBox(model).getSize(new THREE.Vector3()).y || targetM,
+    fit,
+    heightM,
+    humanMultiple: heightM / HUMAN_HEIGHT_M,
+    unitKind: unitFix === 0.01 || unitFix === 100 ? 'x100' : unitFix === 1 ? 'ok' : 'decade',
   };
 }
 

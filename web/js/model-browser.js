@@ -831,6 +831,7 @@ function deployModel(root, { facePlusZ, entry = null } = {}) {
       importPipeline: root.userData.importPipeline,
     });
     const look = diagnoseCharacterLook(root);
+    const uf = root.userData.grudgeUnitFix ?? d.fit?.unitFix ?? 1;
     return {
       height: d.heightM,
       measure: d.measure,
@@ -841,11 +842,14 @@ function deployModel(root, { facePlusZ, entry = null } = {}) {
       handL: d.handL,
       bones: d.bones,
       profile,
-      scaleReason: d.facingApplied
-        ? 'characterDeploy · art-forward +Z'
-        : 'characterDeploy',
-      unitFixed: false,
+      scaleReason:
+        (d.facingApplied ? 'characterDeploy · art-forward +Z' : 'characterDeploy') +
+        (uf !== 1 ? ` · unit×${uf}` : '') +
+        ` · ${(d.measure / 1.8).toFixed(2)}× human`,
+      unitFixed: uf !== 1,
+      unitKind: uf === 0.01 || uf === 100 ? 'x100' : uf === 1 ? 'ok' : 'decade',
       normalized: true,
+      humanLabel: `${d.measure.toFixed(2)} m (${(d.measure / 1.8).toFixed(2)}× human tall)`,
       facingApplied: d.facingApplied,
       lookIssues: look.issues,
     };
@@ -865,10 +869,8 @@ function deployModel(root, { facePlusZ, entry = null } = {}) {
   let size = box.getSize(new THREE.Vector3());
   let measure = measureSize(size, profile) || 1;
 
-  const { scale, reason, unitFixed, normalized } = computeDeployScale(
-    measure,
-    profile,
-  );
+  const scaled = computeDeployScale(measure, profile);
+  const { scale, reason, unitFixed, normalized } = scaled;
   if (scale !== 1) {
     root.scale.multiplyScalar(scale);
     root.updateWorldMatrix(true, true);
@@ -919,6 +921,8 @@ function deployModel(root, { facePlusZ, entry = null } = {}) {
     profile,
     scaleReason: reason,
     unitFixed,
+    unitKind: scaled.unitKind,
+    humanLabel: scaled.humanLabel,
     normalized,
   };
 }
@@ -1098,6 +1102,8 @@ function setDiag(info, mats, mode, entry = null) {
     scaleReason: info.scaleReason || '',
     unitFixed: !!info.unitFixed,
     normalized: !!info.normalized,
+    unitKind: info.unitKind || '',
+    humanLabel: info.humanLabel || '',
   });
 
   const statusClass = (s) =>
