@@ -46,6 +46,14 @@ import {
   runDeployChecks,
   deployScore,
 } from './deployChecks.js';
+import {
+  deployCharacterModel,
+  reGroundAfterAnimSample,
+  stripPositionTracks,
+  diagnoseCharacterLook,
+  bodyBox as charBodyBox,
+  prepareSkinnedMeasure,
+} from './characterDeploy.js';
 
 // ── Fleet hosts ────────────────────────────────────────
 const R2 = 'https://assets.grudge-studio.com';
@@ -788,13 +796,62 @@ function bodyBox(root) {
 
 /**
  * Deploy/preview placement with **category-aware** scale rules.
- * Characters → ~1.8 m height. Projectiles/weapons → author meters (unit-fix only).
+ * Characters / anim hosts → characterDeploy SSOT (kills hip-float + sideways).
+ * Projectiles/weapons → author meters (never 1.8 m character-fit).
  *
  * @param {THREE.Object3D} root
- * @param {{ facePlusZ?: boolean, entry?: object|null }} opts
+ * @param {{ facePlusZ?: boolean|'auto', entry?: object|null }} opts
  */
-function deployModel(root, { facePlusZ = false, entry = null } = {}) {
+function deployModel(root, { facePlusZ, entry = null } = {}) {
   const profile = getDeployProfile(entry || {});
+
+  // ── Characters & anim hosts: SSOT characterDeploy (never facePlusZ:false on FBX) ──
+  if (
+    profile.kind === 'character' ||
+    profile.kind === 'animation' ||
+    profile.kind === 'creature'
+  ) {
+    root.userData.sourceUrl = entry?.cdnUrl || entry?.path || root.userData.sourceUrl;
+    if (!root.userData.importPipeline) {
+      root.userData.importPipeline =
+        /\.fbx($|\?)/i.test(String(entry?.path || entry?.cdnUrl || '')) ||
+        /grudge6\/races|Characters\.fbx/i.test(String(entry?.path || entry?.cdnUrl || ''))
+          ? 'fbx-atlas'
+          : root.userData.importPipeline || 'fbx-atlas';
+    }
+    // KILL facePlusZ:false on grudge6 FBX — default auto applies π/2 art-forward +Z
+    const face =
+      facePlusZ === false
+        ? 'auto' // ignore false — was the sideways bug
+        : facePlusZ === true
+          ? true
+          : 'auto';
+    const d = deployCharacterModel(root, {
+      facePlusZ: face,
+      importPipeline: root.userData.importPipeline,
+    });
+    const look = diagnoseCharacterLook(root);
+    return {
+      height: d.heightM,
+      measure: d.measure,
+      size: d.size,
+      minY: d.minY,
+      pelvis: d.pelvis,
+      handR: d.handR,
+      handL: d.handL,
+      bones: d.bones,
+      profile,
+      scaleReason: d.facingApplied
+        ? 'characterDeploy · art-forward +Z'
+        : 'characterDeploy',
+      unitFixed: false,
+      normalized: true,
+      facingApplied: d.facingApplied,
+      lookIssues: look.issues,
+    };
+  }
+
+  // ── Non-characters: category scale only ──
   root.scale.set(1, 1, 1);
   root.position.set(0, 0, 0);
   root.rotation.set(0, 0, 0);
@@ -817,11 +874,6 @@ function deployModel(root, { facePlusZ = false, entry = null } = {}) {
     root.updateWorldMatrix(true, true);
   }
 
-  if (facePlusZ && (profile.kind === 'character' || profile.kind === 'animation')) {
-    root.rotation.y = Math.PI / 2;
-    root.updateWorldMatrix(true, true);
-  }
-
   const pelvis =
     findBone(root, /bip001\s*pelvis/i) ||
     findBone(root, /pelvis/i) ||
@@ -830,26 +882,15 @@ function deployModel(root, { facePlusZ = false, entry = null } = {}) {
   const origin = new THREE.Vector3();
   root.getWorldPosition(origin);
   const ax = new THREE.Vector3();
-
-  // Characters: XZ on pelvis. Props/projectiles: center on XZ (or keep author origin).
-  if (profile.kind === 'character' || profile.kind === 'animation' || profile.kind === 'creature') {
-    if (pelvis) pelvis.getWorldPosition(ax);
-    else box.getCenter(ax);
-    root.position.x -= ax.x - origin.x;
-    root.position.z -= ax.z - origin.z;
-  } else {
-    box.getCenter(ax);
-    root.position.x -= ax.x - origin.x;
-    root.position.z -= ax.z - origin.z;
-  }
+  box.getCenter(ax);
+  root.position.x -= ax.x - origin.x;
+  root.position.z -= ax.z - origin.z;
   root.updateWorldMatrix(true, true);
 
-  // Grounding policy
   box = bodyBox(root);
   if (profile.ground === 'feet' || profile.ground === 'bottom') {
     root.position.y -= box.min.y;
   } else {
-    // center — float mid-height for projectiles / vfx preview
     box.getCenter(ax);
     root.position.y -= ax.y - origin.y;
   }
@@ -1129,7 +1170,10 @@ function rematchClip(root, clip) {
     } else tracks.push(track);
   }
   if (!tracks.length) return clip;
-  return new THREE.AnimationClip(clip.name, clip.duration, tracks, clip.blendMode);
+  // KILL hip-float: never keep .position tracks when retargeting onto grounded kit
+  return stripPositionTracks(
+    new THREE.AnimationClip(clip.name, clip.duration, tracks, clip.blendMode),
+  );
 }
 
 // ── Viewer ─────────────────────────────────────────────
@@ -1279,6 +1323,8 @@ async function loadCharacterKit(raceId) {
   }
   if (!gltf) throw new Error('Failed to load character kit');
   const root = gltf.scene;
+  root.userData.importPipeline = 'fbx-atlas';
+  root.userData.sourceUrl = kit.fbx || kit.r2 || kit.glb;
   // Unify skeletons lightly (Toon RTS multi-skeleton kits)
   const canon = new Map();
   root.traverse((o) => {
@@ -1309,8 +1355,13 @@ async function playBakedOnCharacter(entry, raceId) {
     path: entry.path || entry.r2Key,
     name: entry.name,
   });
-  const hostEntry = { kind: 'character', name: raceId, path: 'grudge6/races' };
-  const info = deployModel(model, { facePlusZ: false, entry: hostEntry });
+  const hostEntry = {
+    kind: 'character',
+    name: raceId,
+    path: 'models/grudge6/races',
+    cdnUrl: RACE_KITS[raceId]?.fbx || RACE_KITS[raceId]?.r2,
+  };
+  const info = deployModel(model, { entry: hostEntry });
   currentRoot = model;
   scene.add(model);
   rebuildMeshIndex(model);
@@ -1342,13 +1393,19 @@ async function playBakedOnCharacter(entry, raceId) {
     }
   }
   if (!clip) throw new Error('Baked clip not found');
+  clip = stripPositionTracks(clip);
   mixer = new THREE.AnimationMixer(model);
   mixer.clipAction(clip).play();
+  mixer.update(1 / 30);
+  reGroundAfterAnimSample(model, 0);
+  const look = diagnoseCharacterLook(model);
   window._currentAnimations = [clip];
   fillAnimUi([clip]);
   frameCamera(model);
+  const face = info.facingApplied ? ' +Z' : '';
   document.getElementById('viewerInfo').textContent =
-    `baked · ${clip.duration.toFixed(2)}s · bones ${info.bones.length} · h=${info.height.toFixed(2)}m`;
+    `baked · ${clip.duration.toFixed(2)}s · bones ${info.bones.length} · h=${info.height.toFixed(2)}m · feetY=${info.minY.toFixed(3)}${face}` +
+    (look.ok ? '' : ` · LOOK ${look.issues.map((i) => i.id).join(',')}`);
 }
 
 function fillAnimUi(anims) {
@@ -1383,7 +1440,18 @@ function fillAnimUi(anims) {
 function playAnimIndex(i) {
   if (!mixer || !window._currentAnimations?.[i]) return;
   mixer.stopAllAction();
-  mixer.clipAction(window._currentAnimations[i]).reset().play();
+  const clip = stripPositionTracks(window._currentAnimations[i]);
+  window._currentAnimations[i] = clip;
+  mixer.clipAction(clip).reset().play();
+  // Sample one frame then re-ground — kills hip-float after sword_shield attack
+  if (currentRoot) {
+    mixer.update(1 / 30);
+    reGroundAfterAnimSample(currentRoot, 0);
+    const look = diagnoseCharacterLook(currentRoot);
+    if (look.issues.length) {
+      console.warn('[character-correctness]', look.issues);
+    }
+  }
 }
 
 function frameCamera(obj) {
@@ -1409,7 +1477,7 @@ async function loadMeshAsset(entry) {
     r2Key: entry.r2Key,
   });
   if (rebound) mats.rebound = rebound;
-  const info = deployModel(model, { facePlusZ: false, entry });
+  const info = deployModel(model, { entry });
   currentRoot = model;
   scene.add(model);
   const report = setDiag(
@@ -1421,9 +1489,13 @@ async function loadMeshAsset(entry) {
   const anims = gltf.animations || [];
   if (anims.length) {
     mixer = new THREE.AnimationMixer(model);
-    const remapped = anims.map((c) => rematchClip(model, c));
+    const remapped = anims.map((c) => stripPositionTracks(rematchClip(model, c)));
     window._currentAnimations = remapped;
     mixer.clipAction(remapped[0]).play();
+    mixer.update(1 / 30);
+    if (report?.profile?.kind === 'character' || report?.profile?.kind === 'animation') {
+      reGroundAfterAnimSample(model, 0);
+    }
     fillAnimUi(remapped);
   } else {
     fillAnimUi([]);
@@ -1463,18 +1535,22 @@ async function loadAnimClipOnCharacter(entry, raceId) {
   });
   if (hasSkin && anims.length) {
     const { prep: mats } = await prepAndRebindMaterials(gltf.scene, entry);
-    const info = deployModel(gltf.scene, { entry });
+    gltf.scene.userData.importPipeline =
+      gltf.scene.userData.importPipeline || 'fbx-atlas';
+    const info = deployModel(gltf.scene, { entry: { ...entry, kind: 'character' } });
     currentRoot = gltf.scene;
     scene.add(gltf.scene);
     setDiag(info, mats, 'embedded skinned anim', entry);
     mixer = new THREE.AnimationMixer(gltf.scene);
-    const remapped = anims.map((c) => rematchClip(gltf.scene, c));
+    const remapped = anims.map((c) => stripPositionTracks(rematchClip(gltf.scene, c)));
     window._currentAnimations = remapped;
     mixer.clipAction(remapped[0]).play();
+    mixer.update(1 / 30);
+    reGroundAfterAnimSample(gltf.scene, 0);
     fillAnimUi(remapped);
     frameCamera(gltf.scene);
     document.getElementById('viewerInfo').textContent =
-      `skinned clip host · ${anims.length} clips · h=${info.height.toFixed(2)}m`;
+      `skinned clip host · ${anims.length} clips · h=${info.height.toFixed(2)}m · feetY=${info.minY.toFixed(3)}`;
     return;
   }
   if (!anims.length) {
@@ -1487,19 +1563,28 @@ async function loadAnimClipOnCharacter(entry, raceId) {
     path: entry.path || entry.r2Key,
     name: entry.name,
   });
-  const hostEntry = { kind: 'character', name: raceId, path: 'grudge6/races' };
+  const hostEntry = {
+    kind: 'character',
+    name: raceId,
+    path: 'models/grudge6/races',
+    cdnUrl: RACE_KITS[raceId]?.fbx || RACE_KITS[raceId]?.r2,
+  };
   const info = deployModel(model, { entry: hostEntry });
   currentRoot = model;
   scene.add(model);
   setDiag(info, mats, `clip-on-character (${raceId})`, hostEntry);
   mixer = new THREE.AnimationMixer(model);
-  const remapped = anims.map((c) => rematchClip(model, c));
+  const remapped = anims.map((c) => stripPositionTracks(rematchClip(model, c)));
   window._currentAnimations = remapped;
   mixer.clipAction(remapped[0]).play();
+  mixer.update(1 / 30);
+  reGroundAfterAnimSample(model, 0);
   fillAnimUi(remapped);
   frameCamera(model);
+  const look = diagnoseCharacterLook(model);
   document.getElementById('viewerInfo').textContent =
-    `anim on character · ${anims.length} clips · rematched bones · h=${info.height.toFixed(2)}m`;
+    `anim on character · ${anims.length} clips · rematched · h=${info.height.toFixed(2)}m · feetY=${(charBodyBox(model).min.y).toFixed(3)}` +
+    (look.ok ? ' · look OK' : ` · LOOK ${look.issues.map((i) => i.id).join(',')}`);
 }
 
 function pushDeepLink(entry) {
