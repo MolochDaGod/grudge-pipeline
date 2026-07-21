@@ -7,6 +7,12 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { prepAndRebindMaterials } from './materials.js';
+import {
+  inferAssetKind,
+  getDeployProfile,
+  measureSize,
+  computeDeployScale,
+} from './deployChecks.js';
 
 const DB_NAME = 'grudge-pipeline-thumbs';
 const DB_STORE = 'thumbs';
@@ -108,23 +114,34 @@ function ensureRenderer() {
   scene.add(fill);
 }
 
-function fitObject(root) {
+/**
+ * Fit for thumb capture — category-aware (no 1.8 m force on arrows).
+ * @param {THREE.Object3D} root
+ * @param {string} [url] for kind inference
+ */
+function fitObject(root, url = '') {
+  const profile = getDeployProfile({
+    kind: inferAssetKind({ path: url, name: url, cdnUrl: url }),
+    path: url,
+    name: url,
+  });
   root.updateWorldMatrix(true, true);
   const box = new THREE.Box3().setFromObject(root);
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
-  let h = size.y || 1;
-  if (h > 50 || h < 0.05) {
-    const unit = Math.pow(10, Math.round(Math.log10(1.8 / h)));
-    root.scale.multiplyScalar(unit);
+  let measure = measureSize(size, profile) || 1;
+  const { scale } = computeDeployScale(measure, profile);
+  if (scale !== 1) {
+    root.scale.multiplyScalar(scale);
     root.updateWorldMatrix(true, true);
     box.setFromObject(root);
     box.getSize(size);
     box.getCenter(center);
-    h = size.y || 1.8;
   }
-  const fit = Math.min(8, Math.max(0.05, 1.6 / Math.max(size.x, size.y, size.z, 0.01)));
-  root.scale.multiplyScalar(fit);
+  // Framing only — fill the thumb square without re-authoring meters
+  const span = Math.max(size.x, size.y, size.z, 0.05);
+  const frame = Math.min(6, Math.max(0.4, 1.4 / span));
+  root.scale.multiplyScalar(frame);
   root.updateWorldMatrix(true, true);
   box.setFromObject(root);
   box.getCenter(center);
@@ -212,7 +229,7 @@ export async function captureThumbnail(key, url, opts = {}) {
     }
     if (!root) return null;
     await prepAndRebindMaterials(root, { path: url, cdnUrl: url });
-    fitObject(root);
+    fitObject(root, url);
     scene.add(root);
     // Two frames for skins
     renderer.render(scene, camera);

@@ -293,15 +293,37 @@ body {
 }
 .mesh-list button.mesh-pick:hover { color: var(--accent); }
 .diag { display: grid; gap: 6px; }
-.diag > div {
-  display: grid; grid-template-columns: 88px 1fr; gap: 6px; font-size: 0.78rem;
+.diag > div,
+.diag .diag-row {
+  display: grid; grid-template-columns: 7.2rem 1fr; gap: 6px; font-size: 0.78rem;
   padding: 5px 8px; border-radius: 6px; background: rgba(255,255,255,0.03);
 }
 .diag dt { color: var(--dim); }
-.diag dd { color: var(--text); font-family: ui-monospace, Consolas, monospace; word-break: break-all; }
+.diag dd { color: var(--text); font-family: ui-monospace, Consolas, monospace; word-break: break-word; }
 .diag dd.ok { color: var(--green); }
 .diag dd.warn { color: var(--orange); }
 .diag dd.bad { color: #f87171; }
+.diag dd.info { color: var(--blue, #7eb8ff); }
+.diag dd.dim { color: var(--dim); }
+.diag-summary {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  line-height: 1.35;
+}
+.diag-summary.pass { color: var(--green); border-color: rgba(61,214,140,0.35); }
+.diag-summary.fail { color: #f87171; border-color: rgba(248,113,113,0.35); }
+.diag-hint { font-size: 0.72rem; font-weight: 500; color: var(--dim); text-transform: none; }
+.diag-footnote {
+  margin: 8px 0 12px;
+  font-size: 0.72rem;
+  color: var(--dim);
+  line-height: 1.35;
+}
 .bone-list, .clip-list {
   max-height: 160px; overflow: auto; font-size: 0.72rem;
   font-family: ui-monospace, Consolas, monospace; color: var(--dim);

@@ -1,5 +1,20 @@
 # Pipeline thumbs + Use panel
 
+## Category deploy checks (scale / layer / scripts)
+
+**Never apply character 1.8 m height to every mesh.**
+
+| Kind | Scale rule | Physics layer | Notes |
+|------|------------|---------------|--------|
+| **character** | height → ~1.8 m, feet y=0 | `Player` | Bip001 pelvis/hands |
+| **projectile** (arrow, bolt, shell) | **longest edge ~0.2–1.2 m** (arrows ~0.6–0.9) | `Projectile` | **no** character-fit |
+| **weapon** | longest ~0.25–2.8 m | `Item` | hand-relative |
+| **prop** | longest author meters | `Default` | box collider |
+| **environment** | large author OK | `Terrain` | navmesh |
+| **animation** | preview on character host | — | rematch Bip001 |
+
+Implementation: `web/js/deployChecks.js` · viewer “Deploy check” panel · Use snippet includes layer + scale.
+
 ## Yellow / untextured props (arrows, bows, craftpix shells)
 
 **Root cause:** many weapon GLBs were converted with FBX2glTF when the atlas path

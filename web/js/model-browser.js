@@ -38,6 +38,14 @@ import {
   prepMaterials,
   prepAndRebindMaterials,
 } from './materials.js';
+import {
+  inferAssetKind,
+  getDeployProfile,
+  measureSize,
+  computeDeployScale,
+  runDeployChecks,
+  deployScore,
+} from './deployChecks.js';
 
 // ── Fleet hosts ────────────────────────────────────────
 const R2 = 'https://assets.grudge-studio.com';
@@ -46,7 +54,6 @@ const D1_API = 'https://api.grudge-studio.com/assets';
 const OBJECTSTORE_MODELS = 'https://molochdagod.github.io/ObjectStore/api/v1/models3d.json';
 const DRACO_PATH = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 const PAGE_SIZE = 48;
-const TARGET_H = 1.8;
 
 const RACE_KITS = {
   'western-kingdoms': {
@@ -147,18 +154,7 @@ function esc(s) {
 }
 
 function inferKind(m) {
-  const c = `${m.category || ''} ${m.group || ''} ${m.path || ''} ${m.name || ''}`.toLowerCase();
-  if (m.kind) return m.kind;
-  if (m.isBakedClip || c.includes('anim') || c.includes('/anims/') || m.scaleProfile === 'animation_clip')
-    return 'animation';
-  if (c.includes('weapon') || c.includes('sword') || c.includes('bow') || c.includes('gun')) return 'weapon';
-  if (c.includes('character') || c.includes('race') || c.includes('hero') || c.includes('grudge6/races'))
-    return 'character';
-  if (c.includes('creature') || c.includes('monster') || c.includes('animal')) return 'creature';
-  if (c.includes('environment') || c.includes('nature') || c.includes('terrain') || c.includes('building'))
-    return 'environment';
-  if (c.includes('prop') || c.includes('crate') || c.includes('furniture')) return 'prop';
-  return 'other';
+  return inferAssetKind(m);
 }
 
 function inferGroup(m) {
@@ -790,9 +786,18 @@ function bodyBox(root) {
   return box;
 }
 
-function deployModel(root, { facePlusZ = false } = {}) {
+/**
+ * Deploy/preview placement with **category-aware** scale rules.
+ * Characters → ~1.8 m height. Projectiles/weapons → author meters (unit-fix only).
+ *
+ * @param {THREE.Object3D} root
+ * @param {{ facePlusZ?: boolean, entry?: object|null }} opts
+ */
+function deployModel(root, { facePlusZ = false, entry = null } = {}) {
+  const profile = getDeployProfile(entry || {});
   root.scale.set(1, 1, 1);
   root.position.set(0, 0, 0);
+  root.rotation.set(0, 0, 0);
   root.updateWorldMatrix(true, true);
   root.traverse((o) => {
     if (o.isSkinnedMesh && o.skeleton) o.skeleton.update();
@@ -800,23 +805,23 @@ function deployModel(root, { facePlusZ = false } = {}) {
   root.updateWorldMatrix(true, true);
 
   let box = bodyBox(root);
-  let h = box.getSize(new THREE.Vector3()).y || 1;
-  let unit = 1;
-  if (h > 50 || h < 0.05) unit = Math.pow(10, Math.round(Math.log10(TARGET_H / h)));
-  root.scale.setScalar(unit);
-  root.updateWorldMatrix(true, true);
-  box = bodyBox(root);
-  h = box.getSize(new THREE.Vector3()).y || TARGET_H;
-  const fit = Math.min(12, Math.max(0.02, TARGET_H / h));
-  root.scale.multiplyScalar(fit);
-  root.updateWorldMatrix(true, true);
+  let size = box.getSize(new THREE.Vector3());
+  let measure = measureSize(size, profile) || 1;
 
-  if (facePlusZ) {
+  const { scale, reason, unitFixed, normalized } = computeDeployScale(
+    measure,
+    profile,
+  );
+  if (scale !== 1) {
+    root.scale.multiplyScalar(scale);
+    root.updateWorldMatrix(true, true);
+  }
+
+  if (facePlusZ && (profile.kind === 'character' || profile.kind === 'animation')) {
     root.rotation.y = Math.PI / 2;
     root.updateWorldMatrix(true, true);
   }
 
-  // XZ on pelvis
   const pelvis =
     findBone(root, /bip001\s*pelvis/i) ||
     findBone(root, /pelvis/i) ||
@@ -825,18 +830,33 @@ function deployModel(root, { facePlusZ = false } = {}) {
   const origin = new THREE.Vector3();
   root.getWorldPosition(origin);
   const ax = new THREE.Vector3();
-  if (pelvis) pelvis.getWorldPosition(ax);
-  else box.getCenter(ax);
-  root.position.x -= ax.x - origin.x;
-  root.position.z -= ax.z - origin.z;
+
+  // Characters: XZ on pelvis. Props/projectiles: center on XZ (or keep author origin).
+  if (profile.kind === 'character' || profile.kind === 'animation' || profile.kind === 'creature') {
+    if (pelvis) pelvis.getWorldPosition(ax);
+    else box.getCenter(ax);
+    root.position.x -= ax.x - origin.x;
+    root.position.z -= ax.z - origin.z;
+  } else {
+    box.getCenter(ax);
+    root.position.x -= ax.x - origin.x;
+    root.position.z -= ax.z - origin.z;
+  }
   root.updateWorldMatrix(true, true);
 
-  // Feet on y=0
+  // Grounding policy
   box = bodyBox(root);
-  root.position.y -= box.min.y;
+  if (profile.ground === 'feet' || profile.ground === 'bottom') {
+    root.position.y -= box.min.y;
+  } else {
+    // center — float mid-height for projectiles / vfx preview
+    box.getCenter(ax);
+    root.position.y -= ax.y - origin.y;
+  }
   root.updateWorldMatrix(true, true);
   box = bodyBox(root);
-  h = box.getSize(new THREE.Vector3()).y;
+  size = box.getSize(new THREE.Vector3());
+  measure = measureSize(size, profile);
 
   const bones = listBones(root);
   const handR =
@@ -847,12 +867,18 @@ function deployModel(root, { facePlusZ = false } = {}) {
     findBone(root, /l_hand|hand_l|lefthand/i);
 
   return {
-    height: h,
+    height: size.y,
+    measure,
+    size: { x: size.x, y: size.y, z: size.z },
     minY: box.min.y,
     pelvis: pelvis?.name || null,
     handR: handR?.name || null,
     handL: handL?.name || null,
     bones,
+    profile,
+    scaleReason: reason,
+    unitFixed,
+    normalized,
   };
 }
 
@@ -885,8 +911,12 @@ function fillUsePanel(entry) {
     return;
   }
   const r = readinessOf(entry);
+  const kind = r.kind || entry.kind || 'other';
+  const layer = r.physicsLayer || 'Default';
   const want = ['uuid', 'cdn', 'tex', 'skel', 'anim', 'web', 'uuid-ok'];
   ready.innerHTML =
+    `<span class="ready-pill on">kind:${esc(kind)}</span>` +
+    `<span class="ready-pill on">layer:${esc(layer)}</span>` +
     want
       .map((f) => {
         const on = r.flags.includes(f);
@@ -993,40 +1023,72 @@ function soloMesh(name) {
   selectMeshName(name);
 }
 
-function setDiag(info, mats, mode) {
-  const h = document.getElementById('diagHeight');
-  const f = document.getElementById('diagFeet');
-  const b = document.getElementById('diagBones');
-  const p = document.getElementById('diagPelvis');
-  const hands = document.getElementById('diagHands');
-  const mEl = document.getElementById('diagMats');
-  const tEl = document.getElementById('diagTex');
-  const modeEl = document.getElementById('diagMode');
-  if (!info) {
-    [h, f, b, p, hands, mEl, tEl, modeEl].forEach((el) => {
-      if (el) {
-        el.textContent = '—';
-        el.className = '';
-      }
-    });
-    return;
-  }
-  h.textContent = `${info.height.toFixed(3)} m`;
-  h.className = info.height > 1.4 && info.height < 2.4 ? 'ok' : 'warn';
-  f.textContent = info.minY.toFixed(4);
-  f.className = Math.abs(info.minY) < 0.08 ? 'ok' : 'warn';
-  b.textContent = String(info.bones.length);
-  b.className = info.bones.length > 10 ? 'ok' : 'warn';
-  p.textContent = info.pelvis || 'missing';
-  p.className = info.pelvis ? 'ok' : 'bad';
-  hands.textContent = `R:${info.handR || '—'} · L:${info.handL || '—'}`;
-  hands.className = info.handR ? 'ok' : 'warn';
-  mEl.textContent = mats ? String(mats.mats) : '—';
-  tEl.textContent = mats ? `${mats.withMap}/${mats.mats} mapped` : '—';
-  tEl.className = mats && mats.withMap > 0 ? 'ok' : mats?.mats ? 'warn' : '';
-  modeEl.textContent = mode || '—';
+function setDiag(info, mats, mode, entry = null) {
+  const list = document.getElementById('diagList');
+  const summaryEl = document.getElementById('diagSummary');
   const bl = document.getElementById('boneList');
-  bl.textContent = (info.bones || []).slice(0, 80).join('\n') || '(no bones)';
+
+  if (!info) {
+    if (list) {
+      list.innerHTML =
+        '<div><dt>Category</dt><dd>—</dd></div><div><dt>Scale</dt><dd>—</dd></div><div><dt>Layer</dt><dd>—</dd></div>';
+    }
+    if (summaryEl) {
+      summaryEl.textContent = 'Load an asset for category deploy checks';
+      summaryEl.className = 'diag-summary';
+    }
+    if (bl) bl.textContent = '';
+    window._lastDeployReport = null;
+    return null;
+  }
+
+  const profile = info.profile || getDeployProfile(entry || currentEntry || {});
+  const report = runDeployChecks({
+    entry: entry || currentEntry || {},
+    profile,
+    measure: info.measure ?? info.height,
+    size: info.size || { x: 0, y: info.height || 0, z: 0 },
+    minY: info.minY,
+    pelvis: info.pelvis,
+    handR: info.handR,
+    handL: info.handL,
+    bones: info.bones || [],
+    mats: mats || {},
+    scaleReason: info.scaleReason || '',
+    unitFixed: !!info.unitFixed,
+    normalized: !!info.normalized,
+  });
+
+  const statusClass = (s) =>
+    ({ ok: 'ok', warn: 'warn', fail: 'bad', info: 'info', na: 'dim' }[s] || '');
+
+  if (list) {
+    list.innerHTML = report.checks
+      .map(
+        (c) =>
+          `<div class="diag-row status-${c.status}">
+            <dt>${esc(c.label)}</dt>
+            <dd class="${statusClass(c.status)}" title="${esc(c.detail)}">${esc(c.detail)}</dd>
+          </div>`,
+      )
+      .join('');
+  }
+
+  if (summaryEl) {
+    const sc = deployScore(report.summary, report.checks);
+    summaryEl.className = `diag-summary ${report.summary.pass ? 'pass' : 'fail'}`;
+    summaryEl.textContent =
+      `${report.summary.pass ? 'PASS' : 'FAIL'} · ${profile.label} · score ${sc} · ` +
+      `${report.summary.ok} ok / ${report.summary.warn} warn / ${report.summary.fail} fail` +
+      (mode ? ` · ${mode}` : '');
+  }
+
+  if (bl) {
+    bl.textContent = (info.bones || []).slice(0, 80).join('\n') || '(no bones)';
+  }
+
+  window._lastDeployReport = report;
+  return report;
 }
 
 // ── Bone rematch for clips ─────────────────────────────
@@ -1247,11 +1309,12 @@ async function playBakedOnCharacter(entry, raceId) {
     path: entry.path || entry.r2Key,
     name: entry.name,
   });
-  const info = deployModel(model, { facePlusZ: false });
+  const hostEntry = { kind: 'character', name: raceId, path: 'grudge6/races' };
+  const info = deployModel(model, { facePlusZ: false, entry: hostEntry });
   currentRoot = model;
   scene.add(model);
   rebuildMeshIndex(model);
-  setDiag(info, mats, `anim-on-character (${raceId})`);
+  setDiag(info, mats, `anim-on-character (${raceId})`, hostEntry);
 
   const rel = entry.bakedRel;
   const urls = [
@@ -1345,10 +1408,16 @@ async function loadMeshAsset(entry) {
     name: entry.name,
     r2Key: entry.r2Key,
   });
-  const info = deployModel(model, { facePlusZ: false });
+  if (rebound) mats.rebound = rebound;
+  const info = deployModel(model, { facePlusZ: false, entry });
   currentRoot = model;
   scene.add(model);
-  setDiag(info, mats, rebound ? `mesh · atlas rebound (${rebound})` : 'mesh asset');
+  const report = setDiag(
+    info,
+    mats,
+    rebound ? `mesh · atlas rebound (${rebound})` : 'mesh asset',
+    entry,
+  );
   const anims = gltf.animations || [];
   if (anims.length) {
     mixer = new THREE.AnimationMixer(model);
@@ -1360,11 +1429,15 @@ async function loadMeshAsset(entry) {
     fillAnimUi([]);
   }
   frameCamera(model);
+  const kind = report?.profile?.kind || entry.kind || 'other';
+  const m = info.measure ?? info.height;
+  const axis = report?.profile?.scaleAxis === 'height' ? 'h' : 'L';
   const texNote = rebound
-    ? `tex ${mats.withMap}/${mats.mats} · rebound ${atlasUrl ? atlasUrl.split('/').pop() : ''}`
+    ? `tex rebound ${atlasUrl ? atlasUrl.split('/').pop() : ''}`
     : `tex ${mats.withMap}/${mats.mats}`;
   document.getElementById('viewerInfo').textContent =
-    `${entry.format?.toUpperCase() || ''} · ${entry.sizeKB || '?'} KB · ${anims.length} clips · h=${info.height.toFixed(2)}m · ${texNote}`;
+    `${kind} · ${entry.format?.toUpperCase() || ''} · ${entry.sizeKB || '?'} KB · ` +
+    `${anims.length} clips · ${axis}=${m.toFixed(2)}m · layer ${report?.profile?.physicsLayer || '?'} · ${texNote}`;
   return { model, anims };
 }
 
@@ -1390,10 +1463,10 @@ async function loadAnimClipOnCharacter(entry, raceId) {
   });
   if (hasSkin && anims.length) {
     const { prep: mats } = await prepAndRebindMaterials(gltf.scene, entry);
-    const info = deployModel(gltf.scene, {});
+    const info = deployModel(gltf.scene, { entry });
     currentRoot = gltf.scene;
     scene.add(gltf.scene);
-    setDiag(info, mats, 'embedded skinned anim');
+    setDiag(info, mats, 'embedded skinned anim', entry);
     mixer = new THREE.AnimationMixer(gltf.scene);
     const remapped = anims.map((c) => rematchClip(gltf.scene, c));
     window._currentAnimations = remapped;
@@ -1414,10 +1487,11 @@ async function loadAnimClipOnCharacter(entry, raceId) {
     path: entry.path || entry.r2Key,
     name: entry.name,
   });
-  const info = deployModel(model, {});
+  const hostEntry = { kind: 'character', name: raceId, path: 'grudge6/races' };
+  const info = deployModel(model, { entry: hostEntry });
   currentRoot = model;
   scene.add(model);
-  setDiag(info, mats, `clip-on-character (${raceId})`);
+  setDiag(info, mats, `clip-on-character (${raceId})`, hostEntry);
   mixer = new THREE.AnimationMixer(model);
   const remapped = anims.map((c) => rematchClip(model, c));
   window._currentAnimations = remapped;
@@ -1668,13 +1742,22 @@ function wireUi() {
   document.getElementById('btnCopyAll')?.addEventListener('click', async () => {
     if (!currentEntry) return;
     const pack = animPackHint(currentEntry);
+    const kind = inferAssetKind(currentEntry);
+    const profile = getDeployProfile(currentEntry);
+    const rep = window._lastDeployReport;
     const text = [
       `grudgeUuid: ${currentEntry.grudgeUuid || ''}`,
       `r2Key: ${r2KeyOf(currentEntry)}`,
       `cdnUrl: ${cdnUrlOf(currentEntry)}`,
-      `kind: ${currentEntry.kind || ''}`,
+      `kind: ${kind}`,
+      `physicsLayer: ${profile.physicsLayer}`,
+      `scaleAxis: ${profile.scaleAxis}`,
+      `okRangeM: ${profile.okRange.join('–')}`,
       `animPack: ${pack || ''}`,
       `meshName: ${selectedMeshName || ''}`,
+      rep
+        ? `deploy: ${rep.summary.pass ? 'PASS' : 'FAIL'} measure=${rep.summary.measure?.toFixed?.(3) ?? '?'}m fail=${rep.summary.fail} warn=${rep.summary.warn}`
+        : 'deploy: (open viewer to run checks)',
       '',
       openImportSnippet(currentEntry),
     ].join('\n');
