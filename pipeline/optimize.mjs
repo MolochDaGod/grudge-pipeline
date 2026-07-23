@@ -1,6 +1,11 @@
 /**
  * optimize.mjs — GLB Optimization Pipeline
  * Dedup, weld, compress (Draco), texture resize, quantize.
+ *
+ * This is the web pack stage after convert. For **character SI height + colliders**,
+ * prefer ObjectStore grudge-convert **glb2glb** (`--height 1.8 --texture-size 1024`)
+ * then optional Draco here. Production goal: textured · meshed · scaled · deploy GLB.
+ * @see docs/PRODUCTION_BAKE.md
  */
 import fs from 'fs';
 import path from 'path';

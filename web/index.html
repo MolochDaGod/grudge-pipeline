@@ -12,7 +12,7 @@
       <div>
         <h1>Grudge Pipeline</h1>
         <p class="subtitle">
-          Fleet asset browser — UUID verify · snapshot thumbs · anim-on-character
+          Production bake first — textured · meshed · SI-scaled · glb2glb · baked deploy
           <span class="r2-status checking" id="r2Status"><span class="r2-dot"></span> Catalog…</span>
         </p>
       </div>
@@ -38,6 +38,7 @@
           placeholder="Search name, path, group, uuid, bones… (e.g. sword walk bip001 glb)"
           autocomplete="off" spellcheck="false">
         <select id="sortSelect" class="sort-select" title="Sort">
+          <option value="production" selected>Production score</option>
           <option value="name">Name</option>
           <option value="group">Group</option>
           <option value="size">Size</option>
@@ -58,6 +59,10 @@
         <span class="action-status" id="actionStatus"></span>
       </div>
 
+      <div class="filter-section">
+        <div class="filter-label">Deploy bake</div>
+        <div class="filter-row" id="prodFilters"></div>
+      </div>
       <div class="filter-section">
         <div class="filter-label">Kind</div>
         <div class="filter-row" id="kindFilters"></div>
@@ -82,7 +87,7 @@
 
     <div class="drop-zone" id="dropZone">
       <div class="drop-icon">📦</div>
-      <div class="drop-text">Drop GLB / GLTF / FBX to preview · animations play on grudge6 character</div>
+      <div class="drop-text">Drop production GLB (preferred) or FBX · anims play on grudge6 R2 host · prefer glb2glb bake</div>
       <input type="file" id="fileInput" accept=".glb,.gltf,.fbx" style="display:none">
     </div>
 

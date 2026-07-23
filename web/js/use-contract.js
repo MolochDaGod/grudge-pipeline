@@ -1,7 +1,23 @@
 /**
  * Fleet "use" contracts — copy-ready fields for Open / loaders / agents.
+ * Prefers production bake path: textured · meshed · SI-scaled · glb2glb · CDN.
  */
 import { inferAssetKind, getDeployProfile } from './deployChecks.js';
+import {
+  productionScore,
+  isProductionDeployReady,
+  productionBadge,
+  productionLoadComment,
+  HUMAN_HEIGHT_M,
+} from './productionBake.js';
+
+export {
+  productionScore,
+  isProductionDeployReady,
+  productionBadge,
+  productionLoadComment,
+  HUMAN_HEIGHT_M,
+};
 
 export function r2KeyOf(m) {
   if (!m) return '';
@@ -51,12 +67,14 @@ const clipUrl = ${JSON.stringify(url || m.cdnUrl || '')};
 // Prefer play on grudge6 character (not empty armature).`;
   }
   if (kind === 'character') {
-    return `// grudge6 / character kit
+    return `${productionLoadComment(m)}
+// grudge6 / character kit — prefer production GLB (glb2glb), not raw FBX in game
 // uuid: ${uuid}
 // r2Key: ${r2}
 // layer: ${profile.physicsLayer}
+// badge: ${productionBadge(m).label} · score ${productionScore(m)}
 const modelUrl = ${JSON.stringify(url)};
-// GLTFLoader + fitCharacterHeight(~1.8m) + feet y=0 + art-forward +Z
+// GLTFLoader + enforceCharacterSi(${HUMAN_HEIGHT_M}) + feet y=0 + art-forward +Z
 // Equipment = child mesh visibility (mesh_ids), not model swap.`;
   }
   if (kind === 'projectile') {
@@ -108,6 +126,8 @@ export function animPackHint(m) {
 export function readinessOf(m) {
   const kind = inferAssetKind(m);
   const profile = getDeployProfile({ ...m, kind });
+  const prod = productionScore(m);
+  const badge = productionBadge(m);
   const flags = [];
   if (m.grudgeUuid) flags.push('uuid');
   if (cdnUrlOf(m)) flags.push('cdn');
@@ -116,18 +136,30 @@ export function readinessOf(m) {
   if (m.animations > 0 || m.isBakedClip || kind === 'animation') flags.push('anim');
   if (m.compressionType === 'draco' || m.format === 'glb') flags.push('web');
   if (m.uuidStatus === 'ok' || m.uuidStatus === 'derived') flags.push('uuid-ok');
+  if (isProductionDeployReady(m)) flags.push('prod');
+  if (m.bakePipeline === 'glb2glb' || m.productionBaked) flags.push('glb2glb');
+  if (m.scaleBaked || m.scaleProfile === 'character') flags.push('scaled');
+  if (m.isBakedClip) flags.push('baked-clip');
   flags.push(`kind:${kind}`);
   flags.push(`layer:${profile.physicsLayer}`);
-  // score 0-100
-  let score = 20;
-  if (flags.includes('cdn')) score += 20;
-  if (flags.includes('uuid') || flags.includes('uuid-ok')) score += 15;
-  if (flags.includes('tex') || kind === 'animation' || !profile.requireTexture) score += 15;
-  if (flags.includes('web')) score += 15;
-  if (kind === 'character' && flags.includes('skel')) score += 10;
-  if (kind === 'projectile' || kind === 'weapon') score += 5; // classified correctly
-  if (m.sizeKB && m.sizeKB < 15000) score += 5;
-  return { flags, score: Math.min(100, score), kind, physicsLayer: profile.physicsLayer };
+  // Blend catalog readiness with production bake score (deploy-first)
+  let score = Math.round(prod * 0.65);
+  if (flags.includes('cdn')) score += 10;
+  if (flags.includes('uuid') || flags.includes('uuid-ok')) score += 8;
+  if (flags.includes('tex') || kind === 'animation' || !profile.requireTexture) score += 8;
+  if (flags.includes('web') || flags.includes('glb2glb')) score += 8;
+  if (kind === 'character' && flags.includes('skel')) score += 5;
+  if (kind === 'projectile' || kind === 'weapon') score += 3;
+  if (m.sizeKB && m.sizeKB < 15000) score += 3;
+  return {
+    flags,
+    score: Math.min(100, score),
+    productionScore: prod,
+    productionBadge: badge.label,
+    deployReady: isProductionDeployReady(m),
+    kind,
+    physicsLayer: profile.physicsLayer,
+  };
 }
 
 export async function copyText(text) {

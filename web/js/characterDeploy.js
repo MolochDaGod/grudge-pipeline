@@ -245,16 +245,20 @@ export function deployCharacterModel(model, opts = {}) {
   if (faceMode === true) {
     facingApplied = applyArtForwardPlusZ(model, opts.faceYaw ?? Math.PI / 2);
   } else if (faceMode === 'auto') {
-    if (
+    const src = String(model.userData.sourceUrl || '');
+    // production-glb (glb2glb deploy) is expected art-forward already — do not double-yaw.
+    // FBX / fbx-atlas kits often face +X → apply +π/2 once.
+    const needsFbxForward =
+      pipeline !== 'production-glb' &&
       (pipeline === 'fbx-atlas' ||
         pipeline === 'grudge6-fbx' ||
-        /Characters\.fbx|grudge6\/races/i.test(String(model.userData.sourceUrl || ''))) &&
-      !model.userData.artForwardSet
-    ) {
+        /\.fbx($|\?)/i.test(src) ||
+        /Characters\.fbx/i.test(src));
+    if (needsFbxForward && !model.userData.artForwardSet) {
       facingApplied = applyArtForwardPlusZ(model, opts.faceYaw ?? Math.PI / 2);
     }
   }
-  // faceMode === false: explicit only (e.g. already +Z GLB)
+  // faceMode === false: explicit only (e.g. already +Z production GLB)
 
   const { dx, dz, pelvis } = centerXZOnPelvis(model);
   const groundDeltaY = groundFeetLocal(model, groundY);

@@ -33,7 +33,11 @@ import {
   readinessOf,
   copyText,
   resolveCdnThumb,
+  productionScore,
+  isProductionDeployReady,
+  productionBadge,
 } from './use-contract.js';
+import { raceKitDeployUrls } from './productionBake.js';
 import {
   prepMaterials,
   prepAndRebindMaterials,
@@ -56,9 +60,9 @@ import {
   prepareSkinnedMeasure,
 } from './characterDeploy.js';
 
-// ── Fleet hosts (SSOT only — no secondary character libraries) ──
-// Mesh: assets.grudge-studio.com models/grudge6/races/* only.
-// Baked anim JSON may load from arena/open (clip data, not mesh hosts).
+// ── Fleet hosts — production deploy first ──
+// Prefer: textured · meshed · SI-scaled · converted · glb2glb · R2 GLB
+// Author FBX is fallback only. Anim clips: baked Bip001 JSON.
 // KILL: grudge-arena …/cdn/assets/characters/* as character host (wrong scale / stale).
 const R2 = 'https://assets.grudge-studio.com';
 const ARENA = 'https://grudge-arena.grudge-studio.com';
@@ -88,10 +92,10 @@ const RACE_KITS = {
   'western-kingdoms': {
     label: 'WK human',
     prefix: 'WK_',
-    // SSOT: R2 only (FBX preferred, GLB deploy). Never arena character CDN.
-    fbx: `${R2}/models/grudge6/races/WK_Characters.fbx`,
+    // Deploy: production GLB (glb2glb). Author: FBX. Never arena character CDN.
     glb: `${R2}/models/grudge6/races/WK_Characters.glb`,
     r2: `${R2}/models/grudge6/races/WK_Characters.glb`,
+    fbx: `${R2}/models/grudge6/races/WK_Characters.fbx`,
     atlas: `${R2}/textures/grudge6/western-kingdoms/WK_Standard_Units.webp`,
   },
   barbarians: {
@@ -162,7 +166,9 @@ let activeGroup = null;
 let activeFormat = null;
 let activeSource = null;
 let activeUuid = null;
-let sortKey = 'name';
+let sortKey = 'production';
+/** @type {string|null} null | 'ready' | 'raw' */
+let activeProd = null;
 /** @type {{ byUuid: Map, byPath: Map }} */
 let d1Index = { byUuid: new Map(), byPath: new Map() };
 let uuidVerified = false;
@@ -236,6 +242,10 @@ function normalizeEntry(raw, source) {
     supportedSkeletons: raw.supportedSkeletons || raw.metadata?.supportedSkeletons || null,
     isBakedClip: !!raw.isBakedClip,
     bakedRel: raw.bakedRel || null,
+    productionBaked: !!raw.productionBaked,
+    deployReady: !!raw.deployReady,
+    bakePipeline: raw.bakePipeline || raw.metadata?.bakePipeline || null,
+    scaleBaked: !!raw.scaleBaked || !!raw.metadata?.scaleBaked,
     kind: raw.kind || null,
     grudgeUuid: grudgeUuid && isValidUuid(grudgeUuid) ? grudgeUuid : grudgeUuid,
     uuidStatus: grudgeUuid && isValidUuid(grudgeUuid) ? 'pending' : grudgeUuid ? 'invalid' : 'pending',
@@ -266,27 +276,33 @@ function normalizeEntry(raw, source) {
 function curatedGrudge6() {
   const out = [];
   for (const [id, kit] of Object.entries(RACE_KITS)) {
-    // R2 path only — parse from SSOT URL (never arena character CDN)
-    const r2Path = String(kit.fbx || kit.glb || '')
+    // Production deploy path: R2 GLB (glb2glb) first; FBX listed as author alt
+    const r2Glb = String(kit.glb || kit.r2 || '')
       .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
       .replace(/^\//, '');
     out.push(
       normalizeEntry(
         {
           id: `grudge6-race-${id}`,
-          name: `${kit.label} — Characters kit (R2 SSOT)`,
-          path: r2Path || `models/grudge6/races/${id}`,
-          format: 'fbx',
+          name: `${kit.label} — Characters (prod GLB)`,
+          path: r2Glb || `models/grudge6/races/${id}`,
+          format: 'glb',
           category: 'grudge6-races',
           group: 'grudge6/races',
           kind: 'character',
-          cdnUrl: kit.fbx,
-          altUrls: [kit.fbx, kit.glb, kit.r2].filter(Boolean),
+          cdnUrl: kit.glb || kit.r2,
+          altUrls: [kit.glb, kit.r2, kit.fbx].filter(Boolean),
           animations: 0,
           textures: 1,
           textureStatus: 'atlas',
           scaleProfile: 'character',
+          scaleBaked: true,
+          productionBaked: true,
+          bakePipeline: 'glb2glb',
+          deployReady: true,
+          compressionType: 'draco',
           supportedSkeletons: ['bip001', 'rts_toon'],
+          meshes: 12,
         },
         'grudge6-ssot',
       ),
@@ -309,6 +325,10 @@ function curatedGrudge6() {
           boneMap: 'bip001',
           scaleProfile: 'animation_clip',
           supportedSkeletons: ['bip001', 'rts_toon'],
+          productionBaked: true,
+          bakePipeline: 'anim_bake',
+          deployReady: true,
+          scaleBaked: true,
           cdnUrl: `${ARENA}/anims/baked/${encodeURI(clip.id)}.json`,
           altUrls: [
             `${OPEN}/anims/baked/${encodeURI(clip.id)}.json`,
@@ -454,10 +474,17 @@ function applyFilters() {
     if (activeFormat && m.format !== activeFormat) return false;
     if (activeSource && m.source !== activeSource) return false;
     if (activeUuid && (m.uuidStatus || 'pending') !== activeUuid) return false;
+    if (activeProd === 'ready' && !isProductionDeployReady(m)) return false;
+    if (activeProd === 'raw' && isProductionDeployReady(m)) return false;
     if (toks.length && !toks.every((t) => m.searchBlob.includes(t))) return false;
     return true;
   });
   filtered.sort((a, b) => {
+    if (sortKey === 'production') {
+      const d = productionScore(b) - productionScore(a);
+      if (d !== 0) return d;
+      return (a.name || '').localeCompare(b.name || '');
+    }
     if (sortKey === 'size') return (b.sizeKB || 0) - (a.sizeKB || 0);
     if (sortKey === 'group') return (a.group || '').localeCompare(b.group || '');
     if (sortKey === 'format') return (a.format || '').localeCompare(b.format || '');
@@ -472,8 +499,9 @@ function applyFilters() {
   const groups = new Set(allModels.map((m) => m.group));
   document.getElementById('totalCategories').textContent = String(groups.size);
   document.getElementById('resultsTitle').textContent =
-    [activeKind, activeGroup, activeFormat, activeSource, activeUuid].filter(Boolean).join(' · ') ||
-    'All assets';
+    [activeKind, activeGroup, activeFormat, activeSource, activeUuid, activeProd]
+      .filter(Boolean)
+      .join(' · ') || 'All assets';
   updateUuidStat();
 }
 
@@ -505,6 +533,21 @@ function renderFilters() {
     uuids[us] = (uuids[us] || 0) + 1;
   }
   const sortEntries = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]);
+  const prodReady = allModels.filter((m) => isProductionDeployReady(m)).length;
+  const prodRaw = allModels.length - prodReady;
+  chipRow(
+    document.getElementById('prodFilters'),
+    [
+      ['ready', prodReady],
+      ['raw', prodRaw],
+    ],
+    activeProd,
+    (v) => {
+      activeProd = v;
+      applyFilters();
+    },
+    (v) => (v === 'ready' ? 'prod-ready' : 'prod-raw'),
+  );
   chipRow(
     document.getElementById('kindFilters'),
     sortEntries(kinds),
@@ -688,6 +731,8 @@ function renderPage() {
             : m.textureStatus === 'vertex-color'
               ? '<span class="badge badge-tex-warn">VCOL</span>'
               : '';
+      const prod = productionBadge(m);
+      const prodBadge = `<span class="badge ${prod.cls}" title="productionScore ${prod.score}">${esc(prod.label)}</span>`;
       const us = m.uuidStatus || 'pending';
       const uuidBadge =
         us !== 'pending'
@@ -697,7 +742,9 @@ function renderPage() {
         m.format?.toUpperCase(),
         m.sizeKB ? (m.sizeKB >= 1024 ? `${(m.sizeKB / 1024).toFixed(1)} MB` : `${m.sizeKB} KB`) : null,
         m.animations ? `${m.animations} anim` : m.isBakedClip ? 'baked clip' : null,
+        m.bakePipeline || null,
         m.kind,
+        `P${prod.score}`,
       ]
         .filter(Boolean)
         .join(' · ');
@@ -707,11 +754,11 @@ function renderPage() {
       const thumbHtml = mem
         ? `<img class="thumb" alt="" src="${mem}">`
         : `<span class="glyph">${glyphFor(m)}</span>`;
-      return `<article class="model-card" data-idx="${idx}" data-thumb-key="${esc(key || '')}" title="${esc(m.path || m.name)}">
+      return `<article class="model-card ${isProductionDeployReady(m) ? 'card-prod' : 'card-raw'}" data-idx="${idx}" data-thumb-key="${esc(key || '')}" title="${esc(m.path || m.name)} · prod ${prod.score}">
         <div class="model-icon">
           <span class="badge badge-fmt">${esc(m.format || '?')}</span>
           <span class="badge badge-kind">${esc(m.kind)}</span>
-          <span class="badge badge-group">${esc(m.group)}</span>
+          ${prodBadge}
           ${uuidBadge}
           ${tex}
           ${thumbHtml}
@@ -1376,10 +1423,9 @@ async function loadCharacterKit(raceId) {
     return clone(characterTemplateCache.get(raceId));
   }
   const kit = RACE_KITS[raceId] || RACE_KITS['western-kingdoms'];
-  // SSOT load order: R2 FBX → R2 GLB only. Never arena secondary character CDN.
-  const urls = [kit.fbx, kit.glb, kit.r2].filter(
-    (u, i, a) => u && a.indexOf(u) === i && !isForbiddenCharacterHost(u),
-  );
+  // Deploy order: production GLB (glb2glb) → R2 GLB → FBX author only.
+  // Never arena secondary character CDN.
+  const urls = raceKitDeployUrls(kit, isForbiddenCharacterHost);
   let gltf = null;
   let loadedUrl = null;
   for (const url of urls) {
@@ -1398,9 +1444,13 @@ async function loadCharacterKit(raceId) {
     );
   }
   const root = gltf.scene;
-  root.userData.importPipeline = 'fbx-atlas';
-  root.userData.sourceUrl = loadedUrl || kit.fbx;
+  // production-glb = deploy bake (textures/scale in mesh); fbx-atlas = author + runtime atlas
+  root.userData.importPipeline = /\.fbx($|\?)/i.test(loadedUrl || '')
+    ? 'fbx-atlas'
+    : 'production-glb';
+  root.userData.sourceUrl = loadedUrl || kit.glb || kit.fbx;
   root.userData.grudge6SsotHost = true;
+  root.userData.productionBaked = root.userData.importPipeline === 'production-glb';
   root.userData.grudgeHeightFit = false; // never trust template sticky fit
   // Unify skeletons lightly (Toon RTS multi-skeleton kits)
   const canon = new Map();
