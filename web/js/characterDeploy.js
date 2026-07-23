@@ -207,6 +207,7 @@ export function applyArtForwardPlusZ(root, yaw = Math.PI / 2) {
 export function deployCharacterModel(model, opts = {}) {
   const target = opts.targetHeightM ?? CHARACTER_TARGET_HEIGHT_M;
   const groundY = opts.groundY ?? 0;
+  const forceRefit = opts.forceRefit === true;
 
   // Reset transform noise from prior previews
   model.position.set(0, 0, 0);
@@ -214,10 +215,21 @@ export function deployCharacterModel(model, opts = {}) {
 
   prepareSkinnedMeasure(model);
   let h = bodyBox(model).getSize(new THREE.Vector3()).y || 0;
-  const already = model.userData.grudgeHeightFit === true;
-  const absurd = h > target * 3 || h < target * 0.4 || h < 0.05;
+  // KILL sticky wrong fit from secondary hosts / 100×: always refit when absurd
+  // or forceRefit (anim-on-character host path).
+  const already = !forceRefit && model.userData.grudgeHeightFit === true;
+  const absurd =
+    h > target * 3 ||
+    h < target * 0.4 ||
+    h < 0.05 ||
+    h > 15 || // absolute cm band before unit fix
+    (already && (h < 1.4 || h > 2.4));
   let fit = null;
-  if (!already || absurd) {
+  if (!already || absurd || forceRefit) {
+    if (absurd || forceRefit) {
+      model.userData.grudgeHeightFit = false;
+      model.scale.set(1, 1, 1);
+    }
     fit = fitCharacterHeight(model, target, opts.authorScale ?? 1);
     h = fit.heightM;
   }
@@ -257,19 +269,30 @@ export function deployCharacterModel(model, opts = {}) {
     if (o.isSkinnedMesh) o.frustumCulled = false;
   });
 
+  // Final SI gate — catches residual 100× after facing/center
+  const enforced = enforceCharacterSi(model, target);
+  if (enforced.fixed) {
+    h = enforced.heightM;
+    if (enforced.fit) fit = enforced.fit;
+    facingApplied = true;
+  }
+
   prepareSkinnedMeasure(model);
   const box = bodyBox(model);
   const size = box.getSize(new THREE.Vector3());
+  // Re-ground to requested groundY (enforce uses 0)
+  const groundDeltaY2 = groundY !== 0 ? groundFeetLocal(model, groundY) : 0;
 
   return {
     heightM: size.y || h,
     measure: size.y || h,
     size: { x: size.x, y: size.y, z: size.z },
     minY: box.min.y,
-    groundDeltaY,
+    groundDeltaY: groundDeltaY + groundDeltaY2,
     centerDeltaX: dx,
     centerDeltaZ: dz,
     fit,
+    siEnforced: enforced.fixed,
     pelvis: pelvis?.name || null,
     pelvisBone: pelvis,
     facingApplied,
@@ -311,20 +334,82 @@ function listBoneNames(root) {
 
 /**
  * Strip translation root-motion / hip position tracks when retargeting pack
- * clips onto a grounded kit. Keeps quaternion + scale.
+ * clips onto a grounded kit.
  * KILL: playing full Mixamo/FBX position tracks on a Y-grounded grudge6 kit
  * (character floats at hip / slides).
+ *
+ * By default also strips **.scale** tracks — Mixamo/cm packs often inject
+ * 100× bone scale and explode the skinned body after retarget.
+ * Pass `{ keepScale: true }` only for authored grudge6 root-scale clips.
  */
-export function stripPositionTracks(clip) {
+export function stripPositionTracks(clip, opts = {}) {
   if (!clip?.tracks?.length) return clip;
+  const keepScale = opts.keepScale === true;
   const tracks = clip.tracks.filter((t) => {
     const n = t.name || '';
-    // Keep quaternion and scale; drop .position (root motion / hip lift)
+    // Drop .position (root motion / hip lift)
     if (n.endsWith('.position') || n.includes('.position[')) return false;
+    // Drop .scale unless explicitly kept (100× retarget killer)
+    if (!keepScale && (n.endsWith('.scale') || n.includes('.scale['))) return false;
     return true;
   });
   if (tracks.length === clip.tracks.length) return clip;
   return new THREE.AnimationClip(clip.name, clip.duration, tracks, clip.blendMode);
+}
+
+/**
+ * Hard SI gate: body height must land in [1.55, 2.05] m for grudge6 hosts.
+ * Clears sticky grudgeHeightFit and re-runs unit decade + fit when wrong
+ * (classic 100× / secondary-host mismatch).
+ */
+export function enforceCharacterSi(model, targetM = CHARACTER_TARGET_HEIGHT_M) {
+  prepareSkinnedMeasure(model);
+  let h = bodyBox(model).getSize(new THREE.Vector3()).y || 0;
+  if (h >= 1.55 && h <= 2.05) {
+    groundFeetLocal(model, 0);
+    model.userData.deployHeightM = h;
+    model.userData.grudgeHeightFit = true;
+    return { heightM: h, fixed: false, unitFix: model.userData.grudgeUnitFix ?? 1 };
+  }
+
+  const hadFace = model.userData.artForwardSet === true;
+  const yaw = model.userData.artForwardYaw ?? model.rotation.y ?? Math.PI / 2;
+
+  model.userData.grudgeHeightFit = false;
+  model.userData.artForwardSet = false;
+  model.scale.set(1, 1, 1);
+  model.position.set(0, 0, 0);
+  model.rotation.set(0, 0, 0);
+
+  const fit = fitCharacterHeight(model, targetM);
+  if (hadFace || true) {
+    // grudge6 hosts always re-apply art-forward after hard refit
+    applyArtForwardPlusZ(model, yaw || Math.PI / 2);
+  }
+  centerXZOnPelvis(model);
+  groundFeetLocal(model, 0);
+
+  h = bodyBox(model).getSize(new THREE.Vector3()).y || 0;
+  // Last resort: direct multiply to target (still unclamped unit path already ran)
+  if (h < 1.4 || h > 2.4) {
+    const s = targetM / Math.max(h, 1e-6);
+    if (Number.isFinite(s) && s > 0) {
+      model.scale.multiplyScalar(s);
+      prepareSkinnedMeasure(model);
+      groundFeetLocal(model, 0);
+      h = bodyBox(model).getSize(new THREE.Vector3()).y || targetM;
+    }
+  }
+
+  model.userData.grudgeHeightFit = true;
+  model.userData.characterDeployed = true;
+  model.userData.deployHeightM = h;
+  return {
+    heightM: h,
+    fixed: true,
+    unitFix: fit?.unitFix ?? model.userData.grudgeUnitFix ?? 1,
+    fit,
+  };
 }
 
 /**

@@ -51,59 +51,87 @@ import {
   reGroundAfterAnimSample,
   stripPositionTracks,
   diagnoseCharacterLook,
+  enforceCharacterSi,
   bodyBox as charBodyBox,
   prepareSkinnedMeasure,
 } from './characterDeploy.js';
 
-// ── Fleet hosts ────────────────────────────────────────
+// ── Fleet hosts (SSOT only — no secondary character libraries) ──
+// Mesh: assets.grudge-studio.com models/grudge6/races/* only.
+// Baked anim JSON may load from arena/open (clip data, not mesh hosts).
+// KILL: grudge-arena …/cdn/assets/characters/* as character host (wrong scale / stale).
 const R2 = 'https://assets.grudge-studio.com';
 const ARENA = 'https://grudge-arena.grudge-studio.com';
+const OPEN = 'https://open.grudge-studio.com';
 const D1_API = 'https://api.grudge-studio.com/assets';
 const OBJECTSTORE_MODELS = 'https://molochdagod.github.io/ObjectStore/api/v1/models3d.json';
 const DRACO_PATH = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 const PAGE_SIZE = 48;
 
+/** Forbidden host bases for grudge6 race kits (secondary / stale feeds). */
+const FORBIDDEN_HOST_SUBSTRINGS = [
+  'grudge-arena.grudge-studio.com/cdn/assets/characters',
+  'cdn/assets/characters/human',
+  'cdn/assets/characters/barbarian',
+  'cdn/assets/characters/elf',
+  'cdn/assets/characters/dwarf',
+  'cdn/assets/characters/orc',
+  'cdn/assets/characters/undead',
+];
+
+function isForbiddenCharacterHost(url) {
+  const u = String(url || '').toLowerCase();
+  return FORBIDDEN_HOST_SUBSTRINGS.some((s) => u.includes(s.toLowerCase()));
+}
+
 const RACE_KITS = {
   'western-kingdoms': {
     label: 'WK human',
-    glb: `${ARENA}/cdn/assets/characters/human/WK_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/WK_Characters.glb`,
+    prefix: 'WK_',
+    // SSOT: R2 only (FBX preferred, GLB deploy). Never arena character CDN.
     fbx: `${R2}/models/grudge6/races/WK_Characters.fbx`,
+    glb: `${R2}/models/grudge6/races/WK_Characters.glb`,
+    r2: `${R2}/models/grudge6/races/WK_Characters.glb`,
     atlas: `${R2}/textures/grudge6/western-kingdoms/WK_Standard_Units.webp`,
   },
   barbarians: {
     label: 'Barbarian',
-    glb: `${ARENA}/cdn/assets/characters/barbarian/BRB_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/BRB_Characters.glb`,
+    prefix: 'BRB_',
     fbx: `${R2}/models/grudge6/races/BRB_Characters.fbx`,
+    glb: `${R2}/models/grudge6/races/BRB_Characters.glb`,
+    r2: `${R2}/models/grudge6/races/BRB_Characters.glb`,
     atlas: `${R2}/textures/grudge6/barbarians/BRB_StandardUnits_texture.webp`,
   },
   'high-elves': {
     label: 'Elf',
-    glb: `${ARENA}/cdn/assets/characters/elf/ELF_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/ELF_Characters.glb`,
+    prefix: 'ELF_',
     fbx: `${R2}/models/grudge6/races/ELF_Characters.fbx`,
+    glb: `${R2}/models/grudge6/races/ELF_Characters.glb`,
+    r2: `${R2}/models/grudge6/races/ELF_Characters.glb`,
     atlas: `${R2}/textures/grudge6/elves/ELF_HighElves_Texture.webp`,
   },
   dwarves: {
     label: 'Dwarf',
-    glb: `${ARENA}/cdn/assets/characters/dwarf/DWF_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/DWF_Characters.glb`,
+    prefix: 'DWF_',
     fbx: `${R2}/models/grudge6/races/DWF_Characters.fbx`,
+    glb: `${R2}/models/grudge6/races/DWF_Characters.glb`,
+    r2: `${R2}/models/grudge6/races/DWF_Characters.glb`,
     atlas: `${R2}/textures/grudge6/dwarves/DWF_Standard_Units.webp`,
   },
   orcs: {
     label: 'Orc',
-    glb: `${ARENA}/cdn/assets/characters/orc/ORC_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/ORC_Characters.glb`,
+    prefix: 'ORC_',
     fbx: `${R2}/models/grudge6/races/ORC_Characters.fbx`,
+    glb: `${R2}/models/grudge6/races/ORC_Characters.glb`,
+    r2: `${R2}/models/grudge6/races/ORC_Characters.glb`,
     atlas: `${R2}/textures/grudge6/orcs/ORC_StandardUnits.webp`,
   },
   undead: {
     label: 'Undead',
-    glb: `${ARENA}/cdn/assets/characters/undead/UD_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/UD_Characters.glb`,
+    prefix: 'UD_',
     fbx: `${R2}/models/grudge6/races/UD_Characters.fbx`,
+    glb: `${R2}/models/grudge6/races/UD_Characters.glb`,
+    r2: `${R2}/models/grudge6/races/UD_Characters.glb`,
     atlas: `${R2}/textures/grudge6/undead/UD_Standard_Units.webp`,
   },
 };
@@ -238,26 +266,34 @@ function normalizeEntry(raw, source) {
 function curatedGrudge6() {
   const out = [];
   for (const [id, kit] of Object.entries(RACE_KITS)) {
+    // R2 path only — parse from SSOT URL (never arena character CDN)
+    const r2Path = String(kit.fbx || kit.glb || '')
+      .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
+      .replace(/^\//, '');
     out.push(
       normalizeEntry(
         {
           id: `grudge6-race-${id}`,
-          name: `${kit.label} — Characters kit`,
-          path: `models/grudge6/races/${id}`,
-          format: 'glb',
+          name: `${kit.label} — Characters kit (R2 SSOT)`,
+          path: r2Path || `models/grudge6/races/${id}`,
+          format: 'fbx',
           category: 'grudge6-races',
           group: 'grudge6/races',
           kind: 'character',
-          cdnUrl: kit.glb,
+          cdnUrl: kit.fbx,
+          altUrls: [kit.fbx, kit.glb, kit.r2].filter(Boolean),
           animations: 0,
           textures: 1,
           textureStatus: 'atlas',
+          scaleProfile: 'character',
+          supportedSkeletons: ['bip001', 'rts_toon'],
         },
-        'grudge6-curated',
+        'grudge6-ssot',
       ),
     );
   }
   for (const clip of BAKED_PACKS) {
+    // Baked Bip001 JSON only — preferred anim format for grudge6 hosts
     out.push(
       normalizeEntry(
         {
@@ -274,8 +310,12 @@ function curatedGrudge6() {
           scaleProfile: 'animation_clip',
           supportedSkeletons: ['bip001', 'rts_toon'],
           cdnUrl: `${ARENA}/anims/baked/${encodeURI(clip.id)}.json`,
+          altUrls: [
+            `${OPEN}/anims/baked/${encodeURI(clip.id)}.json`,
+            `${ARENA}/anims/baked/${encodeURI(clip.id)}.json`,
+          ],
         },
-        'arena-baked',
+        'baked-bip001',
       ),
     );
   }
@@ -829,29 +869,35 @@ function deployModel(root, { facePlusZ, entry = null } = {}) {
     const d = deployCharacterModel(root, {
       facePlusZ: face,
       importPipeline: root.userData.importPipeline,
+      forceRefit: true, // anim/mesh host: never trust sticky wrong scale
     });
+    // Hard SI re-gate (100× residual after secondary/stale GLB)
+    const si = enforceCharacterSi(root, 1.8);
     const look = diagnoseCharacterLook(root);
-    const uf = root.userData.grudgeUnitFix ?? d.fit?.unitFix ?? 1;
+    const heightM = si.heightM || d.heightM;
+    const uf = root.userData.grudgeUnitFix ?? d.fit?.unitFix ?? si.unitFix ?? 1;
     return {
-      height: d.heightM,
-      measure: d.measure,
+      height: heightM,
+      measure: heightM,
       size: d.size,
-      minY: d.minY,
+      minY: charBodyBox(root).min.y,
       pelvis: d.pelvis,
       handR: d.handR,
       handL: d.handL,
       bones: d.bones,
       profile,
       scaleReason:
-        (d.facingApplied ? 'characterDeploy · art-forward +Z' : 'characterDeploy') +
+        (d.facingApplied || si.fixed ? 'characterDeploy · art-forward +Z' : 'characterDeploy') +
         (uf !== 1 ? ` · unit×${uf}` : '') +
-        ` · ${(d.measure / 1.8).toFixed(2)}× human`,
-      unitFixed: uf !== 1,
+        (si.fixed ? ' · SI-enforced' : '') +
+        ` · ${(heightM / 1.8).toFixed(2)}× human`,
+      unitFixed: uf !== 1 || si.fixed,
       unitKind: uf === 0.01 || uf === 100 ? 'x100' : uf === 1 ? 'ok' : 'decade',
       normalized: true,
-      humanLabel: `${d.measure.toFixed(2)} m (${(d.measure / 1.8).toFixed(2)}× human tall)`,
-      facingApplied: d.facingApplied,
+      humanLabel: `${heightM.toFixed(2)} m (${(heightM / 1.8).toFixed(2)}× human tall)`,
+      facingApplied: d.facingApplied || si.fixed,
       lookIssues: look.issues,
+      siEnforced: si.fixed,
     };
   }
 
@@ -1285,10 +1331,20 @@ async function resolveUrl(entry) {
     candidates.push(`https://molochdagod.github.io/ObjectStore/${entry.path}`);
   }
   if (entry.isBakedClip && entry.bakedRel) {
-    candidates.push(`${ARENA}/anims/baked/${entry.bakedRel}.json`);
-    candidates.push(`https://open.grudge-studio.com/anims/baked/${entry.bakedRel}.json`);
+    candidates.push(`${ARENA}/anims/baked/${encodeURI(entry.bakedRel)}.json`);
+    candidates.push(`${OPEN}/anims/baked/${encodeURI(entry.bakedRel)}.json`);
   }
-  for (const url of [...new Set(candidates)]) {
+  // Prefer R2 over secondary hosts; skip forbidden character CDNs entirely
+  const ordered = [...new Set(candidates)].sort((a, b) => {
+    const ar = a.includes('assets.grudge-studio.com') ? 0 : 1;
+    const br = b.includes('assets.grudge-studio.com') ? 0 : 1;
+    return ar - br;
+  });
+  for (const url of ordered) {
+    if (isForbiddenCharacterHost(url)) {
+      console.warn('[resolveUrl] skip secondary character host', url);
+      continue;
+    }
     try {
       const r = await fetch(url, { method: 'HEAD', mode: 'cors', signal: AbortSignal.timeout(4000) });
       if (r.ok) {
@@ -1309,7 +1365,9 @@ async function resolveUrl(entry) {
       }
     }
   }
-  return candidates[0] || null;
+  // Never fall back to a forbidden host
+  const safe = ordered.find((u) => !isForbiddenCharacterHost(u));
+  return safe || null;
 }
 
 async function loadCharacterKit(raceId) {
@@ -1318,19 +1376,32 @@ async function loadCharacterKit(raceId) {
     return clone(characterTemplateCache.get(raceId));
   }
   const kit = RACE_KITS[raceId] || RACE_KITS['western-kingdoms'];
+  // SSOT load order: R2 FBX → R2 GLB only. Never arena secondary character CDN.
+  const urls = [kit.fbx, kit.glb, kit.r2].filter(
+    (u, i, a) => u && a.indexOf(u) === i && !isForbiddenCharacterHost(u),
+  );
   let gltf = null;
-  for (const url of [kit.glb, kit.r2]) {
+  let loadedUrl = null;
+  for (const url of urls) {
     try {
       gltf = await loadGltfOrFbx(url);
+      loadedUrl = url;
       break;
-    } catch {
-      /* next */
+    } catch (e) {
+      console.warn('[grudge6 host] load failed', url, e?.message || e);
     }
   }
-  if (!gltf) throw new Error('Failed to load character kit');
+  if (!gltf) {
+    throw new Error(
+      `Failed to load grudge6 race kit (${raceId}) from R2 SSOT. ` +
+        `Tried: ${urls.join(', ')}. Secondary arena character hosts are disabled.`,
+    );
+  }
   const root = gltf.scene;
   root.userData.importPipeline = 'fbx-atlas';
-  root.userData.sourceUrl = kit.fbx || kit.r2 || kit.glb;
+  root.userData.sourceUrl = loadedUrl || kit.fbx;
+  root.userData.grudge6SsotHost = true;
+  root.userData.grudgeHeightFit = false; // never trust template sticky fit
   // Unify skeletons lightly (Toon RTS multi-skeleton kits)
   const canon = new Map();
   root.traverse((o) => {
@@ -1344,7 +1415,7 @@ async function loadCharacterKit(raceId) {
   });
   // Prefer baked mats; strip 1×1 placeholders; race atlas if still bare
   let { prep: mats } = await prepAndRebindMaterials(root, {
-    path: kit.r2 || kit.glb,
+    path: kit.r2 || kit.glb || kit.fbx,
     name: raceId,
   });
   if (mats.withMap === 0) {
@@ -1371,12 +1442,12 @@ async function playBakedOnCharacter(entry, raceId) {
   currentRoot = model;
   scene.add(model);
   rebuildMeshIndex(model);
-  setDiag(info, mats, `anim-on-character (${raceId})`, hostEntry);
+  setDiag(info, mats, `baked-on-grudge6 (${raceId})`, hostEntry);
 
   const rel = entry.bakedRel;
   const urls = [
-    `${ARENA}/anims/baked/${rel}.json`,
-    `https://open.grudge-studio.com/anims/baked/${rel}.json`,
+    `${ARENA}/anims/baked/${encodeURI(rel)}.json`,
+    `${OPEN}/anims/baked/${encodeURI(rel)}.json`,
   ];
   let clip = null;
   for (const url of urls) {
@@ -1385,7 +1456,7 @@ async function playBakedOnCharacter(entry, raceId) {
       if (!r.ok) continue;
       const json = await r.json();
       clip = THREE.AnimationClip.parse(json);
-      // rotation-only safer for retarget
+      // Best practice: baked Bip001 = quaternion-only on grounded kit
       clip = new THREE.AnimationClip(
         clip.name,
         clip.duration,
@@ -1398,20 +1469,22 @@ async function playBakedOnCharacter(entry, raceId) {
       /* next */
     }
   }
-  if (!clip) throw new Error('Baked clip not found');
-  clip = stripPositionTracks(clip);
+  if (!clip) throw new Error('Baked Bip001 clip not found (prefer anims/baked/*.json)');
+  clip = stripPositionTracks(clip); // also drops .scale (100× retarget)
   mixer = new THREE.AnimationMixer(model);
   mixer.clipAction(clip).play();
   mixer.update(1 / 30);
   reGroundAfterAnimSample(model, 0);
+  const si = enforceCharacterSi(model, 1.8);
   const look = diagnoseCharacterLook(model);
   window._currentAnimations = [clip];
   fillAnimUi([clip]);
   frameCamera(model);
+  const h = si.heightM || info.height;
   const face = info.facingApplied ? ' +Z' : '';
   document.getElementById('viewerInfo').textContent =
-    `baked · ${clip.duration.toFixed(2)}s · bones ${info.bones.length} · h=${info.height.toFixed(2)}m · feetY=${info.minY.toFixed(3)}${face}` +
-    (look.ok ? '' : ` · LOOK ${look.issues.map((i) => i.id).join(',')}`);
+    `baked Bip001 JSON · ${clip.duration.toFixed(2)}s · bones ${info.bones.length} · h=${h.toFixed(2)}m · feetY=${charBodyBox(model).min.y.toFixed(3)}${face}` +
+    (look.ok ? ' · look OK' : ` · LOOK ${look.issues.map((i) => i.id).join(',')}`);
 }
 
 function fillAnimUi(anims) {
@@ -1449,10 +1522,14 @@ function playAnimIndex(i) {
   const clip = stripPositionTracks(window._currentAnimations[i]);
   window._currentAnimations[i] = clip;
   mixer.clipAction(clip).reset().play();
-  // Sample one frame then re-ground — kills hip-float after sword_shield attack
+  // Sample one frame then re-ground + SI gate — kills hip-float / 100× after attack
   if (currentRoot) {
     mixer.update(1 / 30);
     reGroundAfterAnimSample(currentRoot, 0);
+    const si = enforceCharacterSi(currentRoot, 1.8);
+    if (si.fixed) {
+      console.warn('[character-correctness] SI re-enforced after clip', si.heightM);
+    }
     const look = diagnoseCharacterLook(currentRoot);
     if (look.issues.length) {
       console.warn('[character-correctness]', look.issues);
@@ -1464,15 +1541,62 @@ function frameCamera(obj) {
   const box = bodyBox(obj);
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
-  const max = Math.max(size.x, size.y, size.z, 1);
-  camera.position.set(center.x + max * 0.9, center.y + max * 0.45, center.z + max * 1.35);
-  controls.target.copy(center);
+  // Clamp framing so a residual 100× never yeets the camera to 200 m
+  const raw = Math.max(size.x, size.y, size.z, 0.5);
+  const max = Math.min(Math.max(raw, 1), 3.5);
+  const cy = Number.isFinite(center.y) ? Math.min(Math.max(center.y, 0.4), 1.5) : 0.9;
+  camera.position.set(center.x + max * 0.9, cy + max * 0.45, center.z + max * 1.35);
+  controls.target.set(center.x, cy, center.z);
   controls.update();
 }
 
+function guessRaceId(entry) {
+  const blob = `${entry?.path || ''} ${entry?.name || ''} ${entry?.cdnUrl || ''}`.toLowerCase();
+  if (/brb_|barbarian/.test(blob)) return 'barbarians';
+  if (/elf_|high-?elf|elves/.test(blob)) return 'high-elves';
+  if (/dwf_|dwarf/.test(blob)) return 'dwarves';
+  if (/orc_/.test(blob)) return 'orcs';
+  if (/ud_|undead/.test(blob)) return 'undead';
+  if (/wk_|western|human/.test(blob)) return 'western-kingdoms';
+  return document.getElementById('previewRace')?.value || 'western-kingdoms';
+}
+
 async function loadMeshAsset(entry) {
-  const url = await resolveUrl(entry);
+  // grudge6 race kits always load via SSOT host path (R2 FBX/GLB) — never arena CDN
+  if (isGrudge6RaceKitEntry(entry) && entry.kind === 'character') {
+    const raceId = guessRaceId(entry);
+    const model = await loadCharacterKit(raceId);
+    const { prep: mats } = await prepAndRebindMaterials(model, {
+      path: entry.path || RACE_KITS[raceId]?.fbx,
+      name: entry.name,
+    });
+    const hostEntry = {
+      ...entry,
+      kind: 'character',
+      path: entry.path || `models/grudge6/races`,
+      cdnUrl: RACE_KITS[raceId]?.fbx,
+      source: 'grudge6-ssot',
+    };
+    const info = deployModel(model, { entry: hostEntry });
+    currentRoot = model;
+    scene.add(model);
+    const report = setDiag(info, mats, `grudge6 R2 SSOT host (${raceId})`, hostEntry);
+    fillAnimUi([]);
+    frameCamera(model);
+    const h = info.measure ?? info.height;
+    document.getElementById('viewerInfo').textContent =
+      `grudge6 SSOT · ${raceId} · h=${h.toFixed(2)}m · feetY=${charBodyBox(model).min.y.toFixed(3)} · unit ${info.unitKind || 'ok'}` +
+      (info.siEnforced ? ' · SI-enforced' : '');
+    return { model, anims: [] };
+  }
+
+  let url = await resolveUrl(entry);
   if (!url) throw new Error('No URL');
+  if (isForbiddenCharacterHost(url)) {
+    throw new Error(
+      `Blocked secondary character host:\n${url}\nUse assets.grudge-studio.com/models/grudge6/races/* only.`,
+    );
+  }
   const gltf = await loadGltfOrFbx(url);
   const model = gltf.scene;
   // Strip 1×1 convert placeholders + rebind bow/arrow atlas from CDN
@@ -1501,6 +1625,7 @@ async function loadMeshAsset(entry) {
     mixer.update(1 / 30);
     if (report?.profile?.kind === 'character' || report?.profile?.kind === 'animation') {
       reGroundAfterAnimSample(model, 0);
+      enforceCharacterSi(model, 1.8);
     }
     fillAnimUi(remapped);
   } else {
@@ -1519,51 +1644,68 @@ async function loadMeshAsset(entry) {
   return { model, anims };
 }
 
+/**
+ * True if entry is itself a grudge6 race kit (show mesh as host).
+ * Everything else under "Play anims on character" is **clips only** → R2 host.
+ */
+function isGrudge6RaceKitEntry(entry) {
+  const p = `${entry?.path || ''} ${entry?.cdnUrl || ''} ${entry?.source || ''}`.toLowerCase();
+  return (
+    entry?.source === 'grudge6-ssot' ||
+    entry?.source === 'grudge6-curated' ||
+    /models\/grudge6\/races\/.*(wk|brb|elf|dwf|orc|ud)_characters/i.test(p) ||
+    /grudge6\/races/i.test(p)
+  );
+}
+
 async function loadAnimClipOnCharacter(entry, raceId) {
-  // Load animation file, then apply to character
+  // Load animation file, then apply to grudge6 R2 host (never secondary mannequin)
   const onChar = document.getElementById('chkAnimOnChar')?.checked !== false;
   if (!onChar) {
     await loadMeshAsset(entry);
     return;
   }
-  if (entry.isBakedClip) {
+  if (entry.isBakedClip || entry.format === 'json') {
     await playBakedOnCharacter(entry, raceId);
     return;
   }
-  const url = await resolveUrl(entry);
-  if (!url) throw new Error('No animation URL');
-  const gltf = await loadGltfOrFbx(url);
-  const anims = gltf.animations || [];
-  // If file also has a skinned body, show it directly with mats
-  let hasSkin = false;
-  gltf.scene.traverse((o) => {
-    if (o.isSkinnedMesh) hasSkin = true;
-  });
-  if (hasSkin && anims.length) {
-    const { prep: mats } = await prepAndRebindMaterials(gltf.scene, entry);
-    gltf.scene.userData.importPipeline =
-      gltf.scene.userData.importPipeline || 'fbx-atlas';
-    const info = deployModel(gltf.scene, { entry: { ...entry, kind: 'character' } });
-    currentRoot = gltf.scene;
-    scene.add(gltf.scene);
-    setDiag(info, mats, 'embedded skinned anim', entry);
-    mixer = new THREE.AnimationMixer(gltf.scene);
-    const remapped = anims.map((c) => stripPositionTracks(rematchClip(gltf.scene, c)));
-    window._currentAnimations = remapped;
-    mixer.clipAction(remapped[0]).play();
-    mixer.update(1 / 30);
-    reGroundAfterAnimSample(gltf.scene, 0);
-    fillAnimUi(remapped);
-    frameCamera(gltf.scene);
-    document.getElementById('viewerInfo').textContent =
-      `skinned clip host · ${anims.length} clips · h=${info.height.toFixed(2)}m · feetY=${info.minY.toFixed(3)}`;
-    return;
-  }
-  if (!anims.length) {
-    // maybe mesh-only — show mesh
+
+  // Race kit entries: show the kit itself (SSOT mesh), not "anim file as body"
+  if (isGrudge6RaceKitEntry(entry) && entry.kind === 'character') {
     await loadMeshAsset(entry);
     return;
   }
+
+  const url = await resolveUrl(entry);
+  if (!url) throw new Error('No animation URL');
+  if (isForbiddenCharacterHost(url)) {
+    throw new Error(
+      'Blocked secondary character host URL. Use R2 models/grudge6/races/* or baked Bip001 JSON.',
+    );
+  }
+
+  const gltf = await loadGltfOrFbx(url);
+  let anims = gltf.animations || [];
+
+  // KILL: "embedded skinned anim" path — Mixamo/GLB mannequins are 100× wrong scale
+  // and wrong skeleton. Always extract clips onto grudge6 R2 host when on-character.
+  let hasSkin = false;
+  gltf.scene?.traverse((o) => {
+    if (o.isSkinnedMesh) hasSkin = true;
+  });
+
+  if (!anims.length) {
+    // mesh-only file — still do not use as grudge6 substitute
+    if (hasSkin && !isGrudge6RaceKitEntry(entry)) {
+      throw new Error(
+        'This file has a skinned mesh but no clips, and is not a grudge6 race kit. ' +
+          'Use models/grudge6/races/*_Characters.fbx/glb or baked anims/baked/*.json.',
+      );
+    }
+    await loadMeshAsset(entry);
+    return;
+  }
+
   const model = await loadCharacterKit(raceId);
   const { prep: mats } = await prepAndRebindMaterials(model, {
     path: entry.path || entry.r2Key,
@@ -1578,18 +1720,33 @@ async function loadAnimClipOnCharacter(entry, raceId) {
   const info = deployModel(model, { entry: hostEntry });
   currentRoot = model;
   scene.add(model);
-  setDiag(info, mats, `clip-on-character (${raceId})`, hostEntry);
+  setDiag(
+    info,
+    mats,
+    hasSkin
+      ? `clips-from-raw→grudge6 host (${raceId}) · embedded mesh discarded`
+      : `clip-on-grudge6 (${raceId})`,
+    hostEntry,
+  );
   mixer = new THREE.AnimationMixer(model);
+  // strip position + scale tracks (100× retarget); rematch Bip001 names
   const remapped = anims.map((c) => stripPositionTracks(rematchClip(model, c)));
   window._currentAnimations = remapped;
   mixer.clipAction(remapped[0]).play();
   mixer.update(1 / 30);
   reGroundAfterAnimSample(model, 0);
+  const si = enforceCharacterSi(model, 1.8);
   fillAnimUi(remapped);
   frameCamera(model);
   const look = diagnoseCharacterLook(model);
+  const fmt = (entry.format || url.split('.').pop() || '').toUpperCase();
+  const warnFmt =
+    fmt !== 'JSON'
+      ? ` · ⚠ raw ${fmt} (prefer baked Bip001 JSON)`
+      : '';
   document.getElementById('viewerInfo').textContent =
-    `anim on character · ${anims.length} clips · rematched · h=${info.height.toFixed(2)}m · feetY=${(charBodyBox(model).min.y).toFixed(3)}` +
+    `anim→grudge6 R2 host · ${anims.length} clips · rematched · h=${si.heightM.toFixed(2)}m · feetY=${charBodyBox(model).min.y.toFixed(3)}` +
+    warnFmt +
     (look.ok ? ' · look OK' : ` · LOOK ${look.issues.map((i) => i.id).join(',')}`);
 }
 

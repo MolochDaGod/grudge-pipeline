@@ -17,6 +17,18 @@ description: >
 Anything that produces **hip-float**, **sideways facing**, **wrong scale**, or
 **yellow/wrong atlas** is a **known anti-pattern** — diagnose, kill, replace with SSOT.
 
+## Pipeline browser SSOT (grudge-pipeline.vercel.app)
+
+| Feed | Allowed? | Role |
+|------|----------|------|
+| `assets.grudge-studio.com/models/grudge6/races/*_Characters.fbx\|glb` | **YES — mesh SSOT** | Anim host + race kits |
+| `anims/baked/**/*.json` (arena/open) | **YES — clip only** | Bip001 rotation packs |
+| `grudge-arena…/cdn/assets/characters/*` | **NO** | Secondary host — caused **100×** / stale scale |
+| Raw Mixamo/FBX mannequin as body | **NO** when “Play anims on character” | Clips retarget onto R2 grudge6 host only |
+| D1 / ObjectStore | Catalog only | Never override race host URL with arena characters |
+
+**Code:** `web/js/model-browser.js` (`loadCharacterKit`, `FORBIDDEN_HOST_*`) · `web/js/characterDeploy.js` (`enforceCharacterSi`, strip `.position`+`.scale`).
+
 ## Symptoms → root cause (why we saw it)
 
 | What you see | Actual cause | Wrong process that caused it |
