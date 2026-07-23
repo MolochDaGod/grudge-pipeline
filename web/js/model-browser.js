@@ -265,6 +265,9 @@ function normalizeEntry(raw, source) {
     m.boneMap,
     m.textureStatus,
     m.grudgeUuid,
+    m.bakePipeline,
+    m.productionBaked ? 'production baked glb2glb deploy' : '',
+    m.deployReady ? 'deploy-ready' : '',
     ...(m.supportedSkeletons || []),
   ]
     .filter(Boolean)
