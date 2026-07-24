@@ -1,0 +1,302 @@
+{
+  "summary": {
+    "packFiles": 145,
+    "meshUnits": 150,
+    "multipackFiles": 3,
+    "bareFiles": 0,
+    "vertexColorFiles": 20,
+    "families": 93,
+    "productionMeshUnits": 150,
+    "notProductionMeshUnits": 0
+  },
+  "barePacks": [],
+  "multipacks": [
+    {
+      "r2Key": "models/codex/blacksmith/props/barrel_water.glb",
+      "meshes": [
+        "barrel_water 1",
+        "barrel_water 2"
+      ]
+    },
+    {
+      "r2Key": "models/codex/blacksmith/props/bellow.glb",
+      "meshes": [
+        "bellow 1",
+        "bellow 2"
+      ]
+    },
+    {
+      "r2Key": "models/codex/blacksmith/props/grindstone.glb",
+      "meshes": [
+        "grindstone 1",
+        "grindstone 2",
+        "grindstone 3",
+        "grindstone 4"
+      ]
+    }
+  ],
+  "largestFamilies": [
+    {
+      "family": "cold-biome/house/roof",
+      "count": 12,
+      "members": [
+        "cold-biome/house/roofempty",
+        "cold-biome/house/roofemptysnowed",
+        "cold-biome/house/rooffullfilled",
+        "cold-biome/house/rooffullfilledsnowed",
+        "cold-biome/house/roofhalffilled",
+        "cold-biome/house/roofhalffilledsnowed",
+        "cold-biome/house/roofemptysnowedstone",
+        "cold-biome/house/roofemptystone",
+        "cold-biome/house/rooffullfilledsnowedstone",
+        "cold-biome/house/rooffullfilledstone",
+        "cold-biome/house/roofhalffilledsnowedstone",
+        "cold-biome/house/roofhalffilledstone"
+      ]
+    },
+    {
+      "family": "glitch-weapons/weapons/axe",
+      "count": 4,
+      "members": [
+        "glitch-weapons/weapons/copper_axe",
+        "glitch-weapons/weapons/diamond_axe",
+        "glitch-weapons/weapons/gold_axe",
+        "glitch-weapons/weapons/silver_axe"
+      ]
+    },
+    {
+      "family": "glitch-weapons/weapons/picaxe",
+      "count": 4,
+      "members": [
+        "glitch-weapons/weapons/copper_picaxe",
+        "glitch-weapons/weapons/diamond_picaxe",
+        "glitch-weapons/weapons/gold_picaxe",
+        "glitch-weapons/weapons/silver_picaxe"
+      ]
+    },
+    {
+      "family": "glitch-weapons/weapons/scyth",
+      "count": 4,
+      "members": [
+        "glitch-weapons/weapons/copper_scyth",
+        "glitch-weapons/weapons/diamond_scyth",
+        "glitch-weapons/weapons/gold_scyth",
+        "glitch-weapons/weapons/silver_scyth"
+      ]
+    },
+    {
+      "family": "glitch-weapons/weapons/shovel",
+      "count": 4,
+      "members": [
+        "glitch-weapons/weapons/copper_shovel",
+        "glitch-weapons/weapons/diamond_shovel",
+        "glitch-weapons/weapons/gold_shovel",
+        "glitch-weapons/weapons/silver_shovel"
+      ]
+    },
+    {
+      "family": "glitch-weapons/weapons/sword",
+      "count": 4,
+      "members": [
+        "glitch-weapons/weapons/copper_sword",
+        "glitch-weapons/weapons/diamond_sword",
+        "glitch-weapons/weapons/gold_sword",
+        "glitch-weapons/weapons/silver_sword"
+      ]
+    },
+    {
+      "family": "cold-biome/house/wallwindow",
+      "count": 4,
+      "members": [
+        "cold-biome/house/wallwindowcold",
+        "cold-biome/house/wallwindowwarm",
+        "cold-biome/house/wallwindowcoldstone",
+        "cold-biome/house/wallwindowwarmstone"
+      ]
+    },
+    {
+      "family": "cold-biome/house/window",
+      "count": 4,
+      "members": [
+        "cold-biome/house/windowcold",
+        "cold-biome/house/windowwarm",
+        "cold-biome/house/warmwindowstone",
+        "cold-biome/house/windowcoldstone"
+      ]
+    },
+    {
+      "family": "cold-biome/crowns/treecrown",
+      "count": 3,
+      "members": [
+        "cold-biome/crowns/treecrown",
+        "cold-biome/crowns/treecrownsnow",
+        "cold-biome/crowns/treecrownsnowy"
+      ]
+    },
+    {
+      "family": "cold-biome/crowns/treecrown2",
+      "count": 3,
+      "members": [
+        "cold-biome/crowns/treecrown2",
+        "cold-biome/crowns/treecrown2snow",
+        "cold-biome/crowns/treecrown2snowy"
+      ]
+    },
+    {
+      "family": "cold-biome/house/floor",
+      "count": 3,
+      "members": [
+        "cold-biome/house/floor",
+        "cold-biome/house/floorbroken",
+        "cold-biome/house/floorstone"
+      ]
+    },
+    {
+      "family": "cold-biome/icycles/icycle",
+      "count": 3,
+      "members": [
+        "cold-biome/icycles/icycle",
+        "cold-biome/icycles/icycledarkice",
+        "cold-biome/icycles/icyclesnowy"
+      ]
+    },
+    {
+      "family": "cold-biome/bushes/bush",
+      "count": 2,
+      "members": [
+        "cold-biome/bushes/alivebush",
+        "cold-biome/bushes/deadbush"
+      ]
+    },
+    {
+      "family": "cold-biome/house/door",
+      "count": 2,
+      "members": [
+        "cold-biome/house/door",
+        "cold-biome/house/doorstone"
+      ]
+    },
+    {
+      "family": "cold-biome/house/pillarin",
+      "count": 2,
+      "members": [
+        "cold-biome/house/pillarin",
+        "cold-biome/house/pillarinstone"
+      ]
+    },
+    {
+      "family": "cold-biome/house/wall",
+      "count": 2,
+      "members": [
+        "cold-biome/house/wall",
+        "cold-biome/house/wallstone"
+      ]
+    },
+    {
+      "family": "cold-biome/house/walldoor",
+      "count": 2,
+      "members": [
+        "cold-biome/house/walldoor",
+        "cold-biome/house/walldoorstone"
+      ]
+    },
+    {
+      "family": "cold-biome/house/walldoorway",
+      "count": 2,
+      "members": [
+        "cold-biome/house/walldoorway",
+        "cold-biome/house/walldoorwaystone"
+      ]
+    },
+    {
+      "family": "cold-biome/house/wallwindowframe",
+      "count": 2,
+      "members": [
+        "cold-biome/house/wallwindowframe",
+        "cold-biome/house/wallwindowframestone"
+      ]
+    },
+    {
+      "family": "cold-biome/house/wallwindowless",
+      "count": 2,
+      "members": [
+        "cold-biome/house/wallwindowless",
+        "cold-biome/house/wallwindowlessstone"
+      ]
+    },
+    {
+      "family": "cold-biome/house/windowframe",
+      "count": 2,
+      "members": [
+        "cold-biome/house/windowframe",
+        "cold-biome/house/windowframestone"
+      ]
+    },
+    {
+      "family": "cold-biome/icycles/icycle2",
+      "count": 2,
+      "members": [
+        "cold-biome/icycles/icycle2",
+        "cold-biome/icycles/icycledarkice2"
+      ]
+    },
+    {
+      "family": "cold-biome/stones/medium",
+      "count": 2,
+      "members": [
+        "cold-biome/stones/mediumstone",
+        "cold-biome/stones/mediumstonesnow"
+      ]
+    },
+    {
+      "family": "cold-biome/stones/small",
+      "count": 2,
+      "members": [
+        "cold-biome/stones/smallstone",
+        "cold-biome/stones/smallstonesnow"
+      ]
+    },
+    {
+      "family": "blacksmith/props/anvil",
+      "count": 1,
+      "members": [
+        "blacksmith/props/anvil"
+      ]
+    },
+    {
+      "family": "blacksmith/props/barrel_water",
+      "count": 1,
+      "members": [
+        "blacksmith/props/barrel_water"
+      ]
+    },
+    {
+      "family": "blacksmith/props/bellow",
+      "count": 1,
+      "members": [
+        "blacksmith/props/bellow"
+      ]
+    },
+    {
+      "family": "blacksmith/props/blacksmith_stand",
+      "count": 1,
+      "members": [
+        "blacksmith/props/blacksmith_stand"
+      ]
+    },
+    {
+      "family": "blacksmith/props/crate",
+      "count": 1,
+      "members": [
+        "blacksmith/props/crate"
+      ]
+    },
+    {
+      "family": "blacksmith/props/forge_01",
+      "count": 1,
+      "members": [
+        "blacksmith/props/forge_01"
+      ]
+    }
+  ]
+}
