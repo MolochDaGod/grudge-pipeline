@@ -12,7 +12,11 @@
     "ingest": "node ingest/scan-assets.mjs",
     "sync:objectstore": "node sync/to-objectstore.mjs",
     "sync:r2": "node sync/to-r2.mjs",
-    "sync:verify": "node sync/verify.mjs"
+    "sync:verify": "node sync/verify.mjs",
+    "uuid:assign": "node scripts/uuid-assign.mjs",
+    "dedupe": "node scripts/dedupe-purge.mjs",
+    "dedupe:codex": "node scripts/dedupe-purge.mjs --catalog D:/Games/Models/_codex_prod/catalog.json --out reports/dedupe-codex.json --write-plan reports/purge-codex.json",
+    "deploy:ai-worker": "npm run deploy --prefix workers/asset-deploy-ai"
   },
   "dependencies": {
     "@gltf-transform/core": "^4.3.0",

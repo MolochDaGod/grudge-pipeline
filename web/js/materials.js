@@ -39,6 +39,43 @@ export const ATLAS_BINDINGS = [
       `${R2}/models/craftpix_lowpoly/texture_map.png`,
     ],
   },
+  {
+    id: 'grudge6-wk',
+    matName: /wk_|western|kingdom|polyart|toon/i,
+    path: /grudge6\/races\/wk|WK_Characters|western-kingdoms/i,
+    urls: [
+      `${R2}/models/grudge6/races/WK_Standard_Units.webp`,
+      `${R2}/models/grudge6/races/WK_Standard_Units.png`,
+      `${R2}/models/grudge6/atlases/WK_Standard_Units.webp`,
+    ],
+  },
+  {
+    id: 'grudge6-brb',
+    matName: /brb_|barbarian/i,
+    path: /grudge6\/races\/brb|BRB_Characters|barbarian/i,
+    urls: [
+      `${R2}/models/grudge6/races/BRB_Standard_Units.webp`,
+      `${R2}/models/grudge6/races/BRB_Standard_Units.png`,
+    ],
+  },
+  {
+    id: 'codex-glitch',
+    matName: /glitch|copper|silver|gold|diamond/i,
+    path: /models\/codex\/glitch-weapons|glitch-and-giggle/i,
+    urls: [
+      // mesh GLBs should embed maps; icons are 2D fallback only
+      `${R2}/ui/codex/icons/weapons/glitch-and-giggle/copper/copper_sword.png`,
+    ],
+  },
+  {
+    id: 'cold-biome',
+    matName: /cold|snow|viking|ice/i,
+    path: /models\/codex\/cold-biome|cold-biome/i,
+    urls: [
+      `${R2}/models/codex/cold-biome/atlas.png`,
+      `${R2}/models/codex/cold-biome/texture.png`,
+    ],
+  },
 ];
 
 let textureLoader = null;
@@ -243,5 +280,101 @@ export async function prepAndRebindMaterials(root, entry = {}) {
       brokenMaps: after.brokenMaps,
       rebound,
     },
+  };
+}
+
+/**
+ * Tint specific meshes (equipment isolation / team color).
+ * Multiplies base color; keeps map if present.
+ * @param {THREE.Mesh[]} meshes
+ * @param {number|string} hex 0xrrggbb or '#rrggbb'
+ */
+export function applyMeshColor(meshes, hex) {
+  if (!meshes || !meshes.length) return 0;
+  let n = 0;
+  const color = new THREE.Color(hex);
+  for (const mesh of meshes) {
+    const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (let i = 0; i < list.length; i++) {
+      const mat = list[i];
+      if (!mat) continue;
+      // clone so multipack parts don't share tint
+      const m = mat.clone();
+      if (m.color) m.color.copy(color);
+      if (m.map) m.color.setHex(0xffffff).multiply(color);
+      m.needsUpdate = true;
+      list[i] = m;
+      n++;
+    }
+    mesh.material = list.length === 1 ? list[0] : list;
+  }
+  return n;
+}
+
+/**
+ * Bind a texture URL onto mesh materials (smart mesh-specific texturing).
+ * @param {THREE.Mesh[]} meshes
+ * @param {string} url
+ * @returns {Promise<number>} materials updated
+ */
+export async function applyMeshTexture(meshes, url) {
+  if (!meshes || !meshes.length || !url) return 0;
+  const tex = await loadAtlas(url);
+  if (!tex) return 0;
+  let n = 0;
+  for (const mesh of meshes) {
+    const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (let i = 0; i < list.length; i++) {
+      const mat = list[i];
+      if (!mat) continue;
+      const m = mat.clone();
+      m.map = tex;
+      if (m.color) m.color.setHex(0xffffff);
+      if ('metalness' in m) m.metalness = Math.min(m.metalness ?? 0, 0.15);
+      if ('roughness' in m) m.roughness = Math.max(m.roughness ?? 0.5, 0.45);
+      m.needsUpdate = true;
+      list[i] = m;
+      n++;
+    }
+    mesh.material = list.length === 1 ? list[0] : list;
+  }
+  return n;
+}
+
+/**
+ * Report material health for deploy gate UI.
+ */
+export function materialHealth(root) {
+  const pairs = collectMaterials(root);
+  let withMap = 0;
+  let broken = 0;
+  let bare = 0;
+  let vertexColor = 0;
+  for (const { mat } of pairs) {
+    if (mat.vertexColors) vertexColor++;
+    if (mat.map) {
+      if (isBrokenMap(mat.map)) broken++;
+      else withMap++;
+    } else if (!mat.vertexColors) {
+      bare++;
+    }
+  }
+  const ok = pairs.length > 0 && broken === 0 && (withMap > 0 || vertexColor === pairs.length);
+  return {
+    mats: pairs.length,
+    withMap,
+    broken,
+    bare,
+    vertexColor,
+    ok,
+    label: ok
+      ? withMap
+        ? 'textured'
+        : 'vertex-color'
+      : broken
+        ? 'broken-maps'
+        : bare
+          ? 'untextured'
+          : 'empty',
   };
 }

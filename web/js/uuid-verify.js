@@ -171,7 +171,87 @@ export function uuidStatusClass(status) {
       return 'uuid-bad';
     case 'n/a':
       return 'uuid-na';
+    case 'dup':
+      return 'uuid-bad';
     default:
       return 'uuid-missing';
   }
+}
+
+/**
+ * Find catalog duplicates by UUID and basename for purge UI.
+ * @param {object[]} models
+ * @returns {{ byUuid: object[], byBasename: object[], summary: object }}
+ */
+export function findCatalogDuplicates(models) {
+  const byUuid = new Map();
+  const byBase = new Map();
+  for (const m of models || []) {
+    const path = String(m.path || m.r2Key || m.id || '')
+      .replace(/\\/g, '/')
+      .replace(/^\//, '');
+    const base = path.split('/').pop() || m.name || '';
+    const uuid = (m.grudgeUuid || '').toLowerCase();
+    if (uuid && isValidUuid(uuid)) {
+      if (!byUuid.has(uuid)) byUuid.set(uuid, []);
+      byUuid.get(uuid).push(m);
+    }
+    if (base) {
+      const k = base.toLowerCase();
+      if (!byBase.has(k)) byBase.set(k, []);
+      byBase.get(k).push(m);
+    }
+  }
+
+  function groups(map, reason) {
+    const out = [];
+    for (const [key, list] of map) {
+      const paths = new Set(
+        list.map((m) => String(m.path || m.r2Key || m.id || '').replace(/\\/g, '/')),
+      );
+      if (paths.size < 2) continue;
+      out.push({
+        reason,
+        key,
+        count: paths.size,
+        paths: [...paths],
+        names: list.map((m) => m.name).filter(Boolean),
+      });
+    }
+    return out.sort((a, b) => b.count - a.count);
+  }
+
+  const gU = groups(byUuid, 'uuid');
+  const gB = groups(byBase, 'basename');
+  return {
+    byUuid: gU,
+    byBasename: gB,
+    summary: {
+      models: models.length,
+      uuidDupGroups: gU.length,
+      basenameDupGroups: gB.length,
+      purgeHints: gU.length + gB.length,
+    },
+  };
+}
+
+/** Deploy AI worker base (override via window.GRUDGE_ASSET_DEPLOY_AI). */
+export function deployAiBase() {
+  if (typeof window !== 'undefined' && window.GRUDGE_ASSET_DEPLOY_AI) {
+    return String(window.GRUDGE_ASSET_DEPLOY_AI).replace(/\/$/, '');
+  }
+  // workers.dev is always live; custom host needs DNS orange-cloud
+  return 'https://grudge-asset-deploy-ai.grudge.workers.dev';
+}
+
+export async function callDeployAi(path, body) {
+  const base = deployAiBase();
+  const r = await fetch(`${base}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `deploy-ai ${r.status}`);
+  return j;
 }

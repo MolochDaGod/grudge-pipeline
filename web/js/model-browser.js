@@ -17,6 +17,8 @@ import {
   uuidStatusClass,
   grudgeUuidFromR2Key,
   isValidUuid,
+  findCatalogDuplicates,
+  callDeployAi,
 } from './uuid-verify.js';
 import {
   thumbGet,
@@ -37,10 +39,18 @@ import {
   isProductionDeployReady,
   productionBadge,
 } from './use-contract.js';
-import { raceKitDeployUrls } from './productionBake.js';
+import {
+  raceKitDeployUrls,
+  inferEquipSlot,
+  isGameplayProductionGlb,
+  hasProductionSurface,
+} from './productionBake.js';
 import {
   prepMaterials,
   prepAndRebindMaterials,
+  applyMeshColor,
+  applyMeshTexture,
+  materialHealth,
 } from './materials.js';
 import {
   inferAssetKind,
@@ -167,8 +177,14 @@ let activeFormat = null;
 let activeSource = null;
 let activeUuid = null;
 let sortKey = 'production';
-/** @type {string|null} null | 'ready' | 'raw' */
-let activeProd = null;
+/**
+ * Deploy bake filter — DEFAULT **ready**: only textured / glb2glb production assets.
+ * User can switch to "raw" or All to inspect author sources.
+ * @type {string|null} null | 'ready' | 'raw'
+ */
+let activeProd = 'ready';
+/** Prefer GLB format in inventory for gameplay-ready browsing */
+let activeFormat = 'glb';
 /** @type {{ byUuid: Map, byPath: Map }} */
 let d1Index = { byUuid: new Map(), byPath: new Map() };
 let uuidVerified = false;
@@ -1071,9 +1087,11 @@ function rebuildMeshIndex(root) {
   selectedMeshName = null;
   if (!root) {
     document.getElementById('meshList').innerHTML =
-      '<em class="dim">Load a multipack to isolate meshName</em>';
+      '<em class="dim">Load a multipack to isolate meshName · equip slot · color / texture</em>';
     document.getElementById('meshCount').textContent = '';
     document.getElementById('useMeshName').textContent = '—';
+    const slotEl = document.getElementById('useEquipSlot');
+    if (slotEl) slotEl.textContent = '—';
     return;
   }
   root.traverse((o) => {
@@ -1089,16 +1107,46 @@ function rebuildMeshIndex(root) {
     return;
   }
   const list = document.getElementById('meshList');
-  list.innerHTML = names
-    .map((n) => {
-      const count = meshIndex.get(n).length;
-      return `<label data-mesh="${esc(n)}">
+  // Group by equip slot for smarter multipack UI
+  const bySlot = new Map();
+  names.forEach((n) => {
+    const slot = inferEquipSlot(n);
+    if (!bySlot.has(slot)) bySlot.set(slot, []);
+    bySlot.get(slot).push(n);
+  });
+  const slotOrder = [
+    'head',
+    'body',
+    'arms',
+    'legs',
+    'weapon',
+    'shield',
+    'accessory',
+    'hair',
+    'mount',
+    'prop',
+    'mesh',
+    'skeleton',
+    'unknown',
+  ];
+  let html = '';
+  for (const slot of slotOrder) {
+    const group = bySlot.get(slot);
+    if (!group || !group.length) continue;
+    html += `<div class="mesh-slot-group" data-slot="${esc(slot)}"><div class="mesh-slot-label">${esc(slot)} <span class="count">${group.length}</span></div>`;
+    html += group
+      .map((n) => {
+        const count = meshIndex.get(n).length;
+        return `<label data-mesh="${esc(n)}" data-slot="${esc(slot)}">
         <input type="checkbox" class="mesh-vis" data-mesh="${esc(n)}" checked>
-        <span title="${esc(n)}">${esc(n)}${count > 1 ? ` ×${count}` : ''}</span>
-        <button type="button" class="mesh-pick" data-mesh="${esc(n)}" title="Select for meshName">use</button>
+        <span title="${esc(n)} · slot ${esc(slot)}">${esc(n)}${count > 1 ? ` ×${count}` : ''}</span>
+        <button type="button" class="mesh-pick" data-mesh="${esc(n)}" title="Select for meshName / equip">use</button>
       </label>`;
-    })
-    .join('');
+      })
+      .join('');
+    html += '</div>';
+  }
+  list.innerHTML = html;
   list.querySelectorAll('input.mesh-vis').forEach((inp) => {
     inp.addEventListener('change', () => {
       const n = inp.dataset.mesh;
@@ -1125,19 +1173,56 @@ function rebuildMeshIndex(root) {
 function selectMeshName(name) {
   selectedMeshName = name || null;
   document.getElementById('useMeshName').textContent = selectedMeshName || '—';
+  const slot = selectedMeshName ? inferEquipSlot(selectedMeshName) : '—';
+  const slotEl = document.getElementById('useEquipSlot');
+  if (slotEl) slotEl.textContent = slot;
   document.querySelectorAll('#meshList label').forEach((lab) => {
     lab.classList.toggle('solo', lab.dataset.mesh === selectedMeshName);
   });
   if (currentEntry) {
-    // refresh snippet context note
     const sn = document.getElementById('useSnippet');
     if (sn && selectedMeshName) {
       sn.value =
         openImportSnippet(currentEntry) +
-        `\n// isolate multipack:\n// meshName = ${JSON.stringify(selectedMeshName)}`;
+        `\n// isolate multipack equip:\n// meshName = ${JSON.stringify(selectedMeshName)}\n// equipSlot = ${JSON.stringify(slot)}`;
     }
   }
-  flashUse(`meshName = ${selectedMeshName}`);
+  flashUse(`meshName = ${selectedMeshName} · slot ${slot}`);
+}
+
+function selectedMeshes() {
+  if (!selectedMeshName) return [];
+  return meshIndex.get(selectedMeshName) || [];
+}
+
+function applySelectedMeshColor() {
+  const hex = document.getElementById('meshColor')?.value || '#ffffff';
+  const n = applyMeshColor(selectedMeshes(), hex);
+  flashUse(n ? `Tinted ${n} mat(s) on ${selectedMeshName}` : 'Select a mesh first');
+}
+
+async function applySelectedMeshTexture() {
+  const url = (document.getElementById('meshTexUrl')?.value || '').trim();
+  if (!url) {
+    flashUse('Enter a texture URL (CDN atlas / map)');
+    return;
+  }
+  const n = await applyMeshTexture(selectedMeshes(), url);
+  flashUse(n ? `Bound texture on ${n} mat(s)` : 'Texture load failed or no mesh selected');
+}
+
+function soloEquipSlot(slot) {
+  if (!slot) return;
+  meshIndex.forEach((meshes, n) => {
+    const on = inferEquipSlot(n) === slot;
+    meshes.forEach((m) => {
+      m.visible = on;
+    });
+  });
+  document.querySelectorAll('#meshList input.mesh-vis').forEach((inp) => {
+    inp.checked = inferEquipSlot(inp.dataset.mesh) === slot;
+  });
+  flashUse(`Solo equip slot: ${slot}`);
 }
 
 function setAllMeshesVisible(vis) {
@@ -1954,6 +2039,123 @@ async function runUuidVerify() {
   }
 }
 
+function showDedupePanel(text) {
+  const panel = document.getElementById('dedupePanel');
+  const pre = document.getElementById('dedupeReport');
+  if (panel) panel.hidden = false;
+  if (pre) pre.textContent = text;
+}
+
+async function runDedupeScan() {
+  setActionStatus('Dedupe scan…');
+  try {
+    // Ensure UUIDs present
+    if (!uuidVerified) await runUuidVerify();
+    const local = findCatalogDuplicates(allModels);
+    let remote = null;
+    try {
+      const assets = allModels.slice(0, 1500).map((m) => ({
+        r2Key: m.path || m.r2Key,
+        grudgeUuid: m.grudgeUuid,
+        format: m.format,
+        textures: m.textures,
+        textureStatus: m.textureStatus,
+        productionBaked: m.productionBaked,
+        bakePipeline: m.bakePipeline,
+      }));
+      remote = await callDeployAi('/v1/dedupe/scan', { assets });
+    } catch (e) {
+      remote = { error: e.message, note: 'Deploy AI offline — local-only scan' };
+    }
+    const lines = [
+      '=== LOCAL CATALOG DEDUPE ===',
+      JSON.stringify(local.summary, null, 2),
+      '',
+      'Top basename dups:',
+      ...local.byBasename.slice(0, 15).map(
+        (g) => `  [${g.count}] ${g.key}\n    ${g.paths.join('\n    ')}`,
+      ),
+      '',
+      'Top UUID dups:',
+      ...local.byUuid.slice(0, 10).map(
+        (g) => `  [${g.count}] ${g.key}\n    ${g.paths.join('\n    ')}`,
+      ),
+      '',
+      '=== DEPLOY AI /v1/dedupe/scan ===',
+      remote.error
+        ? String(remote.error)
+        : JSON.stringify(remote.summary || remote, null, 2),
+      '',
+      'Purge CLI (review first):',
+      '  node scripts/dedupe-purge.mjs --catalog <catalog.json> --write-plan reports/purge.json',
+    ];
+    showDedupePanel(lines.join('\n'));
+    setActionStatus(
+      `Dedupe · basename groups ${local.summary.basenameDupGroups} · uuid groups ${local.summary.uuidDupGroups}`,
+    );
+  } catch (e) {
+    console.error(e);
+    setActionStatus(`Dedupe failed: ${e.message}`);
+  }
+}
+
+async function runDeployPlan() {
+  setActionStatus('Deploy plan…');
+  try {
+    const assets = (filtered.length ? filtered : allModels).slice(0, 800).map((m) => ({
+      r2Key: m.path || m.r2Key,
+      grudgeUuid: m.grudgeUuid,
+      format: m.format,
+      textures: m.textures,
+      textureStatus: m.textureStatus,
+      productionBaked: m.productionBaked,
+      bakePipeline: m.bakePipeline,
+      deployReady: m.deployReady,
+      cdnUrl: m.cdnUrl,
+    }));
+    let plan;
+    try {
+      plan = await callDeployAi('/v1/deploy/plan', { assets });
+    } catch (e) {
+      // offline: local production filter
+      const ready = [];
+      const blocked = [];
+      for (const m of filtered.length ? filtered : allModels) {
+        const row = { r2Key: m.path || m.r2Key, name: m.name };
+        if (isProductionDeployReady(m)) ready.push(row);
+        else blocked.push(row);
+      }
+      plan = {
+        readyCount: ready.length,
+        blockedCount: blocked.length,
+        ready: ready.slice(0, 40),
+        blocked: blocked.slice(0, 40),
+        policy: 'local isProductionDeployReady (deploy AI offline)',
+        error: e.message,
+      };
+    }
+    const lines = [
+      '=== PRODUCTION DEPLOY PLAN ===',
+      plan.policy || '',
+      `ready=${plan.readyCount} blocked=${plan.blockedCount}`,
+      plan.error ? `(AI: ${plan.error})` : '',
+      '',
+      'Ready (sample):',
+      ...(plan.ready || []).slice(0, 25).map((r) => `  ✓ ${r.r2Key || r.name}`),
+      '',
+      'Blocked (sample):',
+      ...(plan.blocked || []).slice(0, 25).map((r) => `  ✗ ${r.r2Key || r.name} — ${r.reason || 'not production'}`),
+      '',
+      'Fix blocked: glb2glb --height 1.8 --texture-size 1024 → R2 → registry seed',
+    ];
+    showDedupePanel(lines.join('\n'));
+    setActionStatus(`Deploy plan · ready ${plan.readyCount} · blocked ${plan.blockedCount}`);
+  } catch (e) {
+    console.error(e);
+    setActionStatus(`Deploy plan failed: ${e.message}`);
+  }
+}
+
 function snapshotList(list, label) {
   const snapable = list.filter(canSnapshot);
   let done = 0;
@@ -2014,6 +2216,8 @@ function wireUi() {
     applyFilters();
   });
   document.getElementById('btnVerifyUuid')?.addEventListener('click', () => runUuidVerify());
+  document.getElementById('btnDedupe')?.addEventListener('click', () => runDedupeScan());
+  document.getElementById('btnDeployPlan')?.addEventListener('click', () => runDeployPlan());
   document.getElementById('btnSnapPage')?.addEventListener('click', () => {
     const start = page * PAGE_SIZE;
     snapshotList(filtered.slice(start, start + PAGE_SIZE), 'Page');
@@ -2074,6 +2278,18 @@ function wireUi() {
   document.getElementById('btnMeshSolo')?.addEventListener('click', () => {
     if (selectedMeshName) soloMesh(selectedMeshName);
     else flashUse('Pick a mesh with “use” first');
+  });
+  document.getElementById('btnMeshColor')?.addEventListener('click', () => applySelectedMeshColor());
+  document.getElementById('btnMeshTex')?.addEventListener('click', () => {
+    applySelectedMeshTexture();
+  });
+  document.getElementById('meshSlotFilter')?.addEventListener('change', (e) => {
+    const slot = e.target.value;
+    if (!slot) {
+      setAllMeshesVisible(true);
+      return;
+    }
+    soloEquipSlot(slot);
   });
   document.getElementById('viewerCloseBtn').addEventListener('click', () => {
     document.getElementById('viewerOverlay').classList.remove('active');

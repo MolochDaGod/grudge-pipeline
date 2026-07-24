@@ -377,3 +377,31 @@ body {
   .viewer-side { width: 100%; max-width: none; max-height: 36vh; border-left: 0; border-top: 1px solid var(--border); }
   .viewer-body { flex-direction: column; }
 }
+
+/* Dedupe / UUID report */
+.dedupe-panel {
+  margin: 10px 12px 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+}
+.dedupe-report {
+  margin: 8px 0 0;
+  max-height: 220px;
+  overflow: auto;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #b7c5d8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.mesh-slot-group { margin-bottom: 8px; }
+.mesh-slot-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b97a8;
+  margin: 6px 0 4px;
+}
+.mesh-slot-label .count { opacity: 0.7; }

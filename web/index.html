@@ -12,7 +12,7 @@
       <div>
         <h1>Grudge Pipeline</h1>
         <p class="subtitle">
-          Production bake first — textured · meshed · SI-scaled · glb2glb · baked deploy
+          Production only — fully textured · colored · meshed · SI · <b>glb2glb</b> · R2 (raw FBX hidden by default)
           <span class="r2-status checking" id="r2Status"><span class="r2-dot"></span> Catalog…</span>
         </p>
       </div>
@@ -50,6 +50,12 @@
         <button type="button" class="action-btn" id="btnVerifyUuid" title="Verify grudgeUuid format + D1 / r2Key hash">
           Verify UUIDs
         </button>
+        <button type="button" class="action-btn" id="btnDedupe" title="Scan catalog for UUID / basename duplicates">
+          Dedupe scan
+        </button>
+        <button type="button" class="action-btn" id="btnDeployPlan" title="Ask deploy AI which assets are production-ready">
+          Deploy plan
+        </button>
         <button type="button" class="action-btn" id="btnSnapPage" title="Render 3D snapshots for this page">
           Snapshot page
         </button>
@@ -57,6 +63,10 @@
           Snapshot filtered
         </button>
         <span class="action-status" id="actionStatus"></span>
+      </div>
+      <div id="dedupePanel" class="dedupe-panel" hidden>
+        <div class="filter-label">Dedupe / UUID report</div>
+        <pre id="dedupeReport" class="dedupe-report"></pre>
       </div>
 
       <div class="filter-section">
@@ -179,10 +189,38 @@
         </p>
 
         <h3>Multipack meshes <span class="mesh-count" id="meshCount"></span></h3>
+        <p class="diag-footnote" style="margin-top:0">
+          Isolate <strong>meshName</strong> by equip slot (body / arms / legs / head / weapon).
+          Tint or rebind texture per mesh for production equip wiring.
+        </p>
         <div class="mesh-toolbar">
           <button type="button" class="viewer-btn" id="btnMeshAll">All</button>
           <button type="button" class="viewer-btn" id="btnMeshNone">None</button>
           <button type="button" class="viewer-btn" id="btnMeshSolo" title="Solo selected">Solo</button>
+          <select id="meshSlotFilter" class="anim-select-3d" title="Solo equip slot">
+            <option value="">All slots</option>
+            <option value="head">head</option>
+            <option value="body">body</option>
+            <option value="arms">arms</option>
+            <option value="legs">legs</option>
+            <option value="weapon">weapon</option>
+            <option value="shield">shield</option>
+            <option value="accessory">accessory</option>
+            <option value="prop">prop</option>
+            <option value="skeleton">skeleton</option>
+          </select>
+        </div>
+        <div class="mesh-tools row" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;align-items:center">
+          <label class="dim" style="font-size:.75rem">Color
+            <input type="color" id="meshColor" value="#ffffff" title="Mesh tint" />
+          </label>
+          <button type="button" class="viewer-btn" id="btnMeshColor">Apply color</button>
+          <input type="url" id="meshTexUrl" placeholder="https://assets…/atlas.webp" style="flex:1;min-width:140px;font-size:.75rem;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:#0b1220;color:inherit" />
+          <button type="button" class="viewer-btn" id="btnMeshTex">Bind texture</button>
+        </div>
+        <div class="use-row">
+          <label>equipSlot</label>
+          <code id="useEquipSlot">—</code>
         </div>
         <div class="mesh-list" id="meshList"><em class="dim">Load a multipack to isolate meshName</em></div>
 
