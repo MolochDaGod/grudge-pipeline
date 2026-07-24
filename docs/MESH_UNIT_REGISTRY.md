@@ -55,18 +55,43 @@ Mesh unit `r2_key` is **logical** (includes `#mesh:`) so it is UNIQUE.
 }
 ```
 
-Seed:
+Seed (no BEGIN/COMMIT — D1 remote rejects SQL transactions):
 
 ```bash
 wrangler d1 execute grudge-assets-db --remote --file=D:/Games/Models/_codex_prod/seed-d1-meshes.sql
 ```
 
+## Identity model (do not collapse)
+
+| Concept | What it is | D1? | Game resolve |
+|---------|------------|-----|--------------|
+| **Mesh unit** | One textured mesh, own UUID | **Yes, alone** (`category=mesh_unit`, logical `r2_key` with `#mesh:`) | Preferred atom for equip / harvest / damage |
+| **Pack (GLB)** | Parent file; may be multipack | Yes (real R2 key) | Load URL only; isolate mesh unit for play |
+| **Family** | Related instances (damage / material / tier) | Metadata on each row | `variantsOf` / `pickVariant` — not a single blob |
+
+Examples of **families** (each member still its own mesh unit + UUID):
+
+- Tier: `copper_axe` / `silver_axe` / `gold_axe` / `diamond_axe` → `glitch-weapons/weapons/axe`
+- Material: `wall` / `wallstone` / `windowcold` → cold-biome house family
+- Damage / fill: `roofempty` / `roofhalffilled` / `rooffullfilled` / `…broken`
+- Multipack parts: `grindstone::grindstone 1` … `grindstone 4` (same file, four D1 rows)
+
 ## Game load
 
 ```js
 await GrudgeMeshRegistry.load();
+
+// Preferred: mesh unit id or UUID
 const spec = GrudgeMeshRegistry.resolveLoad('blacksmith/props/grindstone::grindstone 1');
 // { url, meshName, grudgeUuid, isolate: true, equipSlot, textureStatus }
+
+// Pack id → prefer first mesh unit (do not dump multipack whole)
+const unit = GrudgeMeshRegistry.preferMeshUnit('blacksmith/props/grindstone');
+
+// Family pick (damage / tier / material)
+const goldAxe = GrudgeMeshRegistry.pickVariant('glitch-weapons/weapons/axe', { tier: 'gold' });
+const wallStone = GrudgeMeshRegistry.pickVariant('cold-biome/house/wall', { materialVariant: 'stone' });
+
 const gltf = await loader.loadAsync(spec.url);
 GrudgeMeshRegistry.isolateMesh(gltf.scene, spec.meshName);
 ```
@@ -75,7 +100,7 @@ Variants:
 
 ```js
 GrudgeMeshRegistry.variantsOf('cold-biome/house/wall');
-// wall, wallstone, walldoor, … damage/material family
+// each member: own id, grudgeUuid, damageLevel, materialVariant, tier
 ```
 
 ## Production gate

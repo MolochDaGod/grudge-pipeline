@@ -325,7 +325,7 @@ async function main() {
       tags: [
         ...(cat.tags || []),
         ...variant.tags,
-        inspect.multipack ? 'multipack' : 'single-mesh',
+        inspect.meshCount > 1 ? 'multipack' : 'single-mesh',
         `tex:${inspect.textureStatus}`,
       ].filter(Boolean),
       meshes: inspect.meshes.map((m) => m.meshName),
@@ -456,10 +456,11 @@ async function main() {
 
   // D1 seed: pack rows + mesh unit rows
   // Pack uses real r2_key; mesh uses logical r2_key (unique) + metadata in animation_packs JSON
+  // NOTE: no BEGIN/COMMIT — wrangler d1 execute --remote rejects SQL transactions
   const lines = [
     '-- Per-mesh + pack asset_registry seed (logical mesh keys use #mesh:)',
     '-- Parent binary remains parentR2Key inside animation_packs JSON',
-    'BEGIN TRANSACTION;',
+    '-- Do not wrap in BEGIN/COMMIT (D1 remote execute rejects transactions)',
   ];
 
   for (const p of packEntries) {
@@ -506,7 +507,6 @@ async function main() {
       `INSERT OR REPLACE INTO asset_registry (id, name, category, r2_key, grudge_uuid, file_size, animation_packs, updated_at) VALUES ('${id}','${name}','mesh_unit','${m.r2Key.replace(/'/g, "''")}','${m.grudgeUuid}',NULL,'${meta}',unixepoch()*1000);`,
     );
   }
-  lines.push('COMMIT;');
   fs.writeFileSync(seedPath, lines.join('\n') + '\n', 'utf8');
   console.log(`[expand-mesh] D1 seed → ${seedPath} (${packEntries.length} packs + ${meshEntries.length} mesh units)`);
 
