@@ -10,6 +10,7 @@
  *   POST /v1/dedupe/purge     { remove: string[], dryRun?: true, adminToken? }
  *   POST /v1/deploy/plan      { assets: [...] }  production bake filter advice
  *   POST /v1/ai/chat          { message, context? }  Workers AI helper
+ *   POST /v1/game/verify      { meshIds?: string[] }  game-ready CDN + UUID batch
  */
 
 const UUID_RE =
@@ -205,6 +206,7 @@ export default {
               'POST /v1/dedupe/purge',
               'POST /v1/deploy/plan',
               'POST /v1/ai/chat',
+              'POST /v1/game/verify',
             ],
           },
           200,
@@ -351,6 +353,58 @@ export default {
             blocked: blocked.slice(0, 500),
             policy:
               'Only fully colored/textured production GLBs after glb2glb; FBX/raw blocked from deploy plan',
+          },
+          200,
+          env,
+          request,
+        );
+      }
+
+      // ── Game-ready verify (for GRUDOX / fleet boot) ─
+      if (url.pathname === '/v1/game/verify') {
+        const meshIds = body.meshIds || [
+          'glitch-weapons/weapons/copper_axe',
+          'glitch-weapons/weapons/copper_sword',
+          'cold-biome/trunks/trunk1',
+          'blacksmith/props/anvil',
+        ];
+        const results = [];
+        let cdnOk = 0;
+        let uuidOk = 0;
+        for (const id of meshIds.slice(0, 40)) {
+          const r2Key = id.startsWith('models/')
+            ? id
+            : `models/codex/${id.replace(/\.glb$/i, '')}.glb`;
+          const grudgeUuid = await grudgeUuidFromR2Key(r2Key);
+          let headOk = false;
+          let status = 0;
+          try {
+            const head = await fetch(`https://assets.grudge-studio.com/${r2Key}`, {
+              method: 'HEAD',
+            });
+            status = head.status;
+            const ct = (head.headers.get('content-type') || '').toLowerCase();
+            headOk = head.ok && !ct.includes('text/html');
+          } catch {
+            headOk = false;
+          }
+          if (headOk) cdnOk++;
+          if (grudgeUuid) uuidOk++;
+          results.push({
+            id,
+            r2Key,
+            grudgeUuid,
+            cdnOk: headOk,
+            status,
+            production: headOk && r2Key.endsWith('.glb'),
+          });
+        }
+        return json(
+          {
+            ok: cdnOk === results.length,
+            summary: `CDN ${cdnOk}/${results.length} · UUID derived ${uuidOk}/${results.length}`,
+            results,
+            policy: 'Game-ready = GLB on R2 CDN with deterministic grudgeUuid',
           },
           200,
           env,
