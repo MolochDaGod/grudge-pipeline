@@ -462,6 +462,17 @@ body {
   gap: 8px;
   margin-top: 10px;
 }
+.need-section-title {
+  grid-column: 1 / -1;
+  margin: 12px 0 2px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.9;
+}
+.need-section-title:first-child { margin-top: 0; }
 .need-card {
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
@@ -503,3 +514,104 @@ body {
 .need-badge.covered { background: rgba(46, 160, 90, 0.35); color: #9ef0c0; }
 .need-badge.gap { background: rgba(200, 60, 60, 0.18); color: #f0a0a0; }
 .fleet-needs.collapsed .fleet-needs-list { display: none; }
+
+/* -- Modular race HUD + weapon skills + fleet open -- */
+.fleet-open-row { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
+.viewer-btn.accent {
+  background: linear-gradient(120deg, rgba(79,195,255,.25), rgba(61,214,140,.2));
+  border-color: rgba(79,195,255,.35);
+  color: var(--accent);
+  font-weight: 600;
+}
+.modular-hud-host { margin: 8px 0 12px; }
+.mod-hud {
+  background: rgba(8,12,22,.85);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.mod-hud-head {
+  font-size: .78rem; font-weight: 600; margin-bottom: 8px;
+  color: var(--accent); letter-spacing: .03em;
+}
+.mod-hud-head .dim { font-weight: 400; color: var(--dim); margin-left: 6px; }
+.mod-hud-actions { display:flex; flex-wrap:wrap; gap:6px; margin-bottom: 10px; }
+.mod-slot {
+  display:grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.mod-slot-label { font-size: .72rem; color: var(--dim); }
+.mod-slot-label .count {
+  opacity: .7; font-size: .65rem; margin-left: 4px;
+  background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px;
+}
+.mod-slot-select {
+  width: 100%;
+  font-size: .72rem;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: #0b1220;
+  color: var(--text);
+}
+.mod-hud-anims { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.mod-anim-row { display:flex; flex-wrap:wrap; gap:6px; margin-top: 6px; }
+.mod-anim { font-size: .7rem !important; }
+
+.skill-list { display:flex; flex-direction:column; gap:6px; margin-top:8px; max-height: 220px; overflow:auto; }
+.skill-card {
+  background: rgba(12,16,28,.9);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: .72rem;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.skill-card:hover { border-color: rgba(79,195,255,.4); }
+.skill-slot {
+  display:inline-block; min-width: 22px; text-align:center;
+  background: rgba(79,195,255,.15); color: var(--accent);
+  border-radius: 4px; padding: 1px 5px; margin-right: 6px; font-weight: 700;
+}
+.skill-name { font-weight: 600; color: var(--text); }
+.skill-meta { display:block; color: var(--dim); margin-top: 2px; font-size: .65rem; }
+.skill-desc { display:block; color: var(--dim); margin-top: 3px; opacity: .9; }
+
+.header-links a[href*="forge"] { color: var(--green); }
+
+/* Forge scene cart */
+.scene-cart-bar {
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 8px;
+  background: rgba(20, 18, 12, 0.85);
+}
+.scene-cart-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 120px;
+  overflow: auto;
+  margin-top: 6px;
+}
+.scene-cart-chip {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #f0e6c8;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.action-btn.accent, .viewer-btn.accent {
+  border-color: rgba(212, 175, 55, 0.65);
+  color: #f5e6b8;
+}

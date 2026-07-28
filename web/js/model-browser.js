@@ -70,6 +70,36 @@ import {
   prepareSkinnedMeasure,
 } from './characterDeploy.js';
 import { scoreHarvestCoverage, matchHarvestNeeds } from './harvestNeeds.js';
+import {
+  openInForge,
+  forgeDeepLink,
+  fleetIntegrationSnippet,
+  FLEET_HOSTS,
+  ANIM_PACKS,
+} from './fleetBridge.js';
+import {
+  modularEquipSlot,
+  groupMeshesBySlot,
+  applyLoadout,
+  renderModularHudHtml,
+  guessPreset,
+  animPackHintFromLoadout,
+} from './modularRaceHud.js';
+import {
+  renderSkillTreeHtml,
+  skillTreeForWeapon,
+  BASE_WEAPON_SKILLS,
+} from './weaponSkillsContract.js';
+import { scoreCombatCoverage } from './projectileVfx.js';
+import {
+  buildForgeScenePack,
+  downloadForgeScenePack,
+  openForgeWithScenePack,
+  loadSceneCart,
+  saveSceneCart,
+  addToSceneCart,
+  clearSceneCart,
+} from './forgeScenePack.js';
 
 // ── Fleet hosts — production deploy first ──
 // Prefer: textured · meshed · SI-scaled · converted · glb2glb · R2 GLB
@@ -174,7 +204,8 @@ let filtered = [];
 let page = 0;
 let activeKind = null;
 let activeGroup = null;
-let activeFormat = null;
+/** @type {string|null} Prefer glb for game-ready inventory (null = all formats). */
+let activeFormat = 'glb';
 let activeSource = null;
 let activeUuid = null;
 let sortKey = 'production';
@@ -183,9 +214,8 @@ let sortKey = 'production';
  * User can switch to "raw" or All to inspect author sources.
  * @type {string|null} null | 'ready' | 'raw'
  */
+/** DEFAULT ready = game-ready only (textured GLB / baked clips). raw = author FBX dumps. */
 let activeProd = 'ready';
-/** Prefer GLB format in inventory for gameplay-ready browsing */
-let activeFormat = 'glb';
 /** @type {{ byUuid: Map, byPath: Map }} */
 let d1Index = { byUuid: new Map(), byPath: new Map() };
 let uuidVerified = false;
@@ -1108,23 +1138,35 @@ function rebuildMeshIndex(root) {
     return;
   }
   const list = document.getElementById('meshList');
-  // Group by equip slot for smarter multipack UI
+  // Group by modular equip slot (cloak / wings / mount / armor / weapons)
   const bySlot = new Map();
   names.forEach((n) => {
-    const slot = inferEquipSlot(n);
+    const slot = modularEquipSlot(n);
     if (!bySlot.has(slot)) bySlot.set(slot, []);
     bySlot.get(slot).push(n);
   });
+  const byModSlot = groupMeshesBySlot(meshIndex);
+  const hudHost = document.getElementById('modularHudHost');
+  if (hudHost) {
+    hudHost.innerHTML = renderModularHudHtml(byModSlot);
+    wireModularHud(byModSlot);
+  }
+  refreshWeaponSkillsPanel();
+
   const slotOrder = [
     'head',
     'body',
     'arms',
     'legs',
+    'shoulders',
+    'cloak',
+    'wings',
+    'mount',
     'weapon',
     'shield',
+    'quiver',
     'accessory',
     'hair',
-    'mount',
     'prop',
     'mesh',
     'skeleton',
@@ -1132,15 +1174,16 @@ function rebuildMeshIndex(root) {
   ];
   let html = '';
   for (const slot of slotOrder) {
-    const group = bySlot.get(slot);
+    const group = bySlot.get(slot) || byModSlot.get(slot);
     if (!group || !group.length) continue;
     html += `<div class="mesh-slot-group" data-slot="${esc(slot)}"><div class="mesh-slot-label">${esc(slot)} <span class="count">${group.length}</span></div>`;
     html += group
       .map((n) => {
         const count = meshIndex.get(n).length;
-        return `<label data-mesh="${esc(n)}" data-slot="${esc(slot)}">
+        const s = modularEquipSlot(n);
+        return `<label data-mesh="${esc(n)}" data-slot="${esc(s)}">
         <input type="checkbox" class="mesh-vis" data-mesh="${esc(n)}" checked>
-        <span title="${esc(n)} · slot ${esc(slot)}">${esc(n)}${count > 1 ? ` ×${count}` : ''}</span>
+        <span title="${esc(n)} · slot ${esc(s)}">${esc(n)}${count > 1 ? ` ×${count}` : ''}</span>
         <button type="button" class="mesh-pick" data-mesh="${esc(n)}" title="Select for meshName / equip">use</button>
       </label>`;
       })
@@ -1171,10 +1214,174 @@ function rebuildMeshIndex(root) {
   });
 }
 
+function wireModularHud(bySlot) {
+  const host = document.getElementById('modularHudHost');
+  if (!host) return;
+
+  host.querySelectorAll('[data-mod]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const kind = btn.getAttribute('data-mod');
+      if (kind === 'all') {
+        meshIndex.forEach((meshes) => meshes.forEach((m) => (m.visible = true)));
+        host.querySelectorAll('.mod-slot-select').forEach((sel) => {
+          sel.value = '';
+        });
+        document.querySelectorAll('#meshList input.mesh-vis').forEach((inp) => {
+          inp.checked = true;
+        });
+        flashUse('All meshes visible');
+        return;
+      }
+      if (kind === 'none') {
+        // Naked base: hide equippable, keep skeleton/body if needed
+        meshIndex.forEach((meshes, n) => {
+          const s = modularEquipSlot(n);
+          const keep = s === 'skeleton' || s === 'body' || s === 'unknown' || s === 'mesh';
+          meshes.forEach((m) => {
+            m.visible = keep && /body|torso|units_body/i.test(n) ? true : s === 'skeleton';
+          });
+        });
+        // Prefer first body mesh only
+        const bodies = bySlot.get('body') || [];
+        if (bodies[0]) {
+          meshIndex.forEach((meshes, n) => {
+            if (modularEquipSlot(n) === 'body') {
+              meshes.forEach((m) => {
+                m.visible = n === bodies[0];
+              });
+            }
+          });
+        }
+        flashUse('Base body only');
+        return;
+      }
+      if (kind === 'warrior' || kind === 'mage' || kind === 'ranger') {
+        const loadout = guessPreset(bySlot, kind);
+        applyLoadout(meshIndex, loadout);
+        // Sync selects + checkboxes
+        host.querySelectorAll('.mod-slot-select').forEach((sel) => {
+          const slot = sel.getAttribute('data-mod-slot');
+          sel.value = loadout[slot] || '';
+        });
+        document.querySelectorAll('#meshList input.mesh-vis').forEach((inp) => {
+          const n = inp.dataset.mesh;
+          const s = modularEquipSlot(n);
+          inp.checked = !!(loadout[s] && loadout[s] === n);
+        });
+        const pack = animPackHintFromLoadout(loadout);
+        const packEl = document.getElementById('useAnimPackActive');
+        if (packEl) packEl.textContent = pack.id;
+        const useAnim = document.getElementById('useAnimPack');
+        if (useAnim) useAnim.textContent = pack.id;
+        flashUse(`${kind} preset · anim ${pack.id}`);
+      }
+    });
+  });
+
+  host.querySelectorAll('.mod-slot-select').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      const slot = sel.getAttribute('data-mod-slot');
+      const meshName = sel.value || null;
+      // Hide slot peers, show selected
+      meshIndex.forEach((meshes, n) => {
+        if (modularEquipSlot(n) !== slot) return;
+        meshes.forEach((m) => {
+          m.visible = meshName ? n === meshName : false;
+        });
+      });
+      document.querySelectorAll('#meshList input.mesh-vis').forEach((inp) => {
+        if (modularEquipSlot(inp.dataset.mesh) === slot) {
+          inp.checked = meshName ? inp.dataset.mesh === meshName : false;
+        }
+      });
+      if (meshName) selectMeshName(meshName);
+      flashUse(`${slot} → ${meshName || 'hidden'}`);
+    });
+  });
+
+  host.querySelectorAll('[data-anim-pack]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-anim-pack');
+      const pack = ANIM_PACKS[id];
+      const packEl = document.getElementById('useAnimPackActive');
+      if (packEl) packEl.textContent = id;
+      const useAnim = document.getElementById('useAnimPack');
+      if (useAnim) useAnim.textContent = id;
+      flashUse(`Anim pack ${pack?.label || id} · ${pack?.baked || ''}`);
+      // Try select matching clip if loaded
+      const sel = document.getElementById('animSelect');
+      if (sel && pack) {
+        const opt = [...sel.options].find((o) =>
+          new RegExp(id.replace(/_/g, '.*'), 'i').test(o.textContent || o.value),
+        );
+        if (opt) {
+          sel.value = opt.value;
+          sel.dispatchEvent(new Event('change'));
+        }
+      }
+    });
+  });
+}
+
+function refreshWeaponSkillsPanel() {
+  const type = document.getElementById('weaponSkillType')?.value || 'sword';
+  const host = document.getElementById('weaponSkillList');
+  if (!host) return;
+  host.innerHTML = renderSkillTreeHtml(type);
+  host.querySelectorAll('.skill-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const weapon = card.getAttribute('data-weapon') || type;
+      const skill = card.getAttribute('data-skill');
+      openInForge({
+        workspace: 'weapons',
+        weaponType: weapon,
+        assetUrl: currentEntry?.cdnUrl,
+        r2Key: currentEntry?.path,
+        grudgeUuid: currentEntry?.grudgeUuid,
+        scene: `weapon-skill:${skill}`,
+      });
+      flashUse(`Forge weapons · ${weapon} · ${skill}`);
+    });
+  });
+}
+
+function currentForgeOpts(extra = {}) {
+  const m = currentEntry;
+  return {
+    assetUrl: m?.cdnUrl || '',
+    r2Key: m?.path || m?.r2Key || '',
+    grudgeUuid: m?.grudgeUuid || '',
+    meshName: selectedMeshName || undefined,
+    equipSlot: selectedMeshName ? modularEquipSlot(selectedMeshName) : undefined,
+    raceId: document.getElementById('previewRace')?.value || undefined,
+    animPack: document.getElementById('useAnimPackActive')?.textContent || undefined,
+    ...extra,
+  };
+}
+
+/** Scene cart badge + chip list for Forge pack export */
+function renderSceneCart() {
+  const cart = loadSceneCart();
+  const countEl = document.getElementById('sceneCartCount');
+  if (countEl) countEl.textContent = String(cart.length);
+  const list = document.getElementById('sceneCartList');
+  if (!list) return;
+  if (!cart.length) {
+    list.innerHTML = '<span class="dim">Empty — open an asset and click + Scene cart</span>';
+    return;
+  }
+  list.innerHTML = cart
+    .map(
+      (c, i) =>
+        `<span class="scene-cart-chip" title="${String(c.cdnUrl || c.path || '').replace(/"/g, '')}">${i + 1}. ${String(c.name || 'asset').slice(0, 28)}</span>`,
+    )
+    .join('');
+}
+
 function selectMeshName(name) {
   selectedMeshName = name || null;
   document.getElementById('useMeshName').textContent = selectedMeshName || '—';
-  const slot = selectedMeshName ? inferEquipSlot(selectedMeshName) : '—';
+  const slot = selectedMeshName ? modularEquipSlot(selectedMeshName) : '—';
   const slotEl = document.getElementById('useEquipSlot');
   if (slotEl) slotEl.textContent = slot;
   document.querySelectorAll('#meshList label').forEach((lab) => {
@@ -1215,13 +1422,13 @@ async function applySelectedMeshTexture() {
 function soloEquipSlot(slot) {
   if (!slot) return;
   meshIndex.forEach((meshes, n) => {
-    const on = inferEquipSlot(n) === slot;
+    const on = modularEquipSlot(n) === slot;
     meshes.forEach((m) => {
       m.visible = on;
     });
   });
   document.querySelectorAll('#meshList input.mesh-vis').forEach((inp) => {
-    inp.checked = inferEquipSlot(inp.dataset.mesh) === slot;
+    inp.checked = modularEquipSlot(inp.dataset.mesh) === slot;
   });
   flashUse(`Solo equip slot: ${slot}`);
 }
@@ -2276,6 +2483,109 @@ function wireUi() {
   });
   document.getElementById('btnMeshAll')?.addEventListener('click', () => setAllMeshesVisible(true));
   document.getElementById('btnMeshNone')?.addEventListener('click', () => setAllMeshesVisible(false));
+  document.getElementById('btnOpenForge')?.addEventListener('click', () => {
+    if (!currentEntry) {
+      flashUse('Load an asset first');
+      return;
+    }
+    const href = openInForge(currentForgeOpts({ workspace: 'assets' }));
+    flashUse(`Opened Forge · ${href.slice(0, 48)}…`);
+  });
+  document.getElementById('btnOpenForgeWeapons')?.addEventListener('click', () => {
+    const w = document.getElementById('weaponSkillType')?.value || 'sword';
+    openInForge(currentForgeOpts({ workspace: 'weapons', weaponType: w }));
+    flashUse(`Forge weapon skills · ${w}`);
+  });
+  document.getElementById('btnOpenForgeScene')?.addEventListener('click', () => {
+    // Prefer full pack when cart has items; else single asset as scene
+    const cart = loadSceneCart();
+    const assets = cart.length ? cart : currentEntry ? [currentEntry] : [];
+    if (!assets.length) {
+      flashUse('Add assets to scene cart (or open one asset)');
+      return;
+    }
+    const pack = buildForgeScenePack(assets, {
+      name: `pipeline-${assets.length}assets`,
+      includeScripts: true,
+    });
+    openForgeWithScenePack(pack);
+    flashUse(`Edit in Forge · ${assets.length} asset(s) + scripts`);
+  });
+  document.getElementById('btnAddToCart')?.addEventListener('click', () => {
+    if (!currentEntry) {
+      flashUse('Load an asset first');
+      return;
+    }
+    const cart = addToSceneCart(currentEntry);
+    renderSceneCart();
+    flashUse(`Scene cart · ${cart.length} asset(s)`);
+  });
+  document.getElementById('btnSaveForgeFromViewer')?.addEventListener('click', () => {
+    if (!currentEntry) {
+      flashUse('Load an asset first');
+      return;
+    }
+    const pack = buildForgeScenePack([currentEntry], {
+      name: currentEntry.name || currentEntry.path || 'pipeline-asset',
+    });
+    const fn = downloadForgeScenePack(pack);
+    flashUse(`Saved ${fn}`);
+  });
+  document.getElementById('btnSceneCart')?.addEventListener('click', () => {
+    const bar = document.getElementById('sceneCartBar');
+    if (!bar) return;
+    bar.hidden = !bar.hidden;
+    renderSceneCart();
+  });
+  document.getElementById('btnCartAddCurrent')?.addEventListener('click', () => {
+    if (!currentEntry) {
+      flashUse('Open a viewer asset first');
+      return;
+    }
+    addToSceneCart(currentEntry);
+    renderSceneCart();
+    flashUse('Added to scene cart');
+  });
+  document.getElementById('btnCartClear')?.addEventListener('click', () => {
+    clearSceneCart();
+    renderSceneCart();
+    flashUse('Scene cart cleared');
+  });
+  document.getElementById('btnSaveForgeScene')?.addEventListener('click', () => {
+    const cart = loadSceneCart();
+    const assets = cart.length ? cart : currentEntry ? [currentEntry] : [];
+    if (!assets.length) {
+      flashUse('Scene cart empty — add assets first');
+      return;
+    }
+    const pack = buildForgeScenePack(assets, {
+      name: `pipeline-scene-${assets.length}`,
+      includeScripts: true,
+    });
+    const fn = downloadForgeScenePack(pack);
+    flashUse(`Downloaded ${fn} · open in Forge (File → Import)`);
+  });
+  document.getElementById('btnOpenForgePack')?.addEventListener('click', () => {
+    const cart = loadSceneCart();
+    const assets = cart.length ? cart : currentEntry ? [currentEntry] : [];
+    if (!assets.length) {
+      flashUse('Add assets to cart (or open one)');
+      return;
+    }
+    const pack = buildForgeScenePack(assets, {
+      name: `pipeline-scene-${assets.length}`,
+      includeScripts: true,
+    });
+    const res = openForgeWithScenePack(pack, { alsoDownload: true });
+    flashUse(
+      res.ok
+        ? `Forge opened · pack posted + ${assets.length} assets downloaded`
+        : 'Popup blocked — pack downloaded; import .gfscene in Forge',
+    );
+  });
+  // Initial cart badge
+  renderSceneCart();
+  document.getElementById('weaponSkillType')?.addEventListener('change', () => refreshWeaponSkillsPanel());
   document.getElementById('btnMeshSolo')?.addEventListener('click', () => {
     if (selectedMeshName) soloMesh(selectedMeshName);
     else flashUse('Pick a mesh with “use” first');
@@ -2333,55 +2643,68 @@ function wireUi() {
   document.getElementById('btnHarvestFilter')?.addEventListener('click', () => {
     filterToHarvestAssets();
   });
+  document.getElementById('btnCombatFilter')?.addEventListener('click', () => {
+    filterToCombatAssets();
+  });
   document.getElementById('btnNeedsToggle')?.addEventListener('click', () => {
     document.getElementById('fleetNeedsPanel')?.classList.toggle('collapsed');
   });
 }
 
-/** Fleet needs panel — harvest track (+ expandable). */
+/** Fleet needs panel — harvest + combat projectile/VFX tracks. */
 function renderFleetNeedsPanel() {
   const listEl = document.getElementById('fleetNeedsList');
   const metaEl = document.getElementById('fleetNeedsMeta');
   const covEl = document.getElementById('harvestCoverage');
   if (!listEl || !metaEl) return;
 
-  const score = scoreHarvestCoverage(allModels);
-  if (covEl) covEl.textContent = `${score.pct}%`;
-  metaEl.innerHTML = `Harvest track: <strong>${score.covered}/${score.total}</strong> asset slots matched in catalog
-    · ${score.runtime} runtime packages
-    · pinata ore/rock/trees
-    · <a href="api/fleet-needs.json" target="_blank" rel="noreferrer">fleet-needs.json</a>`;
+  const harvest = scoreHarvestCoverage(allModels);
+  const combat = scoreCombatCoverage(allModels);
+  if (covEl) covEl.textContent = `H${harvest.pct}% · C${combat.pct}%`;
+  metaEl.innerHTML = `Harvest <strong>${harvest.covered}/${harvest.total}</strong> · Combat projectiles/VFX <strong>${combat.covered}/${combat.total}</strong>
+    · ${harvest.runtime + combat.runtime} runtime packages
+    · pinata + arrows/bullets/cannon/explosives
+    · <a href="api/fleet-needs.json" target="_blank" rel="noreferrer">fleet-needs.json</a>
+    · <a href="docs/PROJECTILES_AND_VFX.md" target="_blank" rel="noreferrer">PROJECTILES_AND_VFX</a>`;
 
-  listEl.innerHTML = score.rows
-    .map((row) => {
-      const statusCls = row.status || 'partial';
-      const coverCls = row.status === 'runtime' || row.status === 'planned'
-        ? row.status
-        : row.covered
-          ? 'covered'
-          : 'gap';
-      const coverLabel =
-        row.status === 'runtime'
-          ? 'runtime'
-          : row.status === 'planned'
-            ? 'planned'
+  const section = (title, score) => {
+    const head = `<div class="need-section-title">${esc(title)} · ${score.pct}% catalog</div>`;
+    const cards = score.rows
+      .map((row) => {
+        const statusCls = row.status || 'partial';
+        const coverCls =
+          row.status === 'runtime' || row.status === 'planned'
+            ? row.status
             : row.covered
-              ? `catalog×${row.catalogHits || 0}`
+              ? 'covered'
               : 'gap';
-      const tool = row.tool ? ` · tool ${esc(row.tool)}` : '';
-      const pinata = row.pinata ? ' · pinata' : '';
-      const sample = row.sample ? `<div class="need-meta">hit: ${esc(row.sample)}</div>` : '';
-      return `<article class="need-card" data-need-search="${esc(row.search || '')}" data-need-id="${esc(row.id)}" title="${esc(row.notes || '')}">
+        const coverLabel =
+          row.status === 'runtime'
+            ? 'runtime'
+            : row.status === 'planned'
+              ? 'planned'
+              : row.covered
+                ? `catalog×${row.catalogHits || 0}`
+                : 'gap';
+        const tool = row.tool ? ` · tool ${esc(row.tool)}` : '';
+        const pinata = row.pinata ? ' · pinata' : '';
+        const subtype = row.subtype ? ` · ${esc(row.subtype)}` : '';
+        const sample = row.sample ? `<div class="need-meta">hit: ${esc(row.sample)}</div>` : '';
+        return `<article class="need-card" data-need-search="${esc(row.search || '')}" data-need-id="${esc(row.id)}" title="${esc(row.notes || '')}">
         <div class="need-title">${esc(row.label)}</div>
         <div class="need-meta">
           <span class="need-badge ${statusCls}">${esc(statusCls)}</span>
           <span class="need-badge ${coverCls}">${esc(coverLabel)}</span>
-          ${esc(row.role || '')}${tool}${pinata}
+          ${esc(row.role || '')}${tool}${pinata}${subtype}
         </div>
         ${sample}
       </article>`;
-    })
-    .join('');
+      })
+      .join('');
+    return head + cards;
+  };
+
+  listEl.innerHTML = section('Harvest / pinata', harvest) + section('Combat projectiles + VFX', combat);
 
   listEl.querySelectorAll('.need-card').forEach((card) => {
     card.addEventListener('click', () => {
@@ -2408,6 +2731,24 @@ function filterToHarvestAssets() {
   page = 0;
   applyFilters();
   // If kind filter empty (no harvest-tagged yet), fall back to search-only
+  if (!filtered.length) {
+    activeKind = null;
+    applyFilters();
+  }
+  document.getElementById('resultsArea')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function filterToCombatAssets() {
+  const box = document.getElementById('searchBox');
+  if (box) {
+    box.value =
+      'arrow projectile bolt bullet cannonball grenade explosive fireball orb shell_arrow ballista vfx impact trail warning';
+  }
+  activeKind = 'projectile';
+  activeGroup = null;
+  activeProd = null;
+  page = 0;
+  applyFilters();
   if (!filtered.length) {
     activeKind = null;
     applyFilters();
