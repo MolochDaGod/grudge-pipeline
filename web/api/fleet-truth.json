@@ -1,0 +1,55 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-07-29",
+  "pipeline": "https://grudge-pipeline.vercel.app/",
+  "role": "Canonical browser for fleet asset truth — D1 index, grudgeUuid, production labels, game-use contracts",
+  "layers": {
+    "identity": "id.grudge-studio.com",
+    "playerState": "grudge-api-production-0d46 Railway Postgres",
+    "definitions": "objectstore.grudge-studio.com / info.grudge-studio.com",
+    "binaries": "assets.grudge-studio.com (R2 grudge-assets)",
+    "assetIndex": "D1 grudge-assets-db via api.grudge-studio.com/assets",
+    "pipelineUi": "grudge-pipeline.vercel.app",
+    "voxelWorlds": "mine-loader-api Railway Postgres"
+  },
+  "ids": {
+    "r2Key": "Relative path under CDN, e.g. models/grudge6/races/WK_Characters.glb",
+    "grudgeUuid": "Deterministic UUID from sha1(\"grudge-asset:\" + r2Key)",
+    "d1Id": "Usually equals r2Key in asset_registry.id"
+  },
+  "mergePriority": ["d1", "production", "grudge6-ssot", "baked-bip001", "objectstore"],
+  "gameUses": [
+    "warlords",
+    "open",
+    "mine-loader",
+    "voxgrudge",
+    "forge",
+    "foundry",
+    "grudox",
+    "pipeline"
+  ],
+  "endpoints": {
+    "d1Assets": "https://api.grudge-studio.com/assets?limit=200&offset=0",
+    "cdn": "https://assets.grudge-studio.com/{r2Key}",
+    "productionCatalog": "/api/production-catalog.json",
+    "fleetNeeds": "/api/fleet-needs.json",
+    "objectStoreModels": "https://molochdagod.github.io/ObjectStore/api/v1/models3d.json"
+  },
+  "browserModules": [
+    "web/js/model-browser.js",
+    "web/js/fleetTruth.js",
+    "web/js/uuid-verify.js",
+    "web/js/deployChecks.js",
+    "web/js/productionBake.js",
+    "web/js/use-contract.js",
+    "web/js/projectileVfx.js",
+    "web/js/harvestNeeds.js"
+  ],
+  "docs": [
+    "docs/FLEET_ASSET_TRUTH.md",
+    "docs/UUID_DEDUPE_DEPLOY.md",
+    "docs/PRODUCTION_CLOUD_STORAGE.md",
+    "docs/BEST-PRACTICES.md",
+    "docs/PROJECTILES_AND_VFX.md"
+  ]
+}

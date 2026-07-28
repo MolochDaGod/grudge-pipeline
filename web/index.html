@@ -22,7 +22,9 @@
         <a href="https://forge.grudge-studio.com/editor?from=pipeline&edit=1" target="_blank" rel="noreferrer" title="R3F + Rapier editor">Forge</a>
         <a href="https://open.grudge-studio.com" target="_blank" rel="noreferrer">Open</a>
         <a href="https://api.grudge-studio.com/assets?limit=5" target="_blank" rel="noreferrer">D1 API</a>
+        <a href="docs/FLEET_ASSET_TRUTH.md" target="_blank" rel="noreferrer" title="D1 + grudgeUuid + labels SSOT">Asset truth</a>
         <a href="docs/FLEET_INTEGRATION.md" target="_blank" rel="noreferrer">Integration</a>
+        <a href="api/fleet-truth.json" target="_blank" rel="noreferrer">fleet-truth.json</a>
         <a href="#fleetNeedsPanel" title="Living ledger — add harvest / build / grudge6 needs as we ship">Fleet needs</a>
       </div>
     </header>
@@ -31,7 +33,9 @@
       <div class="stat-item"><span class="stat-label">Assets</span><span class="stat-value" id="totalModels">—</span></div>
       <div class="stat-item"><span class="stat-label">Groups</span><span class="stat-value" id="totalCategories">—</span></div>
       <div class="stat-item"><span class="stat-label">Visible</span><span class="stat-value" id="visibleCount">—</span></div>
-      <div class="stat-item"><span class="stat-label">Sources</span><span class="stat-value" id="sourceCount">—</span></div>
+      <div class="stat-item" title="Catalog sources (d1, production, grudge6…)"><span class="stat-label">Sources</span><span class="stat-value" id="sourceCount">—</span></div>
+      <div class="stat-item" title="Rows from D1 asset_registry"><span class="stat-label">D1</span><span class="stat-value" id="d1Count">—</span></div>
+      <div class="stat-item" title="% of assets with grudgeUuid"><span class="stat-label">UUID %</span><span class="stat-value" id="truthCount">—</span></div>
       <div class="stat-item"><span class="stat-label">UUID OK</span><span class="stat-value" id="uuidOkCount">—</span></div>
       <div class="stat-item"><span class="stat-label">Thumbs</span><span class="stat-value" id="thumbCount">—</span></div>
       <div class="stat-item" title="Home-island harvest track coverage"><span class="stat-label">Harvest</span><span class="stat-value" id="harvestCoverage">—</span></div>
@@ -42,13 +46,13 @@
         <div>
           <h2>Fleet needs <span class="fleet-needs-sub">add everything along the way</span></h2>
           <p class="fleet-needs-desc">
-            Living SSOT for production gaps:
-            <strong>harvest + three-pinata</strong> and
-            <strong>combat projectiles + VFX</strong>
-            (arrows, bullets, cannonballs, explosives, trails, impacts).
-            <a href="docs/HARVEST_PINATA.md" target="_blank" rel="noreferrer">Harvest</a>
+            Fleet asset truth for <strong>all games</strong>: D1 index, grudgeUuid, production labels,
+            harvest, combat VFX, voxel, grudge6. This browser is the consolidated SSOT UI.
+            <a href="docs/FLEET_ASSET_TRUTH.md" target="_blank" rel="noreferrer">Asset truth</a>
+            · <a href="docs/HARVEST_PINATA.md" target="_blank" rel="noreferrer">Harvest</a>
             · <a href="docs/PROJECTILES_AND_VFX.md" target="_blank" rel="noreferrer">Projectiles/VFX</a>
             · <code>api/fleet-needs.json</code>
+            · <code>api/fleet-truth.json</code>
           </p>
         </div>
         <div class="fleet-needs-actions">
@@ -143,6 +147,10 @@
         <div class="filter-row" id="sourceFilters"></div>
       </div>
       <div class="filter-section">
+        <div class="filter-label">Game use</div>
+        <div class="filter-row" id="gameUseFilters"></div>
+      </div>
+      <div class="filter-section">
         <div class="filter-label">UUID</div>
         <div class="filter-row" id="uuidFilters"></div>
       </div>
@@ -156,7 +164,7 @@
 
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
-      <p>Loading fleet catalog (D1 + ObjectStore + grudge6)…</p>
+      <p>Loading fleet truth catalog (D1 registry + production labels + grudge6)…</p>
     </div>
 
     <div id="resultsArea" style="display:none">

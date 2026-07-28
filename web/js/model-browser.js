@@ -100,18 +100,31 @@ import {
   addToSceneCart,
   clearSceneCart,
 } from './forgeScenePack.js';
+import {
+  FLEET_TRUTH_HOSTS,
+  FLEET_TRUTH_VERSION,
+  mergeTruthEntries,
+  enrichFleetTruth,
+  fetchProductionCatalog,
+  d1Offsets,
+  truthSummary,
+  normalizeR2Key,
+} from './fleetTruth.js';
 
 // ── Fleet hosts — production deploy first ──
 // Prefer: textured · meshed · SI-scaled · converted · glb2glb · R2 GLB
 // Author FBX is fallback only. Anim clips: baked Bip001 JSON.
 // KILL: grudge-arena …/cdn/assets/characters/* as character host (wrong scale / stale).
-const R2 = 'https://assets.grudge-studio.com';
+// Truth: D1 + grudgeUuid + production labels (see fleetTruth.js / FLEET_ASSET_TRUTH.md)
+const R2 = FLEET_TRUTH_HOSTS.cdn;
 const ARENA = 'https://grudge-arena.grudge-studio.com';
-const OPEN = 'https://open.grudge-studio.com';
-const D1_API = 'https://api.grudge-studio.com/assets';
-const OBJECTSTORE_MODELS = 'https://molochdagod.github.io/ObjectStore/api/v1/models3d.json';
+const OPEN = FLEET_TRUTH_HOSTS.open;
+const D1_API = FLEET_TRUTH_HOSTS.d1;
+const OBJECTSTORE_MODELS = FLEET_TRUTH_HOSTS.objectStoreModels;
 const DRACO_PATH = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 const PAGE_SIZE = 48;
+const D1_PAGE = 200;
+const D1_MAX_PAGES = 50; // up to 10k assets
 
 /** Forbidden host bases for grudge6 race kits (secondary / stale feeds). */
 const FORBIDDEN_HOST_SUBSTRINGS = [
@@ -208,6 +221,8 @@ let activeGroup = null;
 /** Prefer GLB format in inventory for gameplay-ready browsing */
 let activeFormat = 'glb';
 let activeSource = null;
+/** @type {string|null} Game product filter (warlords, open, mine-loader, …) */
+let activeGameUse = null;
 let activeUuid = null;
 let sortKey = 'production';
 /**
@@ -257,7 +272,7 @@ function inferGroup(m) {
 }
 
 function normalizeEntry(raw, source) {
-  const path = (raw.path || raw.r2Key || raw.sourcePath || '').replace(/\\/g, '/');
+  const path = normalizeR2Key(raw.path || raw.r2Key || raw.sourcePath || '');
   const format = String(raw.format || path.split('.').pop() || 'glb').toLowerCase().replace(/^\./, '');
   const sizeKB =
     raw.sizeKB ??
@@ -269,13 +284,15 @@ function normalizeEntry(raw, source) {
     (path ? `${R2}/${path}` : null);
   const grudgeUuid = raw.grudgeUuid || raw.uuid || null;
   const m = {
-    id: raw.id || grudgeUuid || `${source}:${path || raw.name}`,
+    id: path || grudgeUuid || raw.id || `${source}:${raw.name}`,
     name: raw.name || path.split('/').pop() || 'asset',
     path,
+    r2Key: path,
     format,
     category: raw.category || 'uncategorized',
     group: raw.group || raw.category || 'uncategorized',
     sizeKB,
+    fileSize: raw.fileSize ?? (sizeKB ? sizeKB * 1024 : null),
     meshes: raw.meshes ?? null,
     animations: raw.animations ?? null,
     textures: raw.textures ?? null,
@@ -283,6 +300,7 @@ function normalizeEntry(raw, source) {
     materials: raw.materials ?? null,
     compressionType: raw.compressionType || null,
     source,
+    sources: [source],
     cdnUrl,
     altUrls: [raw._gameReadyUrl, raw._cdnUrl, raw.cdnUrl].filter(Boolean),
     boneMap: raw.boneMap || raw.metadata?.boneMap || null,
@@ -295,33 +313,18 @@ function normalizeEntry(raw, source) {
     bakePipeline: raw.bakePipeline || raw.metadata?.bakePipeline || null,
     scaleBaked: !!raw.scaleBaked || !!raw.metadata?.scaleBaked,
     kind: raw.kind || null,
+    subtype: raw.subtype || null,
     grudgeUuid: grudgeUuid && isValidUuid(grudgeUuid) ? grudgeUuid : grudgeUuid,
     uuidStatus: grudgeUuid && isValidUuid(grudgeUuid) ? 'pending' : grudgeUuid ? 'invalid' : 'pending',
     uuidMessage: '',
     thumbKey: grudgeUuid || path || raw.id || null,
+    d1Indexed: source === 'd1' || !!raw.d1Indexed,
+    labels: raw.labels || [],
+    gameUses: raw.gameUses || [],
   };
   m.kind = inferKind(m);
   m.group = inferGroup(m);
-  m.searchBlob = [
-    m.name,
-    m.path,
-    m.group,
-    m.category,
-    m.kind,
-    m.format,
-    m.source,
-    m.boneMap,
-    m.textureStatus,
-    m.grudgeUuid,
-    m.bakePipeline,
-    m.productionBaked ? 'production baked glb2glb deploy' : '',
-    m.deployReady ? 'deploy-ready' : '',
-    ...(m.supportedSkeletons || []),
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-  return m;
+  return enrichFleetTruth(m);
 }
 
 function curatedGrudge6() {
@@ -394,36 +397,70 @@ function curatedGrudge6() {
 }
 
 async function fetchD1Catalog() {
-  const offsets = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800, 5200, 5600, 6000];
+  // First page discovers total; then fetch remaining pages (cap D1_MAX_PAGES)
+  let total = D1_PAGE;
+  try {
+    const head = await fetch(`${D1_API}?limit=1&offset=0`, {
+      signal: AbortSignal.timeout(10000),
+    });
+    if (head.ok) {
+      const hj = await head.json();
+      total = Number(hj.total) || total;
+    }
+  } catch {
+    /* use default offsets */
+  }
+  const offsets = d1Offsets(total, D1_PAGE, D1_MAX_PAGES);
   const seen = new Set();
   const out = [];
-  await Promise.all(
-    offsets.map(async (offset) => {
-      try {
-        const r = await fetch(`${D1_API}?limit=200&offset=${offset}`, {
-          signal: AbortSignal.timeout(12000),
-        });
-        if (!r.ok) return;
-        const j = await r.json();
-        for (const a of j.assets || []) {
-          const key = a.r2Key || a.id;
-          if (!key || seen.has(key)) continue;
-          // Prefer viewable 3D / baked-related; skip pure audio/wav
-          const fmt = String(a.format || '').toLowerCase();
-          const mime = String(a.mimeType || '');
-          if (mime.startsWith('audio/') || fmt === 'wav' || fmt === 'mp3' || fmt === 'ogg') continue;
-          if (mime.startsWith('image/') && !key.includes('texture')) {
-            // keep some texture refs for completeness? skip for grid clutter
-            if (!/\.(glb|gltf|fbx)$/i.test(key)) continue;
+  // Batch in waves of 8 to avoid browser connection storms
+  for (let i = 0; i < offsets.length; i += 8) {
+    const wave = offsets.slice(i, i + 8);
+    await Promise.all(
+      wave.map(async (offset) => {
+        try {
+          const r = await fetch(`${D1_API}?limit=${D1_PAGE}&offset=${offset}`, {
+            signal: AbortSignal.timeout(15000),
+          });
+          if (!r.ok) return;
+          const j = await r.json();
+          for (const a of j.assets || []) {
+            const key = normalizeR2Key(a.r2Key || a.id);
+            if (!key || seen.has(key)) continue;
+            const fmt = String(a.format || key.split('.').pop() || '').toLowerCase();
+            const mime = String(a.mimeType || '');
+            if (mime.startsWith('audio/') || fmt === 'wav' || fmt === 'mp3' || fmt === 'ogg') continue;
+            if (mime.startsWith('image/') && !key.includes('texture')) {
+              if (!/\.(glb|gltf|fbx)$/i.test(key)) continue;
+            }
+            // Index all model-like + known game packs
+            if (
+              !/\.(glb|gltf|fbx|json)$/i.test(key) &&
+              !key.includes('anims/baked') &&
+              !key.startsWith('models/')
+            ) {
+              continue;
+            }
+            seen.add(key);
+            const entry = normalizeEntry(
+              {
+                ...a,
+                path: key,
+                r2Key: key,
+                grudgeUuid: a.grudgeUuid || a.uuid,
+                fileSize: a.fileSize,
+                d1Indexed: true,
+              },
+              'd1',
+            );
+            out.push(entry);
           }
-          seen.add(key);
-          out.push(normalizeEntry(a, 'd1'));
+        } catch {
+          /* skip page */
         }
-      } catch {
-        /* skip page */
-      }
-    }),
-  );
+      }),
+    );
+  }
   return out;
 }
 
@@ -440,36 +477,57 @@ async function fetchObjectStoreModels() {
 
 async function loadCatalog() {
   const status = document.getElementById('r2Status');
-  const [d1, os] = await Promise.all([fetchD1Catalog(), fetchObjectStoreModels()]);
-  const curated = curatedGrudge6();
+  if (status) {
+    status.className = 'r2-status checking';
+    status.innerHTML = `<span class="r2-dot"></span> Loading D1 + production truth…`;
+  }
+  const [d1, os, production, curated] = await Promise.all([
+    fetchD1Catalog(),
+    fetchObjectStoreModels(),
+    fetchProductionCatalog().then((rows) => rows.map((r) => normalizeEntry(r, 'production'))),
+    // curatedGrudge6 includes race kits + BAKED_PACKS anim clips
+    Promise.resolve(curatedGrudge6()),
+  ]);
+
   d1Index = { byUuid: new Map(), byPath: new Map() };
   for (const m of d1) {
-    if (m.grudgeUuid) d1Index.byUuid.set(m.grudgeUuid.toLowerCase(), m);
+    if (m.grudgeUuid) d1Index.byUuid.set(String(m.grudgeUuid).toLowerCase(), m);
     if (m.path) d1Index.byPath.set(m.path.replace(/\\/g, '/').toLowerCase(), m);
   }
+
+  // Merge: curated base → ObjectStore → production ship list → D1 (wins identity)
   const map = new Map();
-  for (const m of [...curated, ...os, ...d1]) {
-    const k = m.path || m.id;
+  for (const m of [...curated, ...os, ...production, ...d1]) {
+    const k = normalizeR2Key(m.path || m.r2Key || m.id);
+    if (!k) continue;
     if (!map.has(k)) map.set(k, m);
-    else {
-      // Prefer richer entry (keep D1 uuid when merging)
-      const prev = map.get(k);
-      const merged = { ...prev, ...m };
-      if (!merged.grudgeUuid && prev.grudgeUuid) merged.grudgeUuid = prev.grudgeUuid;
-      if ((m.textures || 0) > (prev.textures || 0) || m.cdnUrl) map.set(k, merged);
-      else map.set(k, { ...m, ...prev, grudgeUuid: prev.grudgeUuid || m.grudgeUuid });
-    }
+    else map.set(k, mergeTruthEntries(map.get(k), m));
   }
-  allModels = [...map.values()];
-  // Pre-derive UUIDs for path-backed assets (async, non-blocking UI after first paint)
-  void prefillDerivedUuids();
-  const sources = new Set(allModels.map((m) => m.source));
+  allModels = [...map.values()].map((m) => enrichFleetTruth(m));
+
+  void prefillDerivedUuids().then(() => {
+    // Re-enrich after UUIDs land
+    allModels.forEach((m) => enrichFleetTruth(m));
+    updateUuidStat();
+    applyFilters();
+  });
+
+  const summary = truthSummary(allModels);
+  const sources = new Set(allModels.flatMap((m) => m.sources || [m.source]));
   if (status) {
     status.className = 'r2-status online';
-    status.innerHTML = `<span class="r2-dot"></span> ${allModels.length} assets · ${sources.size} sources`;
+    status.innerHTML = `<span class="r2-dot"></span> ${summary.total} assets · D1 ${summary.d1} · UUID ${summary.uuidPct}% · truth v${FLEET_TRUTH_VERSION}`;
+    status.title = Object.entries(summary.bySource)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(' · ');
   }
   document.getElementById('sourceCount').textContent = String(sources.size);
+  const d1El = document.getElementById('d1Count');
+  if (d1El) d1El.textContent = String(summary.d1);
+  const truthEl = document.getElementById('truthCount');
+  if (truthEl) truthEl.textContent = `${summary.uuidPct}%`;
   updateThumbStat();
+  renderGameUseFilters();
 }
 
 async function prefillDerivedUuids() {
@@ -480,9 +538,15 @@ async function prefillDerivedUuids() {
     try {
       const u = await grudgeUuidFromR2Key(m.path);
       if (u) {
-        m.grudgeUuid = m.grudgeUuid || u;
+        if (!m.grudgeUuid) {
+          m.grudgeUuid = u;
+          m.uuidStatus = 'derived';
+          m.uuidMessage = 'Derived from grudge-asset:r2Key';
+        }
         m.uuidExpected = u;
         if (!m.thumbKey) m.thumbKey = u;
+        if (m.path) d1Index.byPath.set(m.path.toLowerCase(), m);
+        d1Index.byUuid.set(u.toLowerCase(), m);
       }
     } catch {
       /* ignore */
@@ -523,7 +587,9 @@ function applyFilters() {
     if (activeKind && m.kind !== activeKind) return false;
     if (activeGroup && m.group !== activeGroup) return false;
     if (activeFormat && m.format !== activeFormat) return false;
-    if (activeSource && m.source !== activeSource) return false;
+    if (activeSource && m.source !== activeSource && !(m.sources || []).includes(activeSource))
+      return false;
+    if (activeGameUse && !(m.gameUses || []).includes(activeGameUse)) return false;
     if (activeUuid && (m.uuidStatus || 'pending') !== activeUuid) return false;
     if (activeProd === 'ready' && !isProductionDeployReady(m)) return false;
     if (activeProd === 'raw' && isProductionDeployReady(m)) return false;
@@ -550,10 +616,26 @@ function applyFilters() {
   const groups = new Set(allModels.map((m) => m.group));
   document.getElementById('totalCategories').textContent = String(groups.size);
   document.getElementById('resultsTitle').textContent =
-    [activeKind, activeGroup, activeFormat, activeSource, activeUuid, activeProd]
+    [activeKind, activeGroup, activeFormat, activeSource, activeGameUse, activeUuid, activeProd]
       .filter(Boolean)
       .join(' · ') || 'All assets';
   updateUuidStat();
+}
+
+/** Game-use product chips (warlords / open / mine-loader / …). */
+function renderGameUseFilters() {
+  const el = document.getElementById('gameUseFilters');
+  if (!el) return;
+  const counts = new Map();
+  for (const m of allModels) {
+    for (const g of m.gameUses || []) counts.set(g, (counts.get(g) || 0) + 1);
+  }
+  const entries = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  chipRow(el, entries, activeGameUse, (v) => {
+    activeGameUse = v;
+    page = 0;
+    applyFilters();
+  });
 }
 
 function chipRow(el, entries, active, onPick, classFor) {

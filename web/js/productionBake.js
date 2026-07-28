@@ -13,8 +13,11 @@
 export const HUMAN_HEIGHT_M = 1.8;
 export const PROD_TEXTURE_MAX_PX = 1024;
 export const CDN_ROOT = 'https://assets.grudge-studio.com';
-/** Minimum score for "Deploy bake → ready" when metadata is sparse */
-export const PROD_READY_SCORE = 60;
+/**
+ * Minimum score for "Deploy bake → ready" when metadata is sparse.
+ * Raised so bare / weakly-tagged GLBs never pass as game-ready.
+ */
+export const PROD_READY_SCORE = 72;
 
 /** Named bake stages (align with ObjectStore grudge-convert). */
 export const BAKE_STAGES = {
@@ -112,35 +115,49 @@ export function productionScore(m) {
 }
 
 /**
- * Strict gameplay / pipeline inventory gate:
- * - GLB on R2 with production surface (texture/atlas/vcol) OR baked clip JSON
- * - Never FBX / bare untextured dumps as "ready"
+ * Strict gameplay / pipeline inventory gate (DEFAULT catalog filter):
+ * - **Game-ready only**: textured / atlas / embedded / glb2glb production surface
+ * - GLB on R2 (or baked Bip001 JSON clips)
+ * - **Never** FBX, OBJ, bare untextured dumps, arena character CDN, or unknown hosts
+ *
+ * Used when activeProd === 'ready' on grudge-pipeline.vercel.app.
  */
 export function isProductionDeployReady(m) {
   if (!m) return false;
 
-  // Baked anim clips (rotation-only Bip001) are deploy-ready for play-on-character
   const path = pathOf(m);
   const fmt = fmtOf(m);
+  const cdn = String(m.cdnUrl || '');
+
+  // KILL: secondary arena character host (stale 100× / wrong scale)
+  if (cdn.includes('grudge-arena') && /cdn\/assets\/characters/i.test(cdn)) {
+    return false;
+  }
+  if (/cdn\/assets\/characters/i.test(path)) return false;
+
+  // Baked anim clips (rotation-only Bip001) — deploy-ready for play-on-character
   if (m.isBakedClip || (fmt === 'json' && /anims\/baked/.test(path))) {
     return true;
   }
 
-  // Mesh deploy: GLB only
+  // Mesh deploy: production GLB only (never author FBX/OBJ as "ready")
   if (fmt !== 'glb') return false;
 
   // Must be fleet CDN SSOT
   if (!isCdnSsot(m)) return false;
 
-  // Must have color/texture surface (or explicit glb2glb production bake)
+  // HARD: must have real surface — no grey/yellow bare mesh in game inventory
   if (!hasProductionSurface(m)) return false;
 
-  // Explicit flags
-  if (m.productionBaked === true || m.deployReady === true || m.bakePipeline === 'glb2glb') {
+  // Prefer explicit production bake flags
+  if (m.productionBaked === true || m.bakePipeline === 'glb2glb') {
+    return true;
+  }
+  if (m.deployReady === true && hasProductionSurface(m)) {
     return true;
   }
 
-  // Score floor for catalog rows with good metadata
+  // Score floor for well-tagged R2 GLBs (textured + SI + CDN)
   if (productionScore(m) >= PROD_READY_SCORE) return true;
 
   return false;
@@ -172,18 +189,29 @@ export function inferEquipSlot(meshName) {
   const n = String(meshName || '');
   if (!n || n === '(unnamed)') return 'unknown';
   const s = n.toLowerCase();
-  if (/bip001|skeleton|armature|root|hips|pelvis|spine|neck|head\b|clavicle|upperarm|forearm|hand|thigh|calf|foot|toe/i.test(n) && !/mesh|geo|armor|helm/i.test(n)) {
+  // Skeleton / bones first (not equippable armor)
+  if (
+    /bip001|skeleton|armature|root|hips|pelvis|spine|neck|clavicle|upperarm|forearm|hand|thigh|calf|foot|toe/i.test(
+      n,
+    ) &&
+    !/mesh|geo|armor|helm|body|cloak|wing|cape/i.test(n)
+  ) {
     return 'skeleton';
   }
+  // Back / flight / mount (RTS_TOON modular extras)
+  if (/cloak|cape|mantle|back_?cloth/i.test(s)) return 'cloak';
+  if (/wing|wings|angel|dragon_?wing|bat_?wing/i.test(s)) return 'wings';
+  if (/horse|mount|cavalry|saddle|steed/i.test(s)) return 'mount';
+  if (/shoulder|pauldron/i.test(s)) return 'shoulders';
+  if (/quiver|bone_bag|bone_wood/i.test(s)) return 'quiver';
   if (/head|helm|helmet|hood|hat|mask|face|hair|beard|ear/i.test(s)) return 'head';
-  if (/body|torso|chest|armor|cuirass|robe|shirt|jacket|cape|cloak|back/i.test(s)) return 'body';
-  if (/arm|glove|gauntlet|bracer|shoulder|pauldron|sleeve/i.test(s)) return 'arms';
+  if (/body|torso|chest|armor|cuirass|robe|shirt|jacket/i.test(s)) return 'body';
+  if (/arm|glove|gauntlet|bracer|sleeve/i.test(s)) return 'arms';
   if (/leg|boot|shoe|pant|greave|skirt|lower/i.test(s)) return 'legs';
   if (/sword|axe|mace|bow|staff|wand|spear|dagger|gun|rifle|pick|shovel|scyth|hammer|weapon|blade/i.test(s))
     return 'weapon';
   if (/shield|buckler/i.test(s)) return 'shield';
-  if (/quiver|pouch|bag|belt|ring|amulet|accessory|lantern|torch/i.test(s)) return 'accessory';
-  if (/horse|mount|saddle/i.test(s)) return 'mount';
+  if (/pouch|bag|belt|ring|amulet|accessory|lantern|torch/i.test(s)) return 'accessory';
   if (/building|wall|floor|roof|prop|crate|barrel|rock|tree|trunk|bush|stone/i.test(s)) return 'prop';
   return 'mesh';
 }

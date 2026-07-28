@@ -1,9 +1,42 @@
 {
-  "version": 1,
+  "version": 3,
   "updated": "2026-07-28",
   "live": "https://grudge-pipeline.vercel.app/",
-  "rule": "Accumulate every production asset + runtime package the fleet needs here as systems ship. Browser Kind filters + needs panel are the SSOT for gaps.",
+  "rule": "Fleet-wide ledger: harvest, combat, voxel Realms, grudge6, build. Browser Kind filters + needs panel are SSOT for gaps across Warlords, Mine-Loader, Open, VoxGrudge.",
   "tracks": [
+    {
+      "id": "fleet",
+      "label": "Fleet identity + dual databases (wide)",
+      "product": "All Grudge client apps",
+      "docs": [
+        "grudge-production-wiring",
+        "grudge-live-servers",
+        "Mine-Loader/docs/FLEET_WIDE_INTEGRATION.md"
+      ],
+      "runtime": [
+        "Bearer JWT",
+        "same-origin /api rewrites"
+      ],
+      "layers": {
+        "identity": "id.grudge-studio.com",
+        "playerState": "grudge-api-production-0d46 (Builder Postgres)",
+        "definitions": "objectstore.grudge-studio.com",
+        "binaries": "assets.grudge-studio.com",
+        "assetIndex": "D1 grudge-assets-db",
+        "voxelWorlds": "mine-loader-api Railway Postgres"
+      },
+      "searchHints": [
+        "grudge6",
+        "character",
+        "auth",
+        "sso"
+      ],
+      "todo": [
+        "Redeploy Builder after authReturn/CORS/label changes",
+        "Verify CORS for mine-loader.vercel.app + mine.grudge-studio.com",
+        "Shared token keys across Open/Realms/Warlords"
+      ]
+    },
     {
       "id": "harvest",
       "label": "Home-island harvest + three-pinata",
@@ -49,20 +82,298 @@
         "Isolate ore multipack meshNames for pinata proxies",
         "Hand-attach pickaxe/hatchet production GLBs",
         "Optional: pre-bake pinata shatter LODs for heavy ore nodes",
-        "Terrain PBR packs from pipeline root zips → R2"
+        "Terrain PBR packs from pipeline root zips â†’ R2"
+      ]
+    },
+    {
+      "id": "combat",
+      "label": "Projectiles + combat VFX (arrows, bullets, cannonballs, explosives)",
+      "product": "GrudgeBuilder warscene / tactical-ocean / island combat / fleet parry",
+      "docs": [
+        "docs/PROJECTILES_AND_VFX.md",
+        "docs/BEST-PRACTICES.md"
+      ],
+      "runtime": [
+        "three",
+        "@dimforge/rapier3d-compat"
+      ],
+      "code": [
+        "client/src/warscene/WarProjectileSystem.ts",
+        "client/src/warscene/WarCatapult.ts",
+        "client/src/tactical-ocean/threeWorldMapManager.ts",
+        "client/src/tactical-ocean/TacticalOceanScene.tsx",
+        "web/js/projectileVfx.js",
+        "web/js/deployChecks.js"
+      ],
+      "subtypes": {
+        "arrow": {
+          "siM": [
+            0.45,
+            1
+          ],
+          "expectedM": 0.75,
+          "parryable": true,
+          "gravity": true,
+          "origin": "R_hand_container / bow L_hand"
+        },
+        "bolt": {
+          "siM": [
+            0.5,
+            1.2
+          ],
+          "expectedM": 0.85,
+          "parryable": true,
+          "gravity": true
+        },
+        "bullet": {
+          "siM": [
+            0.008,
+            0.08
+          ],
+          "expectedM": 0.03,
+          "parryable": true,
+          "gravity": false,
+          "prefer": "ray + tracer beyond 30 m"
+        },
+        "cannonball": {
+          "siM": [
+            0.12,
+            0.55
+          ],
+          "expectedM": 0.28,
+          "parryable": false,
+          "gravity": true
+        },
+        "explosive": {
+          "siM": [
+            0.08,
+            0.45
+          ],
+          "expectedM": 0.18,
+          "parryable": false,
+          "gravity": true,
+          "impact": "radius damage + impact VFX"
+        },
+        "magic_orb": {
+          "siM": [
+            0.12,
+            0.8
+          ],
+          "expectedM": 0.35,
+          "parryable": true,
+          "gravity": false
+        },
+        "trail": {
+          "role": "vfx attached",
+          "parryable": false,
+          "layer": "IgnoreRaycast"
+        },
+        "impact": {
+          "role": "vfx one-shot",
+          "parryable": false,
+          "layer": "IgnoreRaycast"
+        }
+      },
+      "cdnKeys": [
+        "models/vfx/projectiles/wod_parts.glb",
+        "models/vfx/impacts/supernova_1987a.glb",
+        "models/vfx/warning_01.glb",
+        "models/vfx/warning_02.glb",
+        "models/vfx/warning_03.glb",
+        "models/vfx/status-magic/"
+      ],
+      "searchHints": [
+        "arrow",
+        "shell_arrow",
+        "ballista",
+        "bolt",
+        "bullet",
+        "cannonball",
+        "shell_cannon",
+        "grenade",
+        "explosive",
+        "fireball",
+        "orb",
+        "projectile",
+        "vfx",
+        "impact",
+        "explosion",
+        "trail",
+        "warning"
+      ],
+      "gameReadyRules": [
+        "SI scale by subtype â€” never fit projectiles to 1.8 m human",
+        "Object-pool meshes; zero per-shot alloc in steady state",
+        "Damage / detonate ON IMPACT only (not on fire)",
+        "Rapier layer Projectile + CCD for solid shells; rays for bullets at range",
+        "Parry allowlist: arrow, bullet, orb â€” deny grenade, bomb, nova, meteor, trap",
+        "Trail/impact VFX = IgnoreRaycast; no self-damage",
+        "Hold â†’ R2 grudge-assets â†’ D1 asset_registry â†’ assetUrl(r2Key) in games",
+        "Yellow arrow = missing atlas â€” rebind materials.js bow-arrow texture"
+      ],
+      "todo": [
+        "DONE: Upload web-sized VFX projectiles/status-magic/warnings + shell arrows to R2 (2026-07-28)",
+        "Bake + meshopt airship.glb (156MB) before CDN",
+        "Convert airship NPC FBX (John Wayne / Scourge) → production GLB",
+        "LOD/replace supernova impact (128MB) for web combat",
+        "wrangler d1 execute grudge-assets-db --remote --file=reports/production-seed.sql",
+        "Atlas-rebind any remaining yellow arrows",
+        "Expand ship-production MANIFEST for nature/harvest/creatures already on CDN with labels only"
       ]
     },
     {
       "id": "grudge6",
       "label": "grudge6 race kits + baked anims",
       "product": "character / open / warlords",
-      "searchHints": ["WK_", "BRB_", "ELF_", "DWF_", "ORC_", "UD_", "baked"]
+      "searchHints": [
+        "WK_",
+        "BRB_",
+        "ELF_",
+        "DWF_",
+        "ORC_",
+        "UD_",
+        "baked"
+      ]
     },
     {
       "id": "build",
       "label": "Buildables + modular props",
       "product": "island build mode",
-      "searchHints": ["buildable", "kenney", "wall", "foundation"]
+      "searchHints": [
+        "buildable",
+        "kenney",
+        "wall",
+        "foundation"
+      ]
+    },
+    {
+      "id": "minecraft",
+      "label": "Minecraft patterns (dgreenheck clone â†’ Mine-Loader)",
+      "product": "mine-loader.vercel.app /#/play",
+      "upstream": "https://github.com/dgreenheck/minecraft-threejs-clone",
+      "runtime": [
+        "artifacts/voxelcraft/src/lib/mcClonePatterns.ts",
+        "artifacts/voxelcraft/src/lib/voxelEngine.ts",
+        "artifacts/voxelcraft/src/lib/gridCraft.ts",
+        "artifacts/voxelcraft/src/lib/recipes.ts"
+      ],
+      "code": [
+        "Mine-Loader/docs/FLEET_MINECRAFT_PATTERNS.md",
+        "Mine-Loader/docs/NEXUS_VOXEL_SSOT.md"
+      ],
+      "searchHints": [
+        "pickaxe",
+        "coal",
+        "ore",
+        "stone",
+        "torch",
+        "planks",
+        "block",
+        "voxel"
+      ],
+      "todo": [
+        "Bake pickaxe/axe GLBs for FPS view-model (tools/)",
+        "Optional: clone face textures only if Codex atlas missing faces",
+        "Codex cat: coal-ore / iron-vein placeables aligned with MC_CLONE_BLOCKS",
+        "Lobby â†’ select â†’ load â†’ play flow smoke on production DNS"
+      ]
+    },
+    {
+      "id": "voxel",
+      "label": "Mine-Loader / Voxel Realms Codex + worlds",
+      "product": "mine.grudge-studio.com · mine-loader.vercel.app",
+      "docs": [
+        "Mine-Loader/docs/FLEET_WIDE_INTEGRATION.md",
+        "Mine-Loader/docs/PRODUCTION_ID_AND_DB.md",
+        "Mine-Loader/docs/NEXUS_VOXEL_SSOT.md"
+      ],
+      "runtime": [
+        "@dimforge/rapier3d-compat",
+        "three"
+      ],
+      "code": [
+        "Mine-Loader/artifacts/api-server",
+        "Mine-Loader/artifacts/voxelcraft",
+        "gameopen mineLoaderConfig + gameLibrary mine-loader-realms"
+      ],
+      "cdnKeys": [
+        "block-icons/",
+        "models/grudge6/"
+      ],
+      "searchHints": [
+        "block",
+        "voxel",
+        "ore",
+        "stone",
+        "codex",
+        "shell_arrow"
+      ],
+      "consumers": [
+        "open",
+        "voxgrudge",
+        "gameopen"
+      ],
+      "todo": [
+        "Keep Open /api/blocks → Mine-Loader Railway",
+        "SPA rewrites: auth→ID, characters/inventory→Builder, worlds→Realms",
+        "1 API replica only",
+        "Production migrate players.active_character_id + last_seen_at",
+        "Pipeline ship combat VFX for Realms skills when wired"
+      ]
+    }
+  ],
+  "relatedSystems": [
+    {
+      "id": "mine-loader",
+      "url": "https://mine-loader.vercel.app",
+      "edge": "https://mine.grudge-studio.com",
+      "api": "https://mine-loader-api-production.up.railway.app",
+      "role": "Voxel Realms SSOT (blocks/worlds)"
+    },
+    {
+      "id": "open",
+      "url": "https://open.grudge-studio.com",
+      "role": "Library + SSO hub + blocks proxy"
+    },
+    {
+      "id": "voxgrudge",
+      "url": "https://voxgrudge.vercel.app",
+      "role": "Open-world consumer of Mine-Loader Codex"
+    },
+    {
+      "id": "builder-api",
+      "url": "https://grudge-api-production-0d46.up.railway.app",
+      "role": "Characters/account/wallet"
+    },
+    {
+      "id": "grudge-id",
+      "url": "https://id.grudge-studio.com",
+      "role": "Login JWT"
+    },
+    {
+      "id": "cdn",
+      "url": "https://assets.grudge-studio.com",
+      "role": "Binary assets R2"
+    },
+    {
+      "id": "pipeline",
+      "url": "https://grudge-pipeline.vercel.app",
+      "role": "Bake/label/ship production assets"
+    },
+    {
+      "id": "foundry",
+      "url": "https://character.grudge-studio.com",
+      "role": "Create heroes only"
+    },
+    {
+      "id": "warlords",
+      "url": "https://grudgewarlords.com",
+      "role": "Island/home combat"
+    },
+    {
+      "id": "grudox",
+      "url": "https://grudox.grudge-studio.com",
+      "role": "Arcade PvP rooms"
     }
   ]
 }
