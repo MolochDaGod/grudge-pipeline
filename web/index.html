@@ -18,8 +18,10 @@
       </div>
       <div class="header-links">
         <a href="https://assets.grudge-studio.com" target="_blank" rel="noreferrer">CDN</a>
+        <a href="https://forge.grudge-studio.com/editor?from=pipeline&edit=1" target="_blank" rel="noreferrer" title="R3F + Rapier editor">Forge</a>
         <a href="https://open.grudge-studio.com" target="_blank" rel="noreferrer">Open</a>
         <a href="https://api.grudge-studio.com/assets?limit=5" target="_blank" rel="noreferrer">D1 API</a>
+        <a href="docs/FLEET_INTEGRATION.md" target="_blank" rel="noreferrer">Integration</a>
         <a href="#fleetNeedsPanel" title="Living ledger — add harvest / build / grudge6 needs as we ship">Fleet needs</a>
       </div>
     </header>
@@ -39,9 +41,12 @@
         <div>
           <h2>Fleet needs <span class="fleet-needs-sub">add everything along the way</span></h2>
           <p class="fleet-needs-desc">
-            Living SSOT for production gaps. Home-island <strong>harvest + three-pinata</strong> (ore / rock / trees)
-            is tracked first — expand this panel as buildables, combat, and sectors ship.
-            <a href="docs/HARVEST_PINATA.md" target="_blank" rel="noreferrer">Harvest docs</a>
+            Living SSOT for production gaps:
+            <strong>harvest + three-pinata</strong> and
+            <strong>combat projectiles + VFX</strong>
+            (arrows, bullets, cannonballs, explosives, trails, impacts).
+            <a href="docs/HARVEST_PINATA.md" target="_blank" rel="noreferrer">Harvest</a>
+            · <a href="docs/PROJECTILES_AND_VFX.md" target="_blank" rel="noreferrer">Projectiles/VFX</a>
             · <code>api/fleet-needs.json</code>
           </p>
         </div>
@@ -49,12 +54,15 @@
           <button type="button" class="action-btn" id="btnHarvestFilter" title="Filter catalog to harvest kind + path hints">
             Show harvest assets
           </button>
+          <button type="button" class="action-btn" id="btnCombatFilter" title="Filter catalog to projectiles + combat VFX">
+            Show combat assets
+          </button>
           <button type="button" class="action-btn" id="btnNeedsToggle" title="Collapse needs list">
             Toggle list
           </button>
         </div>
       </div>
-      <div class="fleet-needs-meta" id="fleetNeedsMeta">Loading harvest coverage…</div>
+      <div class="fleet-needs-meta" id="fleetNeedsMeta">Loading harvest + combat coverage…</div>
       <div class="fleet-needs-list" id="fleetNeedsList"></div>
     </section>
 
@@ -88,7 +96,25 @@
         <button type="button" class="action-btn" id="btnSnapVisible" title="Queue snapshots for all filtered (capped)">
           Snapshot filtered
         </button>
+        <button type="button" class="action-btn accent" id="btnSceneCart" title="Assets queued for a Forge .gfscene pack">
+          Scene cart <span id="sceneCartCount">0</span>
+        </button>
+        <button type="button" class="action-btn" id="btnSaveForgeScene" title="Download .gfscene.json (entities + scripts + asset CDN list)">
+          Save Forge scene
+        </button>
+        <button type="button" class="action-btn accent" id="btnOpenForgePack" title="Open forge.grudge-studio.com and import the pack (scripts + assets)">
+          Edit in Forge
+        </button>
         <span class="action-status" id="actionStatus"></span>
+      </div>
+      <div class="scene-cart-bar" id="sceneCartBar" hidden>
+        <div class="filter-label">Forge scene cart — production CDN assets → .gfscene.json</div>
+        <div class="scene-cart-list" id="sceneCartList"></div>
+        <div class="action-row" style="margin-top:6px">
+          <button type="button" class="action-btn" id="btnCartAddCurrent" title="Add the currently open viewer asset">+ Current asset</button>
+          <button type="button" class="action-btn" id="btnCartClear">Clear cart</button>
+          <span class="dim" id="sceneCartHint">Add assets, then Save or Edit in Forge</span>
+        </div>
       </div>
       <div id="dedupePanel" class="dedupe-panel" hidden>
         <div class="filter-label">Dedupe / UUID report</div>
@@ -214,13 +240,32 @@
           human-relative bands (never force everything to hero height). 100× unit errors are auto-detected.
         </p>
 
-        <h3>Multipack meshes <span class="mesh-count" id="meshCount"></span></h3>
+        <h3>Modular race HUD <span class="mesh-count" id="meshCount"></span></h3>
         <p class="diag-footnote" style="margin-top:0">
-          Isolate <strong>meshName</strong> by equip slot (body / arms / legs / head / weapon).
-          Tint or rebind texture per mesh for production equip wiring.
+          RTS_TOON / grudge6 multipack: armor, <strong>cloak</strong>, <strong>wings</strong>,
+          <strong>mount</strong>, weapons, shield — visibility equip (not model swap).
+          Production GLB + atlas only.
         </p>
+        <div class="fleet-open-row">
+          <button type="button" class="viewer-btn accent" id="btnOpenForge" title="Open asset in forge.grudge-studio.com (R3F + Rapier)">
+            Open in Forge
+          </button>
+          <button type="button" class="viewer-btn" id="btnOpenForgeWeapons" title="Weapon skill tree in Forge">
+            Weapon skills
+          </button>
+          <button type="button" class="viewer-btn" id="btnOpenForgeScene" title="Open scene workspace">
+            Forge scene
+          </button>
+          <button type="button" class="viewer-btn accent" id="btnAddToCart" title="Add this asset to the Forge scene cart">
+            + Scene cart
+          </button>
+          <button type="button" class="viewer-btn" id="btnSaveForgeFromViewer" title="Save current asset as a 1-entity .gfscene.json">
+            Save .gfscene
+          </button>
+        </div>
+        <div id="modularHudHost" class="modular-hud-host"></div>
         <div class="mesh-toolbar">
-          <button type="button" class="viewer-btn" id="btnMeshAll">All</button>
+          <button type="button" class="viewer-btn" id="btnMeshAll">All meshes</button>
           <button type="button" class="viewer-btn" id="btnMeshNone">None</button>
           <button type="button" class="viewer-btn" id="btnMeshSolo" title="Solo selected">Solo</button>
           <select id="meshSlotFilter" class="anim-select-3d" title="Solo equip slot">
@@ -229,8 +274,13 @@
             <option value="body">body</option>
             <option value="arms">arms</option>
             <option value="legs">legs</option>
+            <option value="shoulders">shoulders</option>
+            <option value="cloak">cloak</option>
+            <option value="wings">wings</option>
+            <option value="mount">mount</option>
             <option value="weapon">weapon</option>
             <option value="shield">shield</option>
+            <option value="quiver">quiver</option>
             <option value="accessory">accessory</option>
             <option value="prop">prop</option>
             <option value="skeleton">skeleton</option>
@@ -238,7 +288,7 @@
         </div>
         <div class="mesh-tools row" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;align-items:center">
           <label class="dim" style="font-size:.75rem">Color
-            <input type="color" id="meshColor" value="#ffffff" title="Mesh tint" />
+            <input type="color" id="meshColor" value="#ffffff" title="Mesh tint (post-atlas)" />
           </label>
           <button type="button" class="viewer-btn" id="btnMeshColor">Apply color</button>
           <input type="url" id="meshTexUrl" placeholder="https://assets…/atlas.webp" style="flex:1;min-width:140px;font-size:.75rem;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:#0b1220;color:inherit" />
@@ -248,7 +298,27 @@
           <label>equipSlot</label>
           <code id="useEquipSlot">—</code>
         </div>
-        <div class="mesh-list" id="meshList"><em class="dim">Load a multipack to isolate meshName</em></div>
+        <div class="use-row">
+          <label>anim pack</label>
+          <code id="useAnimPackActive">—</code>
+        </div>
+        <div class="mesh-list" id="meshList"><em class="dim">Load a multipack race kit to equip</em></div>
+
+        <h3>Weapon skills <span class="diag-hint">Forge scripts</span></h3>
+        <p class="diag-footnote" style="margin-top:0">
+          Scripted skill tree (windup / hit window / socket / VFX). Opens in Forge weapon workspace.
+        </p>
+        <select id="weaponSkillType" class="anim-select-3d" title="Weapon type">
+          <option value="sword">sword</option>
+          <option value="axe">axe</option>
+          <option value="hammer">hammer</option>
+          <option value="spear">spear</option>
+          <option value="dagger">dagger</option>
+          <option value="bow">bow</option>
+          <option value="staff">staff</option>
+          <option value="shield">shield</option>
+        </select>
+        <div id="weaponSkillList" class="skill-list"></div>
 
         <h3>Bone names</h3>
         <div class="bone-list" id="boneList"></div>
