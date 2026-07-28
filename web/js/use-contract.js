@@ -11,6 +11,7 @@ import {
   HUMAN_HEIGHT_M,
 } from './productionBake.js';
 import { harvestImportSnippet, isHarvestAsset } from './harvestNeeds.js';
+import { projectileImportSnippet, isProjectileOrCombatVfx } from './projectileVfx.js';
 
 export {
   productionScore,
@@ -57,6 +58,7 @@ export function openImportSnippet(m) {
   const r2 = r2KeyOf(m);
   const kind = inferAssetKind(m);
   const profile = getDeployProfile({ ...m, kind });
+  const forgeHint = `// Forge: https://forge.grudge-studio.com/?from=pipeline&workspace=assets&asset=${encodeURIComponent(url || '')}&r2Key=${encodeURIComponent(r2)}&uuid=${encodeURIComponent(uuid)}`;
   if (kind === 'animation' || m.isBakedClip) {
     const pack = m.group || m.bakedRel || 'pack';
     return `// Grudge baked / anim clip
@@ -69,6 +71,7 @@ const clipUrl = ${JSON.stringify(url || m.cdnUrl || '')};
   }
   if (kind === 'character') {
     return `${productionLoadComment(m)}
+${forgeHint}
 // grudge6 / character kit — prefer production GLB (glb2glb), not raw FBX in game
 // uuid: ${uuid}
 // r2Key: ${r2}
@@ -76,17 +79,15 @@ const clipUrl = ${JSON.stringify(url || m.cdnUrl || '')};
 // badge: ${productionBadge(m).label} · score ${productionScore(m)}
 const modelUrl = ${JSON.stringify(url)};
 // GLTFLoader + enforceCharacterSi(${HUMAN_HEIGHT_M}) + feet y=0 + art-forward +Z
-// Equipment = child mesh visibility (mesh_ids), not model swap.`;
+// Equipment = child mesh visibility (mesh_ids), not model swap.
+// Modular HUD: head/body/arms/legs/cloak/wings/mount/weapon/shield
+// Anims: Bip001 pack sword_shield|2h_melee|longbow|magic — stripPositionTracks`;
   }
-  if (kind === 'projectile') {
-    return `// Projectile (arrow / bolt / shell) — NOT character-scaled
-// uuid: ${uuid}
-// r2Key: ${r2}
-// kind: projectile · layer: ${profile.physicsLayer}
-// scale: longest edge ~${profile.okRange[0]}–${profile.okRange[1]} m (arrows ~0.6–0.9 m)
-// NEVER fit to 1.8 m human height
-const url = ${JSON.stringify(url)};
-// Rapier: type dynamic/kinematic, layer Projectile, CCD on, no Player collision matrix vs self`;
+  if (kind === 'projectile' || isProjectileOrCombatVfx(m)) {
+    return projectileImportSnippet(m);
+  }
+  if (kind === 'vfx') {
+    return projectileImportSnippet({ ...m, path: r2 || m.path, name: m.name || 'vfx' });
   }
   if (kind === 'weapon') {
     return `// Held weapon — hand-relative scale

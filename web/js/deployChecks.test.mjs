@@ -31,8 +31,11 @@ assert(
 assert(inferAssetKind({ name: 'keep_tower', path: 'models/buildings/keep.glb' }) === 'building', 'building');
 assert(inferAssetKind({ name: 'sloop', path: 'models/boats/sloop.glb' }) === 'boat', 'boat');
 assert(inferAssetKind({ name: 'home_island', path: 'models/islands/home.glb' }) === 'island', 'island');
+assert(inferAssetKind({ name: 'cannonball', path: 'models/naval/cannonball.glb' }) === 'projectile', 'cannonball kind');
+assert(inferAssetKind({ name: 'frag_grenade', path: 'models/weapons/grenade.glb' }) === 'projectile', 'grenade kind');
 
-const proj = getDeployProfile({ kind: 'projectile' });
+const proj = getDeployProfile({ name: '_arrow_b_1', path: 'models/weapons/bow/_arrow_b_1.glb' });
+assert(proj.subtype === 'arrow' || proj.kind === 'projectile', 'arrow profile');
 const s1 = computeDeployScale(0.63, proj);
 assert(Math.abs(s1.scale - 1) < 1e-9, 'arrow 0.63 m no scale');
 assert(!s1.normalized, 'arrow not normalized');

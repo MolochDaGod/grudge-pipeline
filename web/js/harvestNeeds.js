@@ -261,6 +261,13 @@ export const FLEET_TRACKS = [
     docs: ['docs/BEST-PRACTICES.md'],
     needs: [],
   },
+  {
+    id: 'combat',
+    label: 'Projectiles + combat VFX',
+    product: 'warscene / tactical-ocean / island combat',
+    docs: ['docs/PROJECTILES_AND_VFX.md', 'docs/BEST-PRACTICES.md'],
+    needs: [], // populated via projectileVfx.COMBAT_PROJECTILE_NEEDS in browser
+  },
 ];
 
 /**

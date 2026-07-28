@@ -15,8 +15,14 @@ import {
   humanRelativeLabel,
   diagnoseUnitScale,
 } from './worldScale.js';
+import {
+  inferProjectileSubtype,
+  projectileRuntimeChecks,
+  PROJECTILE_SUBTYPE_REF,
+} from './projectileVfx.js';
 
 export { HUMAN_HEIGHT_M, humanRelativeLabel, diagnoseUnitScale, computeWorldScale };
+export { inferProjectileSubtype, projectileRuntimeChecks, PROJECTILE_SUBTYPE_REF };
 
 /**
  * @typedef {'character'|'creature'|'weapon'|'projectile'|'prop'|'buildable'|'building'|'boat'|'vehicle'|'island'|'town'|'environment'|'harvest'|'animation'|'vfx'|'ui'|'other'} AssetKind
@@ -115,7 +121,7 @@ export const DEPLOY_PROFILES = {
   },
   projectile: {
     kind: 'projectile',
-    label: 'Projectile (arrow / bolt / shell)',
+    label: 'Projectile (arrow / bolt / shell / bullet / cannon / explosive)',
     scaleAxis: 'longest',
     targetMeters: null,
     expectedM: ref('projectile').expectedM,
@@ -129,8 +135,19 @@ export const DEPLOY_PROFILES = {
     requireBones: false,
     requireTexture: true,
     physicsLayer: 'Projectile',
-    scriptHints: ['layer Projectile', 'CCD'],
-    notes: ['Arrow ~0.6–0.9 m (~0.4× human) — NOT 1.8 m'],
+    scriptHints: [
+      'layer Projectile',
+      'CCD',
+      'object pool',
+      'damage on impact',
+      'subtype SI bands',
+    ],
+    notes: [
+      'Arrow ~0.45–1.0 m · bolt ~0.5–1.2 m · bullet << 0.08 m · cannonball ~0.12–0.55 m',
+      'Explosive / grenade ~0.08–0.45 m · magic orb ~0.12–0.8 m',
+      'NEVER fit any projectile to 1.8 m human height',
+      'See docs/PROJECTILES_AND_VFX.md + projectileVfx.js',
+    ],
   },
   prop: {
     kind: 'prop',
@@ -412,7 +429,17 @@ export function inferAssetKind(m) {
     c.includes('shell_arrow') ||
     c.includes('shell_ballista') ||
     c.includes('shell_cannon') ||
-    c.includes('crossbow_bolt')
+    c.includes('crossbow_bolt') ||
+    c.includes('cannonball') ||
+    c.includes('cannon_ball') ||
+    c.includes('grenade') ||
+    c.includes('explosive') ||
+    (c.includes('bullet') && !c.includes('bulletin')) ||
+    c.includes('musket_ball') ||
+    c.includes('ballista') ||
+    c.includes('fireball') ||
+    c.includes('magic_orb') ||
+    c.includes('/vfx/projectiles')
   ) {
     return 'projectile';
   }
@@ -529,9 +556,58 @@ export function inferAssetKind(m) {
   return 'other';
 }
 
+/**
+ * Map projectile subtype → worldScale reference key.
+ * @param {string} subtype
+ */
+function projectileRefKey(subtype) {
+  switch (subtype) {
+    case 'arrow':
+      return 'projectile_arrow';
+    case 'bolt':
+      return 'projectile_bolt';
+    case 'bullet':
+      return 'projectile_bullet';
+    case 'cannonball':
+      return 'projectile_cannonball';
+    case 'explosive':
+      return 'projectile_explosive';
+    case 'magic_orb':
+      return 'projectile_orb';
+    default:
+      return 'projectile';
+  }
+}
+
 export function getDeployProfile(entry) {
   const kind = inferAssetKind(entry);
-  return DEPLOY_PROFILES[kind] || DEPLOY_PROFILES.other;
+  const base = { ...(DEPLOY_PROFILES[kind] || DEPLOY_PROFILES.other) };
+  if (kind === 'projectile' || kind === 'vfx') {
+    const subtype = inferProjectileSubtype(entry);
+    const sub = PROJECTILE_SUBTYPE_REF[subtype];
+    if (sub && (kind === 'projectile' || subtype === 'trail' || subtype === 'impact')) {
+      const refKey = projectileRefKey(subtype);
+      const r = WORLD_REFERENCE_M[refKey] || WORLD_REFERENCE_M.projectile;
+      const b = WORLD_SIZE_BANDS[refKey] || WORLD_SIZE_BANDS.projectile;
+      base.expectedM = r.expectedM;
+      base.okRange = b.ok;
+      base.warnRange = b.warn;
+      base.label = `${base.label} · ${sub.label}`;
+      base.subtype = subtype;
+      base.notes = [...(base.notes || []), sub.notes];
+      base.scriptHints = [
+        ...(base.scriptHints || []),
+        `subtype:${subtype}`,
+        sub.parryable ? 'parryable' : 'not-parryable',
+        sub.gravity ? 'ballistic-gravity' : 'straight-line',
+      ];
+      if (subtype === 'trail' || subtype === 'impact') {
+        base.physicsLayer = 'IgnoreRaycast';
+        base.requireTexture = false;
+      }
+    }
+  }
+  return base;
 }
 
 export function measureSize(size, profile) {
@@ -648,12 +724,17 @@ export function runDeployChecks(opts) {
     });
   }
 
-  if (profile.kind === 'projectile' && measure > 1.5) {
+  if (profile.kind === 'projectile' || profile.kind === 'vfx') {
+    const runtime = projectileRuntimeChecks(entry || { kind: profile.kind }, measure);
+    for (const c of runtime.checks) checks.push(c);
+  }
+
+  if (profile.kind === 'projectile' && measure > 1.5 && profile.subtype !== 'impact' && profile.subtype !== 'trail') {
     checks.push({
       id: 'scale-projectile-oversized',
       label: 'Projectile size',
       status: 'fail',
-      detail: `${measure.toFixed(2)} m is character-scale — arrows ~0.6–0.9 m. Never fit to ${HUMAN_HEIGHT_M} m.`,
+      detail: `${measure.toFixed(2)} m is character-scale — use subtype SI bands (arrow ~0.6–0.9 m). Never fit to ${HUMAN_HEIGHT_M} m.`,
     });
   }
 
