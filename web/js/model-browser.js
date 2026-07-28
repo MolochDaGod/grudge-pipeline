@@ -205,6 +205,7 @@ let page = 0;
 let activeKind = null;
 let activeGroup = null;
 /** @type {string|null} Prefer glb for game-ready inventory (null = all formats). */
+/** Prefer GLB format in inventory for gameplay-ready browsing */
 let activeFormat = 'glb';
 let activeSource = null;
 let activeUuid = null;
