@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "updated": "2026-07-28",
+  "live": "https://grudge-pipeline.vercel.app/",
+  "rule": "Accumulate every production asset + runtime package the fleet needs here as systems ship. Browser Kind filters + needs panel are the SSOT for gaps.",
+  "tracks": [
+    {
+      "id": "harvest",
+      "label": "Home-island harvest + three-pinata",
+      "product": "GrudgeBuilder Island3D /home-island",
+      "runtime": [
+        "@dgreenheck/three-pinata",
+        "@dimforge/rapier3d-compat"
+      ],
+      "code": [
+        "client/src/island3d/harvest/PinataHarvestBreak.ts",
+        "client/src/island3d/harvest/HarvestNodeRecognition.ts",
+        "client/src/island3d/harvest/HarvestFeedback.ts",
+        "client/src/game/harvest/HarvestToolActions.ts",
+        "client/src/island3d/objects/IslandResourceLoader.ts"
+      ],
+      "tools": {
+        "tree": "axe",
+        "rock": "pickaxe",
+        "ore": "pickaxe",
+        "crystal": "pickaxe",
+        "hemp": "skinning_knife",
+        "flower": "skinning_knife"
+      },
+      "cdnKeys": [
+        "models/environment/harvest_logs.glb",
+        "models/environment/harvest_rock_debris.glb",
+        "models/environment/harvest_stump.glb"
+      ],
+      "searchHints": [
+        "commontree",
+        "pebble",
+        "ore",
+        "crystal",
+        "harvest_logs",
+        "harvest_rock_debris",
+        "harvest_stump",
+        "pickaxe",
+        "hatchet",
+        "nature"
+      ],
+      "todo": [
+        "Bake + UUID all battle NatureDecor trees/rocks used on home island",
+        "Isolate ore multipack meshNames for pinata proxies",
+        "Hand-attach pickaxe/hatchet production GLBs",
+        "Optional: pre-bake pinata shatter LODs for heavy ore nodes",
+        "Terrain PBR packs from pipeline root zips → R2"
+      ]
+    },
+    {
+      "id": "grudge6",
+      "label": "grudge6 race kits + baked anims",
+      "product": "character / open / warlords",
+      "searchHints": ["WK_", "BRB_", "ELF_", "DWF_", "ORC_", "UD_", "baked"]
+    },
+    {
+      "id": "build",
+      "label": "Buildables + modular props",
+      "product": "island build mode",
+      "searchHints": ["buildable", "kenney", "wall", "foundation"]
+    }
+  ]
+}

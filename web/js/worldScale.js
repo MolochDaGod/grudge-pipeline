@@ -225,6 +225,8 @@ export const WORLD_REFERENCE_M = {
   island: { expectedM: 200, axis: 'longest', humans: 110 },
   terrain_chunk: { expectedM: 100, axis: 'longest', humans: 55 },
   environment: { expectedM: 15, axis: 'longest', humans: 8 },
+  /** Home-island harvestables — trees tall, rocks human-scale, debris small */
+  harvest: { expectedM: 4, axis: 'longest', humans: 2.2 },
   animation: { expectedM: HUMAN_HEIGHT_M, axis: 'height', humans: 1 },
   vfx: { expectedM: 2, axis: 'longest', humans: 1.1 },
   ui: { expectedM: 0.5, axis: 'longest', humans: 0.28 },
@@ -247,6 +249,7 @@ export const WORLD_SIZE_BANDS = {
   vehicle: { ok: [1.5, 15], warn: [0.8, 30] },
   island: { ok: [30, 5000], warn: [10, 20000] },
   environment: { ok: [1, 500], warn: [0.5, 2000] },
+  harvest: { ok: [0.15, 25], warn: [0.05, 40] },
   town: { ok: [20, 2000], warn: [8, 8000] },
   animation: { ok: [1.55, 2.05], warn: [1.4, 2.4] },
   vfx: { ok: [0.05, 12], warn: [0.01, 30] },

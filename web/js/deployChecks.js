@@ -19,7 +19,7 @@ import {
 export { HUMAN_HEIGHT_M, humanRelativeLabel, diagnoseUnitScale, computeWorldScale };
 
 /**
- * @typedef {'character'|'creature'|'weapon'|'projectile'|'prop'|'buildable'|'building'|'boat'|'vehicle'|'island'|'town'|'environment'|'animation'|'vfx'|'ui'|'other'} AssetKind
+ * @typedef {'character'|'creature'|'weapon'|'projectile'|'prop'|'buildable'|'building'|'boat'|'vehicle'|'island'|'town'|'environment'|'harvest'|'animation'|'vfx'|'ui'|'other'} AssetKind
  */
 
 /**
@@ -287,6 +287,35 @@ export const DEPLOY_PROFILES = {
     scriptHints: ['navmesh'],
     notes: ['Trees 5–25 m; cliffs large — size vs human silhouette'],
   },
+  harvest: {
+    kind: 'harvest',
+    label: 'Harvest node / ore / rock / tree / debris',
+    scaleAxis: 'longest',
+    targetMeters: null,
+    expectedM: ref('harvest').expectedM,
+    okRange: band('harvest').ok,
+    warnRange: band('harvest').warn,
+    normalizeToTarget: false,
+    unitFixCm: true,
+    ground: 'bottom',
+    requirePelvis: false,
+    requireHands: false,
+    requireBones: false,
+    requireTexture: true,
+    physicsLayer: 'Default',
+    scriptHints: [
+      'home-island harvest',
+      'pinata break',
+      'tool gate axe|pickaxe',
+      'Rapier fragment optional',
+    ],
+    notes: [
+      'Trees ~6–12 m; rocks ~0.8–2.5 m; ore veins similar; debris ~0.3–0.6 m',
+      'Never character-fit to 1.8 m',
+      'Pinata needs manifold proxy (icosphere/cylinder) for shatter',
+      'Network: damage + loot only — no fragment meshes',
+    ],
+  },
   animation: {
     kind: 'animation',
     label: 'Animation (preview on human host)',
@@ -387,12 +416,37 @@ export function inferAssetKind(m) {
   ) {
     return 'projectile';
   }
+  // Home-island harvest before generic weapon/environment
+  // (axe as tool still weapon; harvest_* debris / ore / stump are harvest)
+  if (
+    c.includes('harvest_') ||
+    c.includes('/harvest/') ||
+    c.includes('harvest-logs') ||
+    c.includes('harvest_logs') ||
+    c.includes('harvest_rock') ||
+    c.includes('harvest_stump') ||
+    c.includes('ore_node') ||
+    c.includes('ore-node') ||
+    c.includes('gold_rock') ||
+    c.includes('goldrock') ||
+    c.includes('rock_debris') ||
+    c.includes('pinata') ||
+    (c.includes('ore') && (c.includes('node') || c.includes('vein') || c.includes('crystal'))) ||
+    c.includes('commontree') ||
+    c.includes('pebble_round') ||
+    c.includes('pebble_') ||
+    (c.includes('naturedecor') && (c.includes('tree') || c.includes('rock') || c.includes('pebble')))
+  ) {
+    return 'harvest';
+  }
   if (
     c.includes('weapon') ||
     c.includes('sword') ||
     c.includes('axe') ||
     c.includes('dagger') ||
     c.includes('shield') ||
+    c.includes('pickaxe') ||
+    c.includes('hatchet') ||
     (c.includes('bow') && !c.includes('arrow'))
   ) {
     return 'weapon';

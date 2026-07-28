@@ -69,6 +69,7 @@ import {
   bodyBox as charBodyBox,
   prepareSkinnedMeasure,
 } from './characterDeploy.js';
+import { scoreHarvestCoverage, matchHarvestNeeds } from './harvestNeeds.js';
 
 // ── Fleet hosts — production deploy first ──
 // Prefer: textured · meshed · SI-scaled · converted · glb2glb · R2 GLB
@@ -2328,6 +2329,90 @@ function wireUi() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') document.getElementById('viewerCloseBtn').click();
   });
+
+  document.getElementById('btnHarvestFilter')?.addEventListener('click', () => {
+    filterToHarvestAssets();
+  });
+  document.getElementById('btnNeedsToggle')?.addEventListener('click', () => {
+    document.getElementById('fleetNeedsPanel')?.classList.toggle('collapsed');
+  });
+}
+
+/** Fleet needs panel — harvest track (+ expandable). */
+function renderFleetNeedsPanel() {
+  const listEl = document.getElementById('fleetNeedsList');
+  const metaEl = document.getElementById('fleetNeedsMeta');
+  const covEl = document.getElementById('harvestCoverage');
+  if (!listEl || !metaEl) return;
+
+  const score = scoreHarvestCoverage(allModels);
+  if (covEl) covEl.textContent = `${score.pct}%`;
+  metaEl.innerHTML = `Harvest track: <strong>${score.covered}/${score.total}</strong> asset slots matched in catalog
+    · ${score.runtime} runtime packages
+    · pinata ore/rock/trees
+    · <a href="api/fleet-needs.json" target="_blank" rel="noreferrer">fleet-needs.json</a>`;
+
+  listEl.innerHTML = score.rows
+    .map((row) => {
+      const statusCls = row.status || 'partial';
+      const coverCls = row.status === 'runtime' || row.status === 'planned'
+        ? row.status
+        : row.covered
+          ? 'covered'
+          : 'gap';
+      const coverLabel =
+        row.status === 'runtime'
+          ? 'runtime'
+          : row.status === 'planned'
+            ? 'planned'
+            : row.covered
+              ? `catalog×${row.catalogHits || 0}`
+              : 'gap';
+      const tool = row.tool ? ` · tool ${esc(row.tool)}` : '';
+      const pinata = row.pinata ? ' · pinata' : '';
+      const sample = row.sample ? `<div class="need-meta">hit: ${esc(row.sample)}</div>` : '';
+      return `<article class="need-card" data-need-search="${esc(row.search || '')}" data-need-id="${esc(row.id)}" title="${esc(row.notes || '')}">
+        <div class="need-title">${esc(row.label)}</div>
+        <div class="need-meta">
+          <span class="need-badge ${statusCls}">${esc(statusCls)}</span>
+          <span class="need-badge ${coverCls}">${esc(coverLabel)}</span>
+          ${esc(row.role || '')}${tool}${pinata}
+        </div>
+        ${sample}
+      </article>`;
+    })
+    .join('');
+
+  listEl.querySelectorAll('.need-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const q = card.getAttribute('data-need-search') || '';
+      const box = document.getElementById('searchBox');
+      if (box && q) {
+        box.value = q;
+        activeKind = null;
+        activeGroup = null;
+        page = 0;
+        applyFilters();
+        document.getElementById('resultsArea')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+}
+
+function filterToHarvestAssets() {
+  const box = document.getElementById('searchBox');
+  if (box) box.value = 'harvest tree rock ore pebble stump debris nature crystal';
+  activeKind = 'harvest';
+  activeGroup = null;
+  activeProd = null; // show ready + partial so gaps are visible
+  page = 0;
+  applyFilters();
+  // If kind filter empty (no harvest-tagged yet), fall back to search-only
+  if (!filtered.length) {
+    activeKind = null;
+    applyFilters();
+  }
+  document.getElementById('resultsArea')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function init() {
@@ -2341,6 +2426,7 @@ async function init() {
     document.getElementById('r2Status').innerHTML = '<span class="r2-dot"></span> Catalog error';
   }
   applyFilters();
+  renderFleetNeedsPanel();
   // Auto-run UUID verify once catalog is warm (non-blocking feel via yield)
   setTimeout(async () => {
     if (!uuidVerified) await runUuidVerify();
@@ -2350,6 +2436,7 @@ async function init() {
       // ensure visible in filter if kind locked wrong
       openViewer(deep);
     }
+    renderFleetNeedsPanel();
   }, 400);
 }
 

@@ -82,9 +82,11 @@ The web viewer loads the model registry (`models3d.json`) and resolves GLB files
 Models with Draco compression are automatically decoded using Google's Draco WASM decoder.
 
 ### Features
-- Search and filter 1,053+ GLB models by category
+- Search and filter 1,053+ GLB models by category / **kind** (incl. `harvest`)
+- **Fleet needs** panel — harvest + pinata coverage, expandable tracks
 - Three.js viewer with orbit controls, wireframe, auto-rotate
 - Animation playback with clip selector
+- Harvest “Use in fleet” snippets (tool gates + pinata notes)
 - Drag & drop local GLB/GLTF files for preview
 - Pagination (60 per page)
 - R2 health status indicator
@@ -108,11 +110,30 @@ When you click a model card, the viewer:
 4. Auto-fits the camera to the model bounding box
 5. Auto-plays the first animation if present
 
+## Fleet needs (add along the way)
+
+The live browser keeps a **Fleet needs** ledger so every new production system
+registers its CDN assets + runtime packages here — not only convert/sync.
+
+| Track | What |
+|-------|------|
+| **Harvest + pinata** | Home-island ore / rock / trees — tool gates, debris GLBs, `@dgreenheck/three-pinata` |
+| grudge6 | Race kits + baked anim packs (Kind filters) |
+| Build | Placeables / kenney (expand as shipped) |
+
+- Panel: [grudge-pipeline.vercel.app](https://grudge-pipeline.vercel.app/) → **Fleet needs**
+- Machine SSOT: [`web/api/fleet-needs.json`](web/api/fleet-needs.json)
+- Ledger code: [`web/js/harvestNeeds.js`](web/js/harvestNeeds.js)
+- Docs: [Harvest + pinata](docs/HARVEST_PINATA.md)
+
+When you ship a new harvest mesh/tool/ground pack: bake → R2 → append need row → redeploy `web/`.
+
 ## Docs
 
 - [Best Practices](docs/BEST-PRACTICES.md)
 - [Avatar Spec](docs/AVATAR-SPEC.md)
 - [Pipeline Guide](docs/PIPELINE-GUIDE.md)
+- [Harvest + pinata](docs/HARVEST_PINATA.md)
 
 ## License
 

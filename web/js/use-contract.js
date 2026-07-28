@@ -10,6 +10,7 @@ import {
   productionLoadComment,
   HUMAN_HEIGHT_M,
 } from './productionBake.js';
+import { harvestImportSnippet, isHarvestAsset } from './harvestNeeds.js';
 
 export {
   productionScore,
@@ -94,7 +95,11 @@ const url = ${JSON.stringify(url)};
 // layer: ${profile.physicsLayer}
 // scale: longest ~${profile.okRange[0]}–${profile.okRange[1]} m — do not height-normalize to 1.8 m
 const url = ${JSON.stringify(url)};
-// Attach to R_hand_container / weapon bone; anim pack by type`;
+// Attach to R_hand_container / weapon bone; anim pack by type
+// Harvest tools (pickaxe / hatchet): also wire HarvestToolActions radial + hand attach`;
+  }
+  if (kind === 'harvest' || isHarvestAsset(m)) {
+    return harvestImportSnippet(m);
   }
   return `// Fleet asset load
 // uuid: ${uuid}

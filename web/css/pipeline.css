@@ -405,3 +405,101 @@ body {
   margin: 6px 0 4px;
 }
 .mesh-slot-label .count { opacity: 0.7; }
+
+/* -- Fleet needs ledger (harvest + growing tracks) -- */
+.fleet-needs {
+  margin: 12px 0 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(120, 160, 200, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(165deg, rgba(24, 36, 52, 0.95), rgba(14, 20, 30, 0.98));
+}
+.fleet-needs-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.fleet-needs h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: #e8eef6;
+}
+.fleet-needs-sub {
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: #7eb8ff;
+  margin-left: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.fleet-needs-desc {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #9aabbe;
+  max-width: 62ch;
+}
+.fleet-needs-desc a { color: #8ec5ff; }
+.fleet-needs-desc code {
+  font-size: 0.78em;
+  background: rgba(255,255,255,0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.fleet-needs-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.fleet-needs-meta {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #b8c6d6;
+}
+.fleet-needs-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.need-card {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.22);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.need-card:hover {
+  border-color: rgba(126, 184, 255, 0.45);
+  background: rgba(40, 70, 110, 0.25);
+}
+.need-card .need-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e6edf5;
+}
+.need-card .need-meta {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #8b9aab;
+  line-height: 1.35;
+}
+.need-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-right: 4px;
+}
+.need-badge.ready { background: rgba(46, 160, 90, 0.25); color: #7ddea5; }
+.need-badge.partial { background: rgba(200, 150, 40, 0.22); color: #f0c86a; }
+.need-badge.missing { background: rgba(200, 60, 60, 0.22); color: #f09090; }
+.need-badge.runtime { background: rgba(90, 120, 220, 0.28); color: #a8c0ff; }
+.need-badge.planned { background: rgba(120, 120, 140, 0.25); color: #c0c4d0; }
+.need-badge.covered { background: rgba(46, 160, 90, 0.35); color: #9ef0c0; }
+.need-badge.gap { background: rgba(200, 60, 60, 0.18); color: #f0a0a0; }
+.fleet-needs.collapsed .fleet-needs-list { display: none; }

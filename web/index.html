@@ -20,6 +20,7 @@
         <a href="https://assets.grudge-studio.com" target="_blank" rel="noreferrer">CDN</a>
         <a href="https://open.grudge-studio.com" target="_blank" rel="noreferrer">Open</a>
         <a href="https://api.grudge-studio.com/assets?limit=5" target="_blank" rel="noreferrer">D1 API</a>
+        <a href="#fleetNeedsPanel" title="Living ledger — add harvest / build / grudge6 needs as we ship">Fleet needs</a>
       </div>
     </header>
 
@@ -30,7 +31,32 @@
       <div class="stat-item"><span class="stat-label">Sources</span><span class="stat-value" id="sourceCount">—</span></div>
       <div class="stat-item"><span class="stat-label">UUID OK</span><span class="stat-value" id="uuidOkCount">—</span></div>
       <div class="stat-item"><span class="stat-label">Thumbs</span><span class="stat-value" id="thumbCount">—</span></div>
+      <div class="stat-item" title="Home-island harvest track coverage"><span class="stat-label">Harvest</span><span class="stat-value" id="harvestCoverage">—</span></div>
     </div>
+
+    <section class="fleet-needs" id="fleetNeedsPanel" aria-label="Fleet needs ledger">
+      <div class="fleet-needs-head">
+        <div>
+          <h2>Fleet needs <span class="fleet-needs-sub">add everything along the way</span></h2>
+          <p class="fleet-needs-desc">
+            Living SSOT for production gaps. Home-island <strong>harvest + three-pinata</strong> (ore / rock / trees)
+            is tracked first — expand this panel as buildables, combat, and sectors ship.
+            <a href="docs/HARVEST_PINATA.md" target="_blank" rel="noreferrer">Harvest docs</a>
+            · <code>api/fleet-needs.json</code>
+          </p>
+        </div>
+        <div class="fleet-needs-actions">
+          <button type="button" class="action-btn" id="btnHarvestFilter" title="Filter catalog to harvest kind + path hints">
+            Show harvest assets
+          </button>
+          <button type="button" class="action-btn" id="btnNeedsToggle" title="Collapse needs list">
+            Toggle list
+          </button>
+        </div>
+      </div>
+      <div class="fleet-needs-meta" id="fleetNeedsMeta">Loading harvest coverage…</div>
+      <div class="fleet-needs-list" id="fleetNeedsList"></div>
+    </section>
 
     <div class="controls">
       <div class="search-row">
