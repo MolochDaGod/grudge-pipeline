@@ -83,7 +83,19 @@ Search box matches labels, UUID, r2Key, kind, game tags.
 
 ---
 
-## Ops
+## Three.js viewer (pipeline) — production rules
+
+| Rule | Implementation |
+|------|----------------|
+| sRGB + ACES | `threePipeline.configureRenderer` |
+| DPR ≤ 1.5 | `MAX_PIXEL_RATIO` |
+| Shared Draco GLTFLoader | `getGltfLoader()` — no per-load decoder |
+| Dispose maps/geo | `disposeObject3D` on clear |
+| SkinnedMesh | `frustumCulled = false` |
+| Magic-byte gate | `isLikelyBinaryAsset` before load |
+| RAF pause | stop loop when viewer closed |
+
+## D1 deploy
 
 ```bash
 # Ship labeled production GLBs + D1 SQL
@@ -95,6 +107,8 @@ npm run ship:production
 # Assign UUIDs on offline catalogs
 node scripts/uuid-assign.mjs path/to/catalog.json --write
 ```
+
+Browser auto-loads **all D1 pages** (200/page, capped) and merges with production-catalog + ObjectStore.
 
 ---
 

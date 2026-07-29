@@ -3,9 +3,6 @@
  * Caches JPEG data-URLs in IndexedDB (key = path or uuid).
  */
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { prepAndRebindMaterials } from './materials.js';
 import {
   inferAssetKind,
@@ -13,12 +10,17 @@ import {
   measureSize,
   computeDeployScale,
 } from './deployChecks.js';
+import {
+  configureRenderer,
+  disposeObject3D,
+  loadGltfOrFbxShared,
+  prepareLoadedRoot,
+} from './threePipeline.js';
 
 const DB_NAME = 'grudge-pipeline-thumbs';
 const DB_STORE = 'thumbs';
 const DB_VER = 1;
 const THUMB_SIZE = 256;
-const DRACO_PATH = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 
 let dbPromise = null;
 let captureBusy = false;
@@ -93,14 +95,12 @@ function ensureRenderer() {
   renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: false,
-    preserveDrawingBuffer: true,
+    preserveDrawingBuffer: true, // required for toDataURL thumbs
     powerPreference: 'high-performance',
+    stencil: false,
   });
   renderer.setSize(THUMB_SIZE, THUMB_SIZE);
-  renderer.setPixelRatio(1);
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  configureRenderer(renderer, { maxDpr: 1, exposure: 1.05 });
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0e1420);
   camera = new THREE.PerspectiveCamera(40, 1, 0.05, 100);
@@ -156,41 +156,17 @@ function fitObject(root, url = '') {
 
 async function loadModel(url) {
   const lower = url.split('?')[0].toLowerCase();
-  if (lower.endsWith('.fbx')) {
-    const loader = new FBXLoader();
-    try {
-      const u = new URL(url);
-      loader.setResourcePath(u.href.slice(0, u.href.lastIndexOf('/') + 1));
-    } catch {
-      /* ignore */
-    }
-    const fbx = await loader.loadAsync(url);
-    return fbx;
-  }
   if (lower.endsWith('.json')) {
     // Baked clip — no mesh; caller should pass a character host
     return null;
   }
-  const loader = new GLTFLoader();
-  const draco = new DRACOLoader();
-  draco.setDecoderPath(DRACO_PATH);
-  loader.setDRACOLoader(draco);
-  const gltf = await loader.loadAsync(url);
-  return gltf.scene;
+  const { scene: root } = await loadGltfOrFbxShared(url);
+  prepareLoadedRoot(root);
+  return root;
 }
 
 function disposeObject(root) {
-  if (!root) return;
-  root.traverse((o) => {
-    o.geometry?.dispose?.();
-    if (o.material) {
-      const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) {
-        m.map?.dispose?.();
-        m.dispose?.();
-      }
-    }
-  });
+  disposeObject3D(root);
 }
 
 /**

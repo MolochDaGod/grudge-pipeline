@@ -9,9 +9,14 @@
  */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import {
+  createViewerRenderer,
+  disposeObject3D,
+  loadGltfOrFbxShared,
+  prepareLoadedRoot,
+  isLikelyBinaryAsset,
+  MAX_PIXEL_RATIO,
+} from './threePipeline.js';
 import {
   verifyAll,
   uuidStatusClass,
@@ -121,10 +126,12 @@ const ARENA = 'https://grudge-arena.grudge-studio.com';
 const OPEN = FLEET_TRUTH_HOSTS.open;
 const D1_API = FLEET_TRUTH_HOSTS.d1;
 const OBJECTSTORE_MODELS = FLEET_TRUTH_HOSTS.objectStoreModels;
-const DRACO_PATH = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 const PAGE_SIZE = 48;
 const D1_PAGE = 200;
 const D1_MAX_PAGES = 50; // up to 10k assets
+/** Pause RAF when viewer closed (save GPU). */
+let viewerLoopActive = false;
+let viewerRaf = 0;
 
 /** Forbidden host bases for grudge6 race kits (secondary / stale feeds). */
 const FORBIDDEN_HOST_SUBSTRINGS = [
@@ -465,14 +472,33 @@ async function fetchD1Catalog() {
 }
 
 async function fetchObjectStoreModels() {
-  try {
-    const r = await fetch(OBJECTSTORE_MODELS, { signal: AbortSignal.timeout(15000) });
-    if (!r.ok) return [];
-    const j = await r.json();
-    return (j.models || []).map((m) => normalizeEntry(m, 'objectstore'));
-  } catch {
-    return [];
+  // Prefer production ObjectStore host, then GitHub Pages mirror
+  const urls = [
+    'https://objectstore.grudge-studio.com/api/v1/models3d.json',
+    OBJECTSTORE_MODELS,
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (!r.ok) continue;
+      const j = await r.json();
+      const models = j.models || j.assets || [];
+      if (!models.length) continue;
+      return models.map((m) =>
+        normalizeEntry(
+          {
+            ...m,
+            path: m.path || m.r2Key || m.sourcePath,
+            grudgeUuid: m.grudgeUuid || m.uuid,
+          },
+          'objectstore',
+        ),
+      );
+    } catch {
+      /* try next host */
+    }
   }
+  return [];
 }
 
 async function loadCatalog() {
@@ -505,12 +531,36 @@ async function loadCatalog() {
   }
   allModels = [...map.values()].map((m) => enrichFleetTruth(m));
 
-  void prefillDerivedUuids().then(() => {
-    // Re-enrich after UUIDs land
-    allModels.forEach((m) => enrichFleetTruth(m));
-    updateUuidStat();
-    applyFilters();
-  });
+  void prefillDerivedUuids()
+    .then(async () => {
+      // Re-enrich after UUIDs land
+      allModels.forEach((m) => enrichFleetTruth(m));
+      updateUuidStat();
+      applyFilters();
+      // Background D1/hash verify (does not block first paint)
+      try {
+        await verifyAll(allModels, d1Index, (i, n) => {
+          if (i % 200 === 0 || i === n) {
+            const st = document.getElementById('actionStatus');
+            if (st) st.textContent = `UUID verify ${i}/${n}`;
+          }
+        });
+        uuidVerified = true;
+        allModels.forEach((m) => {
+          if (m.grudgeUuid) {
+            m.searchBlob = `${m.searchBlob} ${m.grudgeUuid} ${m.uuidStatus || ''}`.toLowerCase();
+          }
+          enrichFleetTruth(m);
+        });
+        updateUuidStat();
+        renderFilters();
+        const st = document.getElementById('actionStatus');
+        if (st) st.textContent = 'UUID verify complete';
+      } catch (e) {
+        console.warn('[uuid] background verify', e);
+      }
+    })
+    .catch((e) => console.warn('[uuid] prefill', e));
 
   const summary = truthSummary(allModels);
   const sources = new Set(allModels.flatMap((m) => m.sources || [m.source]));
@@ -1657,22 +1707,23 @@ function rematchClip(root, clip) {
 // ── Viewer ─────────────────────────────────────────────
 function initViewer() {
   const wrap = document.getElementById('viewerCanvasWrap');
-  if (wrap.querySelector('canvas')) return;
+  if (wrap.querySelector('canvas')) {
+    viewerLoopActive = true;
+    startViewerLoop();
+    return;
+  }
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0b1018);
   camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / Math.max(1, wrap.clientHeight), 0.05, 200);
   camera.position.set(1.6, 1.4, 2.8);
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  // Production renderer: sRGB + ACES, DPR ≤ 1.5, no stencil (threejs-production-best-practices)
+  renderer = createViewerRenderer(wrap);
   wrap.appendChild(renderer.domElement);
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.target.set(0, 0.9, 0);
   // Cool neutral lighting — avoid warm yellow key that tints untextured meshes
+  // ≤ 3 direct lights (skill: few direct lights)
   scene.add(new THREE.AmbientLight(0xd0d8e8, 0.45));
   const hemi = new THREE.HemisphereLight(0xb8d0ff, 0x2a3038, 0.85);
   scene.add(hemi);
@@ -1682,9 +1733,6 @@ function initViewer() {
   const fill = new THREE.DirectionalLight(0x8ec8ff, 0.45);
   fill.position.set(-4, 2, -2);
   scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xffffff, 0.35);
-  rim.position.set(0, 3, -5);
-  scene.add(rim);
   gridHelper = new THREE.GridHelper(8, 16, 0x2a3550, 0x1a2233);
   scene.add(gridHelper);
   // Axes: X red, Y green, Z blue (Three.js Y-up)
@@ -1692,33 +1740,45 @@ function initViewer() {
   axes.position.y = 0.01;
   scene.add(axes);
   clock = new THREE.Clock();
-  (function loop() {
-    requestAnimationFrame(loop);
-    if (mixer) mixer.update(clock.getDelta());
-    controls.update();
-    renderer.render(scene, camera);
-  })();
+  viewerLoopActive = true;
+  startViewerLoop();
   new ResizeObserver(() => {
-    if (!wrap.clientWidth) return;
+    if (!wrap.clientWidth || !renderer) return;
     camera.aspect = wrap.clientWidth / wrap.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, MAX_PIXEL_RATIO));
   }).observe(wrap);
+}
+
+function startViewerLoop() {
+  if (viewerRaf) return;
+  const loop = () => {
+    if (!viewerLoopActive) {
+      viewerRaf = 0;
+      return;
+    }
+    viewerRaf = requestAnimationFrame(loop);
+    const dt = clock ? clock.getDelta() : 0;
+    if (mixer) mixer.update(dt);
+    controls?.update();
+    if (renderer && scene && camera) renderer.render(scene, camera);
+  };
+  viewerRaf = requestAnimationFrame(loop);
+}
+
+function stopViewerLoop() {
+  viewerLoopActive = false;
+  if (viewerRaf) {
+    cancelAnimationFrame(viewerRaf);
+    viewerRaf = 0;
+  }
 }
 
 function clearSceneModel() {
   if (currentRoot) {
     scene.remove(currentRoot);
-    currentRoot.traverse((o) => {
-      if (o.geometry) o.geometry.dispose?.();
-      if (o.material) {
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach((m) => {
-          m.map?.dispose?.();
-          m.dispose?.();
-        });
-      }
-    });
+    disposeObject3D(currentRoot);
     currentRoot = null;
   }
   if (mixer) {
@@ -1729,23 +1789,7 @@ function clearSceneModel() {
 }
 
 async function loadGltfOrFbx(url) {
-  const lower = url.split('?')[0].toLowerCase();
-  if (lower.endsWith('.fbx')) {
-    const loader = new FBXLoader();
-    try {
-      const u = new URL(url);
-      loader.setResourcePath(u.href.slice(0, u.href.lastIndexOf('/') + 1));
-    } catch {
-      /* ignore */
-    }
-    const fbx = await loader.loadAsync(url);
-    return { scene: fbx, animations: fbx.animations || [] };
-  }
-  const loader = new GLTFLoader();
-  const draco = new DRACOLoader();
-  draco.setDecoderPath(DRACO_PATH);
-  loader.setDRACOLoader(draco);
-  return loader.loadAsync(url);
+  return loadGltfOrFbxShared(url);
 }
 
 async function resolveUrl(entry) {
@@ -1776,16 +1820,13 @@ async function resolveUrl(entry) {
       if (r.ok) {
         const ct = (r.headers.get('content-type') || '').toLowerCase();
         if (ct.includes('text/html')) continue;
-        return url;
+        // Magic-byte / range probe — reject HTML fake-200 (warlords-assets rule)
+        if (await isLikelyBinaryAsset(url)) return url;
       }
     } catch {
-      /* try GET fallback */
+      /* try GET fallback with magic-byte */
       try {
-        const r = await fetch(url, { method: 'GET', mode: 'cors', signal: AbortSignal.timeout(6000) });
-        if (r.ok) {
-          const ct = (r.headers.get('content-type') || '').toLowerCase();
-          if (!ct.includes('text/html')) return url;
-        }
+        if (await isLikelyBinaryAsset(url)) return url;
       } catch {
         /* next */
       }
@@ -1831,6 +1872,7 @@ async function loadCharacterKit(raceId) {
   root.userData.grudge6SsotHost = true;
   root.userData.productionBaked = root.userData.importPipeline === 'production-glb';
   root.userData.grudgeHeightFit = false; // never trust template sticky fit
+  prepareLoadedRoot(root);
   // Unify skeletons lightly (Toon RTS multi-skeleton kits)
   const canon = new Map();
   root.traverse((o) => {
@@ -1840,6 +1882,7 @@ async function loadCharacterKit(raceId) {
     if (o.isSkinnedMesh && o.skeleton) {
       const bones = o.skeleton.bones.map((b) => canon.get(b.name) || b);
       o.bind(new THREE.Skeleton(bones, o.skeleton.boneInverses), o.bindMatrix);
+      o.frustumCulled = false;
     }
   });
   // Prefer baked mats; strip 1×1 placeholders; race atlas if still bare
@@ -2194,13 +2237,18 @@ function pushDeepLink(entry) {
 async function openViewer(entry) {
   if (!entry) return;
   if (!renderer) initViewer();
+  else {
+    viewerLoopActive = true;
+    startViewerLoop();
+  }
   document.getElementById('viewerOverlay').classList.add('active');
   document.getElementById('viewerTitle').textContent = entry.name;
-  document.getElementById('viewerInfo').textContent = entry.path || entry.kind;
+  document.getElementById('viewerInfo').textContent =
+    `${entry.path || entry.kind || ''} · uuid ${entry.grudgeUuid || 'pending'} · ${entry.source || ''}`;
   document.body.style.overflow = 'hidden';
   const le = document.getElementById('viewerLoading');
   le.style.display = 'flex';
-  le.innerHTML = '<div class="spinner"></div><p>Loading…</p>';
+  le.innerHTML = '<div class="spinner"></div><p>Loading production mesh…</p>';
   clearSceneModel();
   setDiag(null);
   fillAnimUi([]);
@@ -2688,6 +2736,7 @@ function wireUi() {
   document.getElementById('viewerCloseBtn').addEventListener('click', () => {
     document.getElementById('viewerOverlay').classList.remove('active');
     document.body.style.overflow = '';
+    stopViewerLoop();
     clearSceneModel();
     rebuildMeshIndex(null);
     // keep query but optional: leave deep link so refresh reopens
