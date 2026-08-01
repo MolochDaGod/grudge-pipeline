@@ -5,258 +5,265 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grudge Pipeline</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/pipeline.css">
 </head>
 <body class="app">
-  <!-- ── Sidebar ───────────────────────────────────────────── -->
-  <aside class="sidebar" id="sidebar" aria-label="Pipeline navigation">
-    <div class="sidebar-brand">
-      <span class="brand-mark" aria-hidden="true"></span>
+  <aside class="sidebar" id="sidebar" aria-label="Main">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
       <div>
-        <div class="brand-name">Pipeline</div>
-        <div class="brand-sub">Asset console</div>
+        <div class="brand-title">Pipeline</div>
+        <div class="brand-meta">Asset library</div>
       </div>
     </div>
 
-    <nav class="sidebar-nav" aria-label="Views">
-      <button type="button" class="nav-item active" data-view="catalog" title="Browse production assets">
-        <span class="nav-ico" aria-hidden="true">▣</span>
-        <span>Catalog</span>
+    <nav class="nav" aria-label="Sections">
+      <button type="button" class="nav-btn active" data-view="catalog">Library</button>
+      <button type="button" class="nav-btn" data-view="coverage">
+        Gaps
+        <span class="nav-badge" id="navCoveragePill">—</span>
       </button>
-      <button type="button" class="nav-item" data-view="coverage" title="Harvest & combat coverage">
-        <span class="nav-ico" aria-hidden="true">◎</span>
-        <span>Coverage</span>
-        <span class="nav-pill" id="navCoveragePill">—</span>
-      </button>
-      <button type="button" class="nav-item" data-view="tools" title="Deploy, UUID, Forge cart">
-        <span class="nav-ico" aria-hidden="true">⚙</span>
-        <span>Tools</span>
-      </button>
+      <button type="button" class="nav-btn" data-view="tools">Tools</button>
     </nav>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Fleet</div>
-      <a class="nav-link" href="https://open.grudge-studio.com" target="_blank" rel="noreferrer">Open launcher</a>
-      <a class="nav-link" href="https://forge.grudge-studio.com/editor?from=pipeline&edit=1" target="_blank" rel="noreferrer">Forge editor</a>
-      <a class="nav-link" href="https://assets.grudge-studio.com" target="_blank" rel="noreferrer">CDN assets</a>
-      <a class="nav-link" href="https://api.grudge-studio.com/assets?limit=5" target="_blank" rel="noreferrer">D1 API</a>
+    <div class="nav-group">
+      <div class="nav-group-label">Open in</div>
+      <a class="nav-ext" href="https://open.grudge-studio.com" target="_blank" rel="noreferrer">Open launcher</a>
+      <a class="nav-ext" href="https://forge.grudge-studio.com/editor?from=pipeline&edit=1" target="_blank" rel="noreferrer">Forge</a>
+      <a class="nav-ext" href="https://assets.grudge-studio.com" target="_blank" rel="noreferrer">CDN</a>
     </div>
 
-    <div class="sidebar-section sidebar-docs">
-      <div class="sidebar-label">Docs</div>
-      <details class="docs-menu">
-        <summary>References</summary>
-        <a href="docs/FLEET_ASSET_TRUTH.md" target="_blank" rel="noreferrer">Asset truth</a>
-        <a href="docs/HARVEST_PINATA.md" target="_blank" rel="noreferrer">Harvest / pinata</a>
-        <a href="docs/PROJECTILES_AND_VFX.md" target="_blank" rel="noreferrer">Projectiles / VFX</a>
-        <a href="docs/PRODUCTION_BAKE.md" target="_blank" rel="noreferrer">Production bake</a>
-        <a href="api/fleet-truth.json" target="_blank" rel="noreferrer">fleet-truth.json</a>
-        <a href="api/fleet-needs.json" target="_blank" rel="noreferrer">fleet-needs.json</a>
-      </details>
-    </div>
-
-    <div class="sidebar-foot">
-      <span class="r2-status checking" id="r2Status"><span class="r2-dot"></span> Catalog…</span>
+    <div class="sidebar-end">
+      <span class="status-pill checking" id="r2Status"><span class="status-dot"></span><span class="status-text">Loading</span></span>
     </div>
   </aside>
 
-  <!-- ── Main ──────────────────────────────────────────────── -->
-  <div class="app-main">
-    <header class="topbar">
-      <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">☰</button>
-      <div class="topbar-title">
-        <h1 id="viewTitle">Catalog</h1>
-        <p class="topbar-sub" id="viewSubtitle">Production GLB · textured · SI · R2 CDN</p>
+  <main class="main">
+    <header class="bar">
+      <button type="button" class="icon-btn mobile-only" id="sidebarToggle" aria-label="Menu">☰</button>
+      <div class="bar-search">
+        <span class="search-ico" aria-hidden="true">⌕</span>
+        <input type="search" id="searchBox" placeholder="Search assets…" autocomplete="off" spellcheck="false">
       </div>
-      <div class="topbar-stats" id="statsBar" aria-label="Catalog stats">
-        <div class="stat-chip"><span class="stat-label">Assets</span><span class="stat-value" id="totalModels">—</span></div>
-        <div class="stat-chip"><span class="stat-label">Groups</span><span class="stat-value" id="totalCategories">—</span></div>
-        <div class="stat-chip"><span class="stat-label">Visible</span><span class="stat-value" id="visibleCount">—</span></div>
-        <div class="stat-chip" title="D1 asset_registry rows"><span class="stat-label">D1</span><span class="stat-value" id="d1Count">—</span></div>
-        <div class="stat-chip" title="Assets with grudgeUuid"><span class="stat-label">UUID %</span><span class="stat-value" id="truthCount">—</span></div>
-        <div class="stat-chip"><span class="stat-label">UUID OK</span><span class="stat-value" id="uuidOkCount">—</span></div>
-        <div class="stat-chip"><span class="stat-label">Thumbs</span><span class="stat-value" id="thumbCount">—</span></div>
-        <div class="stat-chip" title="Coverage score"><span class="stat-label">Coverage</span><span class="stat-value" id="harvestCoverage">—</span></div>
-        <div class="stat-chip" hidden><span class="stat-label">Sources</span><span class="stat-value" id="sourceCount">—</span></div>
+      <div class="bar-meta">
+        <span id="resultsSummary" class="bar-summary">—</span>
+        <span class="bar-sep" aria-hidden="true">·</span>
+        <span id="harvestCoverage" class="bar-summary muted" title="Coverage">—</span>
+      </div>
+      <!-- Hidden stats for JS compatibility -->
+      <div class="sr-only" id="statsBar" aria-hidden="true">
+        <span id="totalModels">—</span>
+        <span id="totalCategories">—</span>
+        <span id="visibleCount">—</span>
+        <span id="d1Count">—</span>
+        <span id="truthCount">—</span>
+        <span id="uuidOkCount">—</span>
+        <span id="thumbCount">—</span>
+        <span id="sourceCount">—</span>
       </div>
     </header>
 
-    <!-- VIEW: Catalog -->
-    <section class="view active" id="viewCatalog" data-view="catalog" aria-label="Asset catalog">
-      <div class="controls">
-        <div class="search-row">
-          <input type="search" class="search-box" id="searchBox"
-            placeholder="Search name, path, group, uuid, bones…"
-            autocomplete="off" spellcheck="false">
-          <select id="sortSelect" class="sort-select" title="Sort">
-            <option value="production" selected>Production score</option>
-            <option value="name">Name</option>
-            <option value="group">Group</option>
-            <option value="size">Size</option>
-            <option value="format">Format</option>
-            <option value="uuid">UUID status</option>
-          </select>
+    <!-- LIBRARY -->
+    <section class="panel active" id="viewCatalog" data-view="catalog">
+      <div class="toolbar">
+        <div class="filters-inline">
+          <label class="sel">
+            <span>Quality</span>
+            <select id="prodSelect">
+              <option value="ready" selected>Production ready</option>
+              <option value="">All quality</option>
+              <option value="raw">Needs bake</option>
+            </select>
+          </label>
+          <label class="sel">
+            <span>Type</span>
+            <select id="kindSelect"><option value="">All types</option></select>
+          </label>
+          <label class="sel">
+            <span>Group</span>
+            <select id="groupSelect"><option value="">All groups</option></select>
+          </label>
+          <label class="sel">
+            <span>Format</span>
+            <select id="formatSelect"><option value="">All formats</option></select>
+          </label>
+          <label class="sel">
+            <span>Sort</span>
+            <select id="sortSelect">
+              <option value="production" selected>Best score</option>
+              <option value="name">Name</option>
+              <option value="group">Group</option>
+              <option value="size">Size</option>
+              <option value="format">Format</option>
+              <option value="uuid">UUID</option>
+            </select>
+          </label>
+          <button type="button" class="ghost-btn" id="btnClearFilters">Clear</button>
         </div>
 
-        <div class="filter-section">
-          <div class="filter-label">Deploy bake</div>
-          <div class="filter-row" id="prodFilters"></div>
-        </div>
-        <div class="filter-section">
-          <div class="filter-label">Kind</div>
-          <div class="filter-row" id="kindFilters"></div>
-        </div>
-        <div class="filter-section">
-          <div class="filter-label">Group</div>
-          <div class="filter-row" id="categoryFilters"></div>
-        </div>
-        <div class="filter-section">
-          <div class="filter-label">Format</div>
-          <div class="filter-row" id="formatFilters"></div>
-        </div>
-        <div class="filter-section">
-          <div class="filter-label">Source</div>
-          <div class="filter-row" id="sourceFilters"></div>
-        </div>
-        <div class="filter-section">
-          <div class="filter-label">Game use</div>
-          <div class="filter-row" id="gameUseFilters"></div>
-        </div>
-        <div class="filter-section">
-          <div class="filter-label">UUID</div>
-          <div class="filter-row" id="uuidFilters"></div>
-        </div>
+        <details class="more-filters">
+          <summary>More filters</summary>
+          <div class="more-filters-body">
+            <div class="filter-block">
+              <div class="filter-label">Quality chips</div>
+              <div class="filter-row" id="prodFilters"></div>
+            </div>
+            <div class="filter-block">
+              <div class="filter-label">Type chips</div>
+              <div class="filter-row" id="kindFilters"></div>
+            </div>
+            <div class="filter-block">
+              <div class="filter-label">Group chips</div>
+              <div class="filter-row" id="categoryFilters"></div>
+            </div>
+            <div class="filter-block">
+              <div class="filter-label">Format chips</div>
+              <div class="filter-row" id="formatFilters"></div>
+            </div>
+            <div class="filter-block">
+              <div class="filter-label">Source</div>
+              <div class="filter-row" id="sourceFilters"></div>
+            </div>
+            <div class="filter-block">
+              <div class="filter-label">Game use</div>
+              <div class="filter-row" id="gameUseFilters"></div>
+            </div>
+            <div class="filter-block">
+              <div class="filter-label">UUID</div>
+              <div class="filter-row" id="uuidFilters"></div>
+            </div>
+          </div>
+        </details>
       </div>
 
-      <div class="drop-zone" id="dropZone">
-        <div class="drop-icon">📦</div>
-        <div class="drop-text">Drop production GLB (preferred) or FBX · prefer glb2glb bake on R2</div>
-        <input type="file" id="fileInput" accept=".glb,.gltf,.fbx" style="display:none">
+      <div class="results-head">
+        <h2 id="resultsTitle">Library</h2>
+        <p id="resultsCount" class="muted">—</p>
       </div>
 
       <div class="loading" id="loadingState">
         <div class="spinner"></div>
-        <p>Loading catalog…</p>
+        <p>Loading library…</p>
       </div>
 
-      <div id="resultsArea" style="display:none">
-        <div class="results-header">
-          <span class="results-title" id="resultsTitle">All assets</span>
-          <span class="results-count" id="resultsCount"></span>
-        </div>
+      <div id="resultsArea" hidden>
         <div class="model-grid" id="modelGrid"></div>
         <div class="pagination" id="pagination"></div>
       </div>
 
-      <div class="empty-state" id="emptyState" style="display:none">
-        <div class="empty-icon">🔍</div>
-        <h3>No assets match</h3>
-        <p>Clear filters or try a different search</p>
+      <div class="empty-state" id="emptyState" hidden>
+        <h3>No matches</h3>
+        <p class="muted">Try clearing filters or a broader search.</p>
+        <button type="button" class="primary-btn" id="btnEmptyClear">Clear filters</button>
       </div>
+
+      <details class="import-box" id="dropZoneDetails">
+        <summary>Import local file</summary>
+        <div class="drop-zone" id="dropZone">
+          <p>Drop a production <strong>GLB</strong> (preferred) or FBX</p>
+          <input type="file" id="fileInput" accept=".glb,.gltf,.fbx" hidden>
+        </div>
+      </details>
     </section>
 
-    <!-- VIEW: Coverage (was the wall of text at top) -->
-    <section class="view" id="viewCoverage" data-view="coverage" aria-label="Fleet coverage" hidden>
-      <div class="coverage-toolbar">
-        <div class="coverage-kpis" id="fleetNeedsMeta" aria-live="polite">
-          <!-- filled by renderFleetNeedsPanel -->
-        </div>
-        <div class="coverage-controls">
-          <label class="field">
-            <span>Track</span>
-            <select id="needsTrack" class="sort-select">
-              <option value="all">All tracks</option>
-              <option value="harvest">Harvest / pinata</option>
-              <option value="combat">Combat projectiles</option>
-              <option value="runtime">Runtime systems</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Status</span>
-            <select id="needsStatus" class="sort-select">
-              <option value="all">Any status</option>
-              <option value="ready">Ready</option>
-              <option value="partial">Partial</option>
-              <option value="missing">Missing / gap</option>
-              <option value="runtime">Runtime</option>
-              <option value="planned">Planned</option>
-            </select>
-          </label>
-          <label class="field field-grow">
-            <span>Find in coverage</span>
-            <input type="search" id="needsSearch" class="search-box" placeholder="Filter cards…" autocomplete="off">
-          </label>
-          <div class="coverage-actions">
-            <button type="button" class="action-btn" id="btnHarvestFilter">Browse harvest</button>
-            <button type="button" class="action-btn" id="btnCombatFilter">Browse combat</button>
-            <button type="button" class="action-btn" id="btnNeedsToggle" hidden>Toggle list</button>
-          </div>
-        </div>
+    <!-- GAPS / COVERAGE -->
+    <section class="panel" id="viewCoverage" data-view="coverage" hidden>
+      <div class="page-intro">
+        <h2>Coverage gaps</h2>
+        <p class="muted">What the fleet still needs for harvest and combat. Click a card to find matching library assets.</p>
       </div>
-      <div class="fleet-needs-list coverage-grid" id="fleetNeedsList"></div>
-      <p class="coverage-foot dim">
-        Click a card to search the catalog. Data: <a href="api/fleet-needs.json" target="_blank" rel="noreferrer">fleet-needs.json</a>
-      </p>
+      <div class="kpi-row" id="fleetNeedsMeta"></div>
+      <div class="toolbar tight">
+        <label class="sel">
+          <span>Track</span>
+          <select id="needsTrack">
+            <option value="all">All</option>
+            <option value="harvest">Harvest</option>
+            <option value="combat">Combat</option>
+            <option value="runtime">Runtime only</option>
+          </select>
+        </label>
+        <label class="sel">
+          <span>Status</span>
+          <select id="needsStatus">
+            <option value="all">Any</option>
+            <option value="ready">Ready</option>
+            <option value="partial">Partial</option>
+            <option value="missing">Missing</option>
+            <option value="runtime">Runtime</option>
+            <option value="planned">Planned</option>
+          </select>
+        </label>
+        <label class="sel grow">
+          <span>Filter</span>
+          <input type="search" id="needsSearch" placeholder="Filter gaps…">
+        </label>
+        <button type="button" class="ghost-btn" id="btnHarvestFilter">Show harvest in library</button>
+        <button type="button" class="ghost-btn" id="btnCombatFilter">Show combat in library</button>
+        <button type="button" class="ghost-btn" id="btnNeedsToggle" hidden>Toggle</button>
+      </div>
+      <div class="gap-grid" id="fleetNeedsList"></div>
     </section>
 
-    <!-- VIEW: Tools -->
-    <section class="view" id="viewTools" data-view="tools" aria-label="Pipeline tools" hidden>
-      <div class="controls tools-panel">
-        <div class="filter-label">Deploy & verify</div>
-        <div class="action-row">
-          <button type="button" class="action-btn" id="btnVerifyUuid" title="Verify grudgeUuid format + D1 / r2Key hash">
-            Verify UUIDs
-          </button>
-          <button type="button" class="action-btn" id="btnDedupe" title="Scan catalog for UUID / basename duplicates">
-            Dedupe scan
-          </button>
-          <button type="button" class="action-btn" id="btnDeployPlan" title="Ask deploy AI which assets are production-ready">
-            Deploy plan
-          </button>
-          <button type="button" class="action-btn" id="btnSnapPage" title="Render 3D snapshots for this page">
-            Snapshot page
-          </button>
-          <button type="button" class="action-btn" id="btnSnapVisible" title="Queue snapshots for all filtered (capped)">
-            Snapshot filtered
-          </button>
-          <span class="action-status" id="actionStatus"></span>
+    <!-- TOOLS -->
+    <section class="panel" id="viewTools" data-view="tools" hidden>
+      <div class="page-intro">
+        <h2>Tools</h2>
+        <p class="muted">Verification and Forge scene cart. Day-to-day browsing stays in Library.</p>
+      </div>
+      <div class="tool-card">
+        <h3>Verify</h3>
+        <div class="btn-row">
+          <button type="button" class="ghost-btn" id="btnVerifyUuid">Verify UUIDs</button>
+          <button type="button" class="ghost-btn" id="btnDedupe">Dedupe scan</button>
+          <button type="button" class="ghost-btn" id="btnDeployPlan">Deploy plan</button>
+          <button type="button" class="ghost-btn" id="btnSnapPage">Snapshot page</button>
+          <button type="button" class="ghost-btn" id="btnSnapVisible">Snapshot filtered</button>
         </div>
-
-        <div class="filter-label" style="margin-top:16px">Forge scene cart</div>
-        <div class="action-row">
-          <button type="button" class="action-btn accent" id="btnSceneCart" title="Assets queued for a Forge .gfscene pack">
-            Scene cart <span id="sceneCartCount">0</span>
-          </button>
-          <button type="button" class="action-btn" id="btnSaveForgeScene" title="Download .gfscene.json">
-            Save Forge scene
-          </button>
-          <button type="button" class="action-btn accent" id="btnOpenForgePack" title="Open Forge and import the pack">
-            Edit in Forge
-          </button>
-        </div>
-        <div class="scene-cart-bar" id="sceneCartBar" hidden>
-          <div class="filter-label">Cart contents</div>
-          <div class="scene-cart-list" id="sceneCartList"></div>
-          <div class="action-row" style="margin-top:6px">
-            <button type="button" class="action-btn" id="btnCartAddCurrent">+ Current asset</button>
-            <button type="button" class="action-btn" id="btnCartClear">Clear cart</button>
-            <span class="dim" id="sceneCartHint">Add assets, then Save or Edit in Forge</span>
-          </div>
-        </div>
+        <p class="action-status" id="actionStatus"></p>
         <div id="dedupePanel" class="dedupe-panel" hidden>
-          <div class="filter-label">Dedupe / UUID report</div>
           <pre id="dedupeReport" class="dedupe-report"></pre>
         </div>
       </div>
+      <div class="tool-card">
+        <h3>Forge scene cart</h3>
+        <div class="btn-row">
+          <button type="button" class="primary-btn" id="btnSceneCart">Cart <span id="sceneCartCount">0</span></button>
+          <button type="button" class="ghost-btn" id="btnSaveForgeScene">Save scene</button>
+          <button type="button" class="ghost-btn" id="btnOpenForgePack">Open in Forge</button>
+        </div>
+        <div class="scene-cart-bar" id="sceneCartBar" hidden>
+          <div class="scene-cart-list" id="sceneCartList"></div>
+          <div class="btn-row">
+            <button type="button" class="ghost-btn" id="btnCartAddCurrent">+ Current asset</button>
+            <button type="button" class="ghost-btn" id="btnCartClear">Clear</button>
+            <span class="muted" id="sceneCartHint"></span>
+          </div>
+        </div>
+      </div>
+      <details class="tool-card quiet">
+        <summary>API & docs</summary>
+        <div class="link-list">
+          <a href="https://api.grudge-studio.com/assets?limit=5" target="_blank" rel="noreferrer">D1 assets API</a>
+          <a href="api/fleet-truth.json" target="_blank" rel="noreferrer">fleet-truth.json</a>
+          <a href="api/fleet-needs.json" target="_blank" rel="noreferrer">fleet-needs.json</a>
+          <a href="docs/FLEET_ASSET_TRUTH.md" target="_blank" rel="noreferrer">Asset truth doc</a>
+          <a href="docs/HARVEST_PINATA.md" target="_blank" rel="noreferrer">Harvest doc</a>
+          <a href="docs/PROJECTILES_AND_VFX.md" target="_blank" rel="noreferrer">Projectiles doc</a>
+        </div>
+      </details>
     </section>
-  </div>
+  </main>
 
-  <!-- 3D Viewer (unchanged contract) -->
+  <!-- 3D Viewer -->
   <div class="viewer-overlay" id="viewerOverlay">
     <div class="viewer-header">
       <span class="viewer-title" id="viewerTitle">Viewer</span>
       <span class="viewer-info" id="viewerInfo"></span>
-      <button type="button" class="viewer-close" id="viewerCloseBtn">✕ Close</button>
+      <button type="button" class="ghost-btn" id="viewerCloseBtn">Close</button>
     </div>
     <div class="viewer-body">
       <div class="viewer-canvas-wrap" id="viewerCanvasWrap">
@@ -269,7 +276,7 @@
         <h3>Use in fleet</h3>
         <div class="use-panel" id="usePanel">
           <div class="use-row">
-            <label>grudgeUuid</label>
+            <label>UUID</label>
             <code id="useUuid">—</code>
             <button type="button" class="copy-btn" data-copy="useUuid">Copy</button>
           </div>
@@ -279,56 +286,54 @@
             <button type="button" class="copy-btn" data-copy="useR2">Copy</button>
           </div>
           <div class="use-row">
-            <label>cdnUrl</label>
+            <label>CDN</label>
             <code id="useCdn">—</code>
             <button type="button" class="copy-btn" data-copy="useCdn">Copy</button>
           </div>
           <div class="use-row">
-            <label>anim pack</label>
+            <label>Anim</label>
             <code id="useAnimPack">—</code>
             <button type="button" class="copy-btn" data-copy="useAnimPack">Copy</button>
           </div>
           <div class="use-row">
-            <label>meshName</label>
+            <label>Mesh</label>
             <code id="useMeshName">—</code>
             <button type="button" class="copy-btn" data-copy="useMeshName">Copy</button>
           </div>
           <div class="use-ready" id="useReady"></div>
           <label class="use-snippet-label">Import snippet</label>
-          <textarea id="useSnippet" class="use-snippet" readonly rows="7"></textarea>
+          <textarea id="useSnippet" class="use-snippet" readonly rows="6"></textarea>
           <div class="use-actions">
-            <button type="button" class="action-btn" id="btnCopySnippet">Copy snippet</button>
-            <button type="button" class="action-btn" id="btnCopyAll">Copy all fields</button>
-            <button type="button" class="action-btn" id="btnShareLink">Copy deep link</button>
+            <button type="button" class="ghost-btn" id="btnCopySnippet">Copy snippet</button>
+            <button type="button" class="ghost-btn" id="btnCopyAll">Copy fields</button>
+            <button type="button" class="ghost-btn" id="btnShareLink">Deep link</button>
           </div>
           <p class="use-flash" id="useFlash" hidden></p>
         </div>
 
-        <h3>Deploy check <span class="diag-hint">by category</span></h3>
-        <p class="diag-summary" id="diagSummary">Load an asset for category deploy checks</p>
+        <h3>Deploy check</h3>
+        <p class="diag-summary" id="diagSummary">Select an asset</p>
         <dl class="diag" id="diagList">
           <div><dt>Category</dt><dd>—</dd></div>
           <div><dt>Scale</dt><dd>—</dd></div>
           <div><dt>Layer</dt><dd>—</dd></div>
         </dl>
-        <p class="diag-footnote">
-          World yardstick: <strong>1 unit = 1&nbsp;m</strong>, average human = <strong>1.8&nbsp;m</strong>.
-        </p>
+        <p class="diag-footnote">1 unit = 1 m · human ≈ 1.8 m</p>
 
-        <h3>Modular race HUD <span class="mesh-count" id="meshCount"></span></h3>
+        <h3>Equip <span class="mesh-count" id="meshCount"></span></h3>
         <div class="fleet-open-row">
-          <button type="button" class="viewer-btn accent" id="btnOpenForge">Open in Forge</button>
-          <button type="button" class="viewer-btn" id="btnOpenForgeWeapons">Weapon skills</button>
-          <button type="button" class="viewer-btn" id="btnOpenForgeScene">Forge scene</button>
-          <button type="button" class="viewer-btn accent" id="btnAddToCart">+ Scene cart</button>
-          <button type="button" class="viewer-btn" id="btnSaveForgeFromViewer">Save .gfscene</button>
+          <button type="button" class="primary-btn" id="btnOpenForge">Forge</button>
+          <button type="button" class="ghost-btn" id="btnOpenForgeWeapons">Skills</button>
+          <button type="button" class="ghost-btn" id="btnOpenForgeScene">Scene</button>
+          <button type="button" class="ghost-btn" id="btnAddToCart">+ Cart</button>
+          <button type="button" class="ghost-btn" id="btnSaveForgeFromViewer">Save scene</button>
         </div>
         <div id="modularHudHost" class="modular-hud-host"></div>
         <div class="mesh-toolbar">
-          <button type="button" class="viewer-btn" id="btnMeshAll">All meshes</button>
+          <button type="button" class="viewer-btn" id="btnMeshAll">All</button>
           <button type="button" class="viewer-btn" id="btnMeshNone">None</button>
           <button type="button" class="viewer-btn" id="btnMeshSolo">Solo</button>
-          <select id="meshSlotFilter" class="anim-select-3d" title="Solo equip slot">
+          <select id="meshSlotFilter" class="anim-select-3d">
             <option value="">All slots</option>
             <option value="head">head</option>
             <option value="body">body</option>
@@ -347,22 +352,22 @@
           </select>
         </div>
         <div class="mesh-tools row" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;align-items:center">
-          <label class="dim" style="font-size:.75rem">Color
+          <label class="muted" style="font-size:.75rem">Color
             <input type="color" id="meshColor" value="#ffffff" />
           </label>
-          <button type="button" class="viewer-btn" id="btnMeshColor">Apply color</button>
-          <input type="url" id="meshTexUrl" placeholder="https://assets…/atlas.webp" style="flex:1;min-width:140px;font-size:.75rem;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:#0b1220;color:inherit" />
-          <button type="button" class="viewer-btn" id="btnMeshTex">Bind texture</button>
+          <button type="button" class="viewer-btn" id="btnMeshColor">Apply</button>
+          <input type="url" id="meshTexUrl" placeholder="Texture URL" style="flex:1;min-width:120px;font-size:.75rem;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--elev);color:inherit" />
+          <button type="button" class="viewer-btn" id="btnMeshTex">Bind</button>
         </div>
         <div class="use-row">
-          <label>equipSlot</label>
+          <label>Slot</label>
           <code id="useEquipSlot">—</code>
         </div>
         <div class="use-row">
-          <label>anim pack</label>
+          <label>Pack</label>
           <code id="useAnimPackActive">—</code>
         </div>
-        <div class="mesh-list" id="meshList"><em class="dim">Load a multipack race kit to equip</em></div>
+        <div class="mesh-list" id="meshList"><em class="muted">Load a race kit to equip</em></div>
 
         <h3>Weapon skills</h3>
         <select id="weaponSkillType" class="anim-select-3d">
@@ -376,23 +381,22 @@
           <option value="shield">shield</option>
         </select>
         <div id="weaponSkillList" class="skill-list"></div>
-
-        <h3>Bone names</h3>
+        <h3>Bones</h3>
         <div class="bone-list" id="boneList"></div>
         <h3>Clips</h3>
         <div class="clip-list" id="clipList"></div>
       </aside>
     </div>
     <div class="viewer-controls">
-      <button type="button" class="viewer-btn" id="btnWire">Wireframe</button>
-      <button type="button" class="viewer-btn" id="btnRotate">Auto rotate</button>
+      <button type="button" class="viewer-btn" id="btnWire">Wire</button>
+      <button type="button" class="viewer-btn" id="btnRotate">Rotate</button>
       <button type="button" class="viewer-btn" id="btnGrid">Grid</button>
       <label class="viewer-check">
         <input type="checkbox" id="chkAnimOnChar" checked>
-        Play anims on character
+        Anims on character
       </label>
-      <select class="anim-select-3d" id="previewRace" title="Character kit for anim clips">
-        <option value="western-kingdoms">WK (human)</option>
+      <select class="anim-select-3d" id="previewRace">
+        <option value="western-kingdoms">WK</option>
         <option value="barbarians">Barbarian</option>
         <option value="high-elves">Elf</option>
         <option value="dwarves">Dwarf</option>
@@ -400,7 +404,7 @@
         <option value="undead">Undead</option>
       </select>
       <select class="anim-select-3d" id="animSelect" style="display:none">
-        <option value="">— Animations —</option>
+        <option value="">Animations</option>
       </select>
     </div>
   </div>

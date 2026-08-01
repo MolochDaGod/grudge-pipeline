@@ -504,8 +504,8 @@ async function fetchObjectStoreModels() {
 async function loadCatalog() {
   const status = document.getElementById('r2Status');
   if (status) {
-    status.className = 'r2-status checking';
-    status.innerHTML = `<span class="r2-dot"></span> Loading D1 + production truth…`;
+    status.className = 'status-pill checking r2-status checking';
+    status.innerHTML = `<span class="status-dot r2-dot"></span><span class="status-text">Loading…</span>`;
   }
   const [d1, os, production, curated] = await Promise.all([
     fetchD1Catalog(),
@@ -565,11 +565,11 @@ async function loadCatalog() {
   const summary = truthSummary(allModels);
   const sources = new Set(allModels.flatMap((m) => m.sources || [m.source]));
   if (status) {
-    status.className = 'r2-status online';
-    status.innerHTML = `<span class="r2-dot"></span> ${summary.total} assets · D1 ${summary.d1} · UUID ${summary.uuidPct}% · truth v${FLEET_TRUTH_VERSION}`;
-    status.title = Object.entries(summary.bySource)
+    status.className = 'status-pill online r2-status online';
+    status.innerHTML = `<span class="status-dot r2-dot"></span><span class="status-text">${summary.total.toLocaleString()} assets</span>`;
+    status.title = `D1 ${summary.d1} · UUID ${summary.uuidPct}% · ${Object.entries(summary.bySource)
       .map(([k, v]) => `${k}: ${v}`)
-      .join(' · ');
+      .join(' · ')}`;
   }
   document.getElementById('sourceCount').textContent = String(sources.size);
   const d1El = document.getElementById('d1Count');
@@ -661,14 +661,21 @@ function applyFilters() {
   page = 0;
   renderFilters();
   renderPage();
-  document.getElementById('visibleCount').textContent = String(filtered.length);
-  document.getElementById('totalModels').textContent = String(allModels.length);
+  const vis = filtered.length;
+  const total = allModels.length;
+  document.getElementById('visibleCount').textContent = String(vis);
+  document.getElementById('totalModels').textContent = String(total);
   const groups = new Set(allModels.map((m) => m.group));
   document.getElementById('totalCategories').textContent = String(groups.size);
+  const titleBits = [activeKind, activeGroup, activeFormat, activeSource, activeGameUse, activeUuid]
+    .filter(Boolean);
+  const quality =
+    activeProd === 'ready' ? 'Production ready' : activeProd === 'raw' ? 'Needs bake' : null;
   document.getElementById('resultsTitle').textContent =
-    [activeKind, activeGroup, activeFormat, activeSource, activeGameUse, activeUuid, activeProd]
-      .filter(Boolean)
-      .join(' · ') || 'All assets';
+    [...(quality ? [quality] : []), ...titleBits].join(' · ') || 'Library';
+  const sum = document.getElementById('resultsSummary');
+  if (sum) sum.textContent = `${vis.toLocaleString()} shown · ${total.toLocaleString()} total`;
+  syncFilterSelects();
   updateUuidStat();
 }
 
@@ -699,6 +706,46 @@ function chipRow(el, entries, active, onPick, classFor) {
   el.querySelectorAll('button').forEach((b) => {
     b.addEventListener('click', () => onPick(b.dataset.v || null));
   });
+}
+
+function fillSelect(el, entries, active, allLabel) {
+  if (!el) return;
+  const cur = active || '';
+  let html = `<option value="">${esc(allLabel || 'All')}</option>`;
+  for (const [v, n] of entries) {
+    html += `<option value="${esc(v)}" ${cur === v ? 'selected' : ''}>${esc(v)} (${n})</option>`;
+  }
+  // Preserve selection if options rebuilt
+  el.innerHTML = html;
+  el.value = cur;
+}
+
+function syncFilterSelects() {
+  const prod = document.getElementById('prodSelect');
+  if (prod && prod.value !== (activeProd || '')) prod.value = activeProd || '';
+  const kind = document.getElementById('kindSelect');
+  if (kind && kind.value !== (activeKind || '')) kind.value = activeKind || '';
+  const group = document.getElementById('groupSelect');
+  if (group && group.value !== (activeGroup || '')) group.value = activeGroup || '';
+  const fmt = document.getElementById('formatSelect');
+  if (fmt && fmt.value !== (activeFormat || '')) fmt.value = activeFormat || '';
+}
+
+function clearAllFilters() {
+  activeKind = null;
+  activeGroup = null;
+  activeFormat = null;
+  activeSource = null;
+  activeGameUse = null;
+  activeUuid = null;
+  activeProd = 'ready';
+  const box = document.getElementById('searchBox');
+  if (box) box.value = '';
+  sortKey = 'production';
+  const sort = document.getElementById('sortSelect');
+  if (sort) sort.value = 'production';
+  page = 0;
+  applyFilters();
 }
 
 function renderFilters() {
@@ -763,6 +810,13 @@ function renderFilters() {
     activeUuid = v;
     applyFilters();
   });
+
+  // Primary toolbar selects (product UX)
+  fillSelect(document.getElementById('kindSelect'), sortEntries(kinds), activeKind, 'All types');
+  fillSelect(document.getElementById('groupSelect'), g, activeGroup, 'All groups');
+  fillSelect(document.getElementById('formatSelect'), sortEntries(formats), activeFormat, 'All formats');
+  const prodSel = document.getElementById('prodSelect');
+  if (prodSel) prodSel.value = activeProd || '';
 }
 
 function glyphFor(m) {
@@ -891,13 +945,17 @@ function renderPage() {
   const area = document.getElementById('resultsArea');
   if (!filtered.length) {
     area.style.display = 'none';
+    area.hidden = true;
     empty.style.display = 'block';
+    empty.hidden = false;
     document.getElementById('pagination').innerHTML = '';
     return;
   }
   empty.style.display = 'none';
+  empty.hidden = true;
   area.style.display = 'block';
-  document.getElementById('resultsCount').textContent = `${filtered.length} match · page ${page + 1}`;
+  area.hidden = false;
+  document.getElementById('resultsCount').textContent = `${filtered.length.toLocaleString()} · page ${page + 1}`;
   const start = page * PAGE_SIZE;
   const slice = filtered.slice(start, start + PAGE_SIZE);
   const grid = document.getElementById('modelGrid');
@@ -906,49 +964,30 @@ function renderPage() {
       const idx = start + i;
       const key = thumbKeyOf(m);
       const mem = key && thumbCacheMem.get(key);
-      const tex =
-        m.textureStatus === 'atlas' || (m.textures && m.textures > 0)
-          ? '<span class="badge badge-tex-ok">TEX</span>'
-          : m.kind === 'animation'
-            ? ''
-            : m.textureStatus === 'vertex-color'
-              ? '<span class="badge badge-tex-warn">VCOL</span>'
-              : '';
+      const ready = isProductionDeployReady(m);
       const prod = productionBadge(m);
-      const prodBadge = `<span class="badge ${prod.cls}" title="productionScore ${prod.score}">${esc(prod.label)}</span>`;
-      const us = m.uuidStatus || 'pending';
-      const uuidBadge =
-        us !== 'pending'
-          ? `<span class="badge-uuid ${uuidStatusClass(us)}" title="${esc(m.uuidMessage || us)}">${esc(us)}</span>`
-          : '';
-      const meta = [
-        m.format?.toUpperCase(),
-        m.sizeKB ? (m.sizeKB >= 1024 ? `${(m.sizeKB / 1024).toFixed(1)} MB` : `${m.sizeKB} KB`) : null,
-        m.animations ? `${m.animations} anim` : m.isBakedClip ? 'baked clip' : null,
-        m.bakePipeline || null,
-        m.kind,
-        `P${prod.score}`,
-      ]
-        .filter(Boolean)
-        .join(' · ');
-      const uuidLine = m.grudgeUuid
-        ? `<div class="model-uuid" title="${esc(m.uuidMessage || '')}">${esc(m.grudgeUuid)}</div>`
+      const size = m.sizeKB
+        ? m.sizeKB >= 1024
+          ? `${(m.sizeKB / 1024).toFixed(1)} MB`
+          : `${m.sizeKB} KB`
         : '';
+      const meta = [m.kind, size, m.group].filter(Boolean).join(' · ');
       const thumbHtml = mem
         ? `<img class="thumb" alt="" src="${mem}">`
         : `<span class="glyph">${glyphFor(m)}</span>`;
-      return `<article class="model-card ${isProductionDeployReady(m) ? 'card-prod' : 'card-raw'}" data-idx="${idx}" data-thumb-key="${esc(key || '')}" title="${esc(m.path || m.name)} · prod ${prod.score}">
+      const statusBadge = ready
+        ? `<span class="badge prod-ready" title="Score ${prod.score}">Ready</span>`
+        : `<span class="badge prod-raw" title="Score ${prod.score}">Bake</span>`;
+      return `<article class="model-card ${ready ? 'card-prod' : 'card-raw'}" data-idx="${idx}" data-thumb-key="${esc(key || '')}" title="${esc(m.path || m.name)}">
         <div class="model-icon">
-          <span class="badge badge-fmt">${esc(m.format || '?')}</span>
-          <span class="badge badge-kind">${esc(m.kind)}</span>
-          ${prodBadge}
-          ${uuidBadge}
-          ${tex}
+          <span class="badge badge-fmt">${esc((m.format || '?').toUpperCase())}</span>
+          ${statusBadge}
           ${thumbHtml}
         </div>
-        <div class="model-name">${esc(m.name)}</div>
-        <div class="model-meta">${esc(meta)} · <span style="opacity:.7">${esc(m.source)}</span></div>
-        ${uuidLine}
+        <div class="card-body">
+          <div class="model-name">${esc(m.name)}</div>
+          <div class="model-meta">${esc(meta)}</div>
+        </div>
       </article>`;
     })
     .join('');
@@ -2783,7 +2822,7 @@ function wireUi() {
   });
 
   /* App shell: sidebar views + mobile drawer */
-  document.querySelectorAll('.nav-item[data-view]').forEach((btn) => {
+  document.querySelectorAll('.nav-btn[data-view], .nav-item[data-view]').forEach((btn) => {
     btn.addEventListener('click', () => {
       setAppView(btn.getAttribute('data-view') || 'catalog');
       document.body.classList.remove('sidebar-open');
@@ -2796,6 +2835,25 @@ function wireUi() {
   document.getElementById('needsStatus')?.addEventListener('change', () => renderFleetNeedsPanel());
   document.getElementById('needsSearch')?.addEventListener('input', () => renderFleetNeedsPanel());
 
+  document.getElementById('prodSelect')?.addEventListener('change', (e) => {
+    activeProd = e.target.value || null;
+    applyFilters();
+  });
+  document.getElementById('kindSelect')?.addEventListener('change', (e) => {
+    activeKind = e.target.value || null;
+    applyFilters();
+  });
+  document.getElementById('groupSelect')?.addEventListener('change', (e) => {
+    activeGroup = e.target.value || null;
+    applyFilters();
+  });
+  document.getElementById('formatSelect')?.addEventListener('change', (e) => {
+    activeFormat = e.target.value || null;
+    applyFilters();
+  });
+  document.getElementById('btnClearFilters')?.addEventListener('click', () => clearAllFilters());
+  document.getElementById('btnEmptyClear')?.addEventListener('click', () => clearAllFilters());
+
   // Deep-link ?view=coverage
   try {
     const v = new URLSearchParams(location.search).get('view');
@@ -2803,27 +2861,16 @@ function wireUi() {
   } catch { /* ignore */ }
 }
 
-const VIEW_META = {
-  catalog: { title: 'Catalog', sub: 'Production GLB · textured · SI · R2 CDN' },
-  coverage: { title: 'Coverage', sub: 'Harvest, combat projectiles, and runtime systems' },
-  tools: { title: 'Tools', sub: 'UUID verify · dedupe · Forge scene cart' },
-};
-
 function setAppView(name) {
-  const id = VIEW_META[name] ? name : 'catalog';
-  document.querySelectorAll('.view[data-view]').forEach((el) => {
+  const id = name === 'coverage' || name === 'tools' ? name : 'catalog';
+  document.querySelectorAll('.panel[data-view], .view[data-view]').forEach((el) => {
     const on = el.getAttribute('data-view') === id;
     el.hidden = !on;
     el.classList.toggle('active', on);
   });
-  document.querySelectorAll('.nav-item[data-view]').forEach((btn) => {
+  document.querySelectorAll('.nav-btn[data-view], .nav-item[data-view]').forEach((btn) => {
     btn.classList.toggle('active', btn.getAttribute('data-view') === id);
   });
-  const meta = VIEW_META[id];
-  const t = document.getElementById('viewTitle');
-  const s = document.getElementById('viewSubtitle');
-  if (t) t.textContent = meta.title;
-  if (s) s.textContent = meta.sub;
   try {
     const u = new URL(location.href);
     if (id === 'catalog') u.searchParams.delete('view');
@@ -3005,8 +3052,9 @@ async function init() {
     await loadCatalog();
   } catch (e) {
     console.error(e);
-    document.getElementById('r2Status').className = 'r2-status offline';
-    document.getElementById('r2Status').innerHTML = '<span class="r2-dot"></span> Catalog error';
+    document.getElementById('r2Status').className = 'status-pill offline r2-status offline';
+    document.getElementById('r2Status').innerHTML =
+      '<span class="status-dot r2-dot"></span><span class="status-text">Offline</span>';
   }
   applyFilters();
   renderFleetNeedsPanel();
