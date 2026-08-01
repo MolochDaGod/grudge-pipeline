@@ -11,7 +11,8 @@
  *
  * CORRECT order (always):
  *  1. prepareSkinnedMeasure
- *  2. height fit (~1.8 m) with unit snap + clamps — skinned body only
+ *  2. unit snap vs **race height truth** (orc=2.0, human=1.8, …) — skinned body only
+ *     DO NOT force every race to 1.8 m. Only fix cm↔m decades.
  *  3. art-forward +Z (π/2 for fbx-atlas / grudge6 FBX kits)
  *  4. center XZ on Bip001 Pelvis
  *  5. groundFeetLocal from body min.y (NOT pelvis.y)
@@ -22,16 +23,19 @@
  * @see skill grudge-character-correctness
  */
 import * as THREE from 'three';
+import { HUMAN_HEIGHT_M, RACE_HEIGHT_M, raceHeightM } from './worldScale.js';
 
-export const CHARACTER_TARGET_HEIGHT_M = 1.8;
+export { HUMAN_HEIGHT_M, RACE_HEIGHT_M, raceHeightM };
+
+/** Default when race unknown = WK human. Prefer raceHeightM(raceId). */
+export const CHARACTER_TARGET_HEIGHT_M = HUMAN_HEIGHT_M;
 export const CHARACTER_ART_FORWARD = new THREE.Vector3(0, 0, 1);
 
-/** Aesthetic fit clamp only — unit decade (100×) is applied separately and NOT clamped here. */
+/** Residual fit clamp — only if still broken after unit decade. Prefer NOT forcing. */
 const MAX_FIT = 12;
 const MIN_FIT = 0.02;
 const MIN_NATIVE_M = 0.05;
 const MAX_NATIVE_M = 50;
-const HUMAN_HEIGHT_M = 1.8;
 
 export function prepareSkinnedMeasure(root) {
   root.updateWorldMatrix(true, true);
@@ -96,13 +100,23 @@ function powerOfTenToward(reference, current) {
 }
 
 /**
- * Height fit + unit snap toward {@link CHARACTER_TARGET_HEIGHT_M} (1.8 m human).
+ * Unit snap (+ rare residual) toward a **race height**, not a forced global 1.8.
  *
- * KILL: clamping the **unit decade** (100×) to 12 — that left heroes wrong and
- * made the deploy check unable to "see" real metres. Unit snap is unclamped;
- * only the residual aesthetic fit is limited to [MIN_FIT, MAX_FIT].
+ * @param {THREE.Object3D} model
+ * @param {number|string} [targetOrRace=1.8]  metres OR raceId (`orcs` → 2.0)
+ * @param {number} [authorScale=1]
+ *
+ * Truth: orc = 2.0 m, human = 1.8 m, dwarf = 1.45 m, …
+ * - Diagnose + apply **unit decade only** (cm-as-m) against that race height.
+ * - If already inside the race band after unit fix → **do not force** residual fit.
+ * - Residual fit only when still broken after unit snap (pathological exports).
  */
-export function fitCharacterHeight(model, targetM = CHARACTER_TARGET_HEIGHT_M, authorScale = 1) {
+export function fitCharacterHeight(model, targetOrRace = CHARACTER_TARGET_HEIGHT_M, authorScale = 1) {
+  const targetM =
+    typeof targetOrRace === 'string' ? raceHeightM(targetOrRace) : targetOrRace || HUMAN_HEIGHT_M;
+  const bandLo = targetM * 0.9;
+  const bandHi = targetM * 1.12;
+
   model.scale.set(1, 1, 1);
   model.position.set(0, 0, 0);
   prepareSkinnedMeasure(model);
@@ -110,8 +124,8 @@ export function fitCharacterHeight(model, targetM = CHARACTER_TARGET_HEIGHT_M, a
   const nativeHeight = bodyBox(model).getSize(new THREE.Vector3()).y || 1;
   let unitFix = 1;
 
-  // Always diagnose vs human 1.8 m — catch 100× even when native is "in band" wrong
-  const ratio = nativeHeight / (targetM || HUMAN_HEIGHT_M);
+  // Decade vs **this race's** true height (orc 200 "m" → ×0.01 → 2.0 m)
+  const ratio = nativeHeight / targetM;
   if (ratio >= 70 && ratio <= 140) {
     unitFix = 0.01; // classic cm-as-m / 100×
   } else if (ratio >= 1 / 140 && ratio <= 1 / 70) {
@@ -123,22 +137,27 @@ export function fitCharacterHeight(model, targetM = CHARACTER_TARGET_HEIGHT_M, a
   } else if (nativeHeight < MIN_NATIVE_M || nativeHeight > MAX_NATIVE_M) {
     unitFix = powerOfTenToward(targetM, nativeHeight);
   } else if (nativeHeight > 15 && nativeHeight < 500) {
-    // Absolute cm band (e.g. 180) even if ratio vs 1.8 is exactly 100
-    unitFix = 0.01;
+    unitFix = 0.01; // absolute cm band
   }
 
   model.scale.setScalar(unitFix);
   prepareSkinnedMeasure(model);
   const midH = bodyBox(model).getSize(new THREE.Vector3()).y || targetM;
-  let fit = midH > 1e-6 ? (targetM / midH) * authorScale : authorScale;
-  if (!Number.isFinite(fit) || fit <= 0) fit = 1;
-  // Residual fit only — unitFix already applied unclamped
-  fit = Math.min(MAX_FIT, Math.max(MIN_FIT, fit));
+
+  // NO forced residual: if unit-corrected height is already race-true, stop.
+  let fit = 1;
+  if (midH < bandLo || midH > bandHi) {
+    fit = midH > 1e-6 ? (targetM / midH) * authorScale : authorScale;
+    if (!Number.isFinite(fit) || fit <= 0) fit = 1;
+    fit = Math.min(MAX_FIT, Math.max(MIN_FIT, fit));
+  }
+
   model.scale.setScalar(unitFix * fit);
   prepareSkinnedMeasure(model);
   model.userData.grudgeHeightFit = true;
   model.userData.grudgeUnitFix = unitFix;
   model.userData.grudgeNativeHeight = nativeHeight;
+  model.userData.grudgeRaceHeightM = targetM;
   const heightM = bodyBox(model).getSize(new THREE.Vector3()).y || targetM;
   return {
     scale: unitFix * fit,
@@ -146,8 +165,11 @@ export function fitCharacterHeight(model, targetM = CHARACTER_TARGET_HEIGHT_M, a
     unitFix,
     fit,
     heightM,
+    targetM,
+    raceHeightM: targetM,
     humanMultiple: heightM / HUMAN_HEIGHT_M,
     unitKind: unitFix === 0.01 || unitFix === 100 ? 'x100' : unitFix === 1 ? 'ok' : 'decade',
+    forcedFit: fit !== 1,
   };
 }
 
@@ -205,9 +227,17 @@ export function applyArtForwardPlusZ(root, yaw = Math.PI / 2) {
  * }} [opts]
  */
 export function deployCharacterModel(model, opts = {}) {
-  const target = opts.targetHeightM ?? CHARACTER_TARGET_HEIGHT_M;
+  // Race height is truth — orc 2.0, human 1.8 — not a forced global 1.8
+  const target =
+    opts.targetHeightM ??
+    (opts.raceId ? raceHeightM(opts.raceId) : null) ??
+    model.userData.grudgeRaceHeightM ??
+    (model.userData.grudgeRaceId ? raceHeightM(model.userData.grudgeRaceId) : null) ??
+    CHARACTER_TARGET_HEIGHT_M;
   const groundY = opts.groundY ?? 0;
   const forceRefit = opts.forceRefit === true;
+  const bandLo = target * 0.9;
+  const bandHi = target * 1.12;
 
   // Reset transform noise from prior previews
   model.position.set(0, 0, 0);
@@ -215,15 +245,14 @@ export function deployCharacterModel(model, opts = {}) {
 
   prepareSkinnedMeasure(model);
   let h = bodyBox(model).getSize(new THREE.Vector3()).y || 0;
-  // KILL sticky wrong fit from secondary hosts / 100×: always refit when absurd
-  // or forceRefit (anim-on-character host path).
+  // Refit only for unit mistakes (100×) or forceRefit — not because orc ≠ 1.8
   const already = !forceRefit && model.userData.grudgeHeightFit === true;
   const absurd =
     h > target * 3 ||
     h < target * 0.4 ||
     h < 0.05 ||
     h > 15 || // absolute cm band before unit fix
-    (already && (h < 1.4 || h > 2.4));
+    (already && (h < bandLo || h > bandHi));
   let fit = null;
   if (!already || absurd || forceRefit) {
     if (absurd || forceRefit) {
@@ -233,32 +262,43 @@ export function deployCharacterModel(model, opts = {}) {
     fit = fitCharacterHeight(model, target, opts.authorScale ?? 1);
     h = fit.heightM;
   }
+  model.userData.grudgeRaceHeightM = target;
 
-  // Facing: grudge6 FBX kits ALWAYS need +Z art-forward unless already set.
-  // KILL: defaulting facePlusZ false (sideways sword_shield previews).
+  // Facing: Toon RTS / grudge6 multipacks face +X in BOTH FBX and bad GLB converts.
+  // KILL: assuming production-glb is already +Z (BRB screenshot: LOOK sideways-facing).
+  // KILL: facePlusZ false on grudge6.
   let facingApplied = false;
   const pipeline =
     opts.importPipeline ||
     model.userData.importPipeline ||
     'fbx-atlas';
   const faceMode = opts.facePlusZ ?? 'auto';
-  if (faceMode === true) {
-    facingApplied = applyArtForwardPlusZ(model, opts.faceYaw ?? Math.PI / 2);
+  const src = String(model.userData.sourceUrl || opts.sourceUrl || '');
+  const isGrudge6Kit =
+    model.userData.grudge6SsotHost === true ||
+    /grudge6\/races|Characters\.(fbx|glb)/i.test(src) ||
+    /^(western-kingdoms|barbarians|high-elves|dwarves|orcs|undead)$/i.test(
+      String(model.userData.grudgeRaceId || opts.raceId || ''),
+    );
+
+  if (faceMode === true || (faceMode === 'auto' && isGrudge6Kit)) {
+    // Always apply once for grudge6 — GLB convert does NOT fix art-forward
+    if (!model.userData.artForwardSet) {
+      facingApplied = applyArtForwardPlusZ(model, opts.faceYaw ?? Math.PI / 2);
+    } else {
+      facingApplied = true;
+    }
   } else if (faceMode === 'auto') {
-    const src = String(model.userData.sourceUrl || '');
-    // production-glb (glb2glb deploy) is expected art-forward already — do not double-yaw.
-    // FBX / fbx-atlas kits often face +X → apply +π/2 once.
+    // Non-grudge6: FBX kits need +Z; true production-glb may already be correct
     const needsFbxForward =
-      pipeline !== 'production-glb' &&
-      (pipeline === 'fbx-atlas' ||
-        pipeline === 'grudge6-fbx' ||
-        /\.fbx($|\?)/i.test(src) ||
-        /Characters\.fbx/i.test(src));
+      pipeline === 'fbx-atlas' ||
+      pipeline === 'grudge6-fbx' ||
+      /\.fbx($|\?)/i.test(src);
     if (needsFbxForward && !model.userData.artForwardSet) {
       facingApplied = applyArtForwardPlusZ(model, opts.faceYaw ?? Math.PI / 2);
     }
   }
-  // faceMode === false: explicit only (e.g. already +Z production GLB)
+  // faceMode === false: explicit opt-out only
 
   const { dx, dz, pelvis } = centerXZOnPelvis(model);
   const groundDeltaY = groundFeetLocal(model, groundY);
@@ -329,11 +369,39 @@ function findBoneName(root, re) {
 }
 
 function listBoneNames(root) {
-  const names = [];
+  // Unique names only — multipack graphs duplicate Bone objects (looks like "192 bones")
+  const names = new Set();
   root.traverse((o) => {
-    if (o.isBone && o.name) names.push(o.name);
+    if (o.isBone && o.name) names.add(o.name);
   });
-  return names;
+  return [...names];
+}
+
+/**
+ * Report Bip001 vs Mixamo truth (unique names).
+ * grudge6 kit = Bip001 (~40–80). Mixamo = ~25 (clips only). 192 objects ≠ 192 bones.
+ */
+export function skeletonBoneReport(root) {
+  const bip = new Set();
+  const mix = new Set();
+  let objects = 0;
+  root?.traverse((o) => {
+    if (!o.isBone || !o.name) return;
+    objects++;
+    if (/bip001/i.test(o.name)) bip.add(o.name);
+    else if (/mixamorig/i.test(o.name)) mix.add(o.name);
+  });
+  return {
+    bip001: bip.size,
+    mixamo: mix.size,
+    unique: bip.size + mix.size,
+    objects,
+    label:
+      mix.size > bip.size
+        ? `Mixamo ${mix.size} (WRONG kit)`
+        : `Bip001 ${bip.size} unique` +
+          (objects > bip.size + 10 ? ` · ${objects} objs` : ''),
+  };
 }
 
 /**
@@ -362,21 +430,35 @@ export function stripPositionTracks(clip, opts = {}) {
 }
 
 /**
- * Hard SI gate: body height must land in [1.55, 2.05] m for grudge6 hosts.
- * Clears sticky grudgeHeightFit and re-runs unit decade + fit when wrong
- * (classic 100× / secondary-host mismatch).
+ * SI gate vs **race height truth** (orc 2.0, human 1.8, dwarf 1.45, …).
+ * Pass raceId string or metres. Does NOT force every race into a 1.55–2.05 clamp.
+ * Only unit-snaps when outside the race band (or classic 100× cm).
+ *
+ * @param {THREE.Object3D} model
+ * @param {number|string} [targetOrRace]  raceId or metres
  */
-export function enforceCharacterSi(model, targetM = CHARACTER_TARGET_HEIGHT_M) {
+export function enforceCharacterSi(model, targetOrRace = CHARACTER_TARGET_HEIGHT_M) {
+  const targetM =
+    typeof targetOrRace === 'string' ? raceHeightM(targetOrRace) : targetOrRace || HUMAN_HEIGHT_M;
+  const bandLo = targetM * 0.9;
+  const bandHi = targetM * 1.12;
+
   prepareSkinnedMeasure(model);
   let h = bodyBox(model).getSize(new THREE.Vector3()).y || 0;
-  if (h >= 1.55 && h <= 2.05) {
+  // Already race-true (or unit-ok) — ground feet only, no force scale
+  if (h >= bandLo && h <= bandHi) {
     groundFeetLocal(model, 0);
     model.userData.deployHeightM = h;
+    model.userData.grudgeRaceHeightM = targetM;
     model.userData.grudgeHeightFit = true;
-    return { heightM: h, fixed: false, unitFix: model.userData.grudgeUnitFix ?? 1 };
+    return {
+      heightM: h,
+      fixed: false,
+      unitFix: model.userData.grudgeUnitFix ?? 1,
+      targetM,
+    };
   }
 
-  const hadFace = model.userData.artForwardSet === true;
   const yaw = model.userData.artForwardYaw ?? model.rotation.y ?? Math.PI / 2;
 
   model.userData.grudgeHeightFit = false;
@@ -386,16 +468,13 @@ export function enforceCharacterSi(model, targetM = CHARACTER_TARGET_HEIGHT_M) {
   model.rotation.set(0, 0, 0);
 
   const fit = fitCharacterHeight(model, targetM);
-  if (hadFace || true) {
-    // grudge6 hosts always re-apply art-forward after hard refit
-    applyArtForwardPlusZ(model, yaw || Math.PI / 2);
-  }
+  applyArtForwardPlusZ(model, yaw || Math.PI / 2);
   centerXZOnPelvis(model);
   groundFeetLocal(model, 0);
 
   h = bodyBox(model).getSize(new THREE.Vector3()).y || 0;
-  // Last resort: direct multiply to target (still unclamped unit path already ran)
-  if (h < 1.4 || h > 2.4) {
+  // Last resort only if still outside race band after unit path
+  if (h < bandLo * 0.85 || h > bandHi * 1.15) {
     const s = targetM / Math.max(h, 1e-6);
     if (Number.isFinite(s) && s > 0) {
       model.scale.multiplyScalar(s);
@@ -408,17 +487,20 @@ export function enforceCharacterSi(model, targetM = CHARACTER_TARGET_HEIGHT_M) {
   model.userData.grudgeHeightFit = true;
   model.userData.characterDeployed = true;
   model.userData.deployHeightM = h;
+  model.userData.grudgeRaceHeightM = targetM;
   return {
     heightM: h,
     fixed: true,
     unitFix: fit?.unitFix ?? model.userData.grudgeUnitFix ?? 1,
     fit,
+    targetM,
   };
 }
 
 /**
  * Diagnose common wrong looks for agent/UI.
- * @returns {{ ok: boolean, issues: { id: string, severity: string, detail: string }[] }}
+ * Integrates skeletonCanon (bip001/mixamo) + unit decade + feet ground.
+ * @returns {{ ok: boolean, issues: { id: string, severity: string, detail: string }[], skeleton?: object }}
  */
 export function diagnoseCharacterLook(model, opts = {}) {
   const issues = [];
@@ -428,20 +510,61 @@ export function diagnoseCharacterLook(model, opts = {}) {
   const h = size.y || 0;
   const minY = box.min.y;
 
-  if (h < 1.4 || h > 2.4) {
+  const raceTarget =
+    opts.raceHeightM ??
+    opts.targetHeightM ??
+    model.userData.grudgeRaceHeightM ??
+    (opts.raceId ? raceHeightM(opts.raceId) : HUMAN_HEIGHT_M);
+  const bandLo = raceTarget * 0.9;
+  const bandHi = raceTarget * 1.12;
+
+  // 100× / decade unit mistakes (classic cm-as-m)
+  if (h >= 70 && h <= 250) {
+    issues.push({
+      id: 'unit-x100',
+      severity: 'error',
+      detail: `height ${h.toFixed(1)} m looks like cm-as-m (100×). Apply unitFix×0.01 vs race ${raceTarget} m — never non-uniform bone scale.`,
+    });
+  } else if (h < bandLo || h > bandHi) {
     issues.push({
       id: 'height',
       severity: h < 0.5 || h > 5 ? 'error' : 'warn',
-      detail: `height ${h.toFixed(2)} m (want ~1.6–2.1 for grudge6 heroes)`,
+      detail: `height ${h.toFixed(2)} m (race truth ${raceTarget.toFixed(2)} m · band ${bandLo.toFixed(2)}–${bandHi.toFixed(2)})`,
     });
   }
-  if (Math.abs(minY) > 0.12) {
+  if (Math.abs(minY) > 0.08) {
     issues.push({
       id: 'hip-float-or-sink',
-      severity: Math.abs(minY) > 0.4 ? 'error' : 'warn',
+      severity: Math.abs(minY) > 0.25 ? 'error' : 'warn',
       detail:
         `feet minY=${minY.toFixed(3)} — if |minY| large while pelvis near 0, ` +
-        `feet were never grounded (hip-float). Use groundFeetLocal on skinned body, not pelvis.y.`,
+        `feet were never grounded (hip-float). Use groundFeetLocal on skinned body, not pelvis.y. ` +
+        `Also strip .position tracks before idle/attack on grounded kit.`,
+    });
+  }
+  // Multipack weapon soup: many visible non-body meshes under race kit
+  let visibleWeapons = 0;
+  let visibleExtras = 0;
+  let visibleBody = 0;
+  model.traverse((o) => {
+    if (!(o.isMesh || o.isSkinnedMesh) || !o.visible) return;
+    const n = (o.name || '').toLowerCase();
+    if (/sword|axe|mace|bow|staff|spear|dagger|hammer|weapon|blade|shield/i.test(n)) visibleWeapons++;
+    else if (/body|torso|leg|arm|head|helm|boot/i.test(n)) visibleBody++;
+    else if (/bag|wood|quiver|prop|crate|barrel|cloak|wing|bone_/i.test(n)) visibleExtras++;
+  });
+  if (visibleWeapons > 2) {
+    issues.push({
+      id: 'weapon-soup',
+      severity: 'error',
+      detail: `${visibleWeapons} weapon-like meshes visible — multipack must isolate mesh_ids (warrior = one sword + optional shield)`,
+    });
+  }
+  if (visibleBody === 0 && (visibleWeapons > 0 || visibleExtras > 0)) {
+    issues.push({
+      id: 'no-body-mesh',
+      severity: 'error',
+      detail: 'No body/legs visible — equip hid the body; feet ground will use hip and float',
     });
   }
   if (!model.userData.artForwardSet && opts.expectFbxFacing !== false) {
@@ -465,5 +588,98 @@ export function diagnoseCharacterLook(model, opts = {}) {
       detail: 'No Bip001 Pelvis / Hips — wrong rig or incomplete load',
     });
   }
-  return { ok: !issues.some((i) => i.severity === 'error'), issues, heightM: h, minY };
+
+  // Skeleton family + feet/hands — count UNIQUE names (not Bone object instances)
+  let skeleton = null;
+  try {
+    const bipNames = new Set();
+    const mixNames = new Set();
+    let objects = 0;
+    let leftFoot = false;
+    let rightFoot = false;
+    model.traverse((o) => {
+      if (!o.isBone) return;
+      objects++;
+      const n = o.name || '';
+      if (/bip001/i.test(n)) bipNames.add(n);
+      if (/mixamorig/i.test(n)) mixNames.add(n);
+      if (/l.*foot|leftfoot|foot\.l|foot_l/i.test(n) && !/end|nub/i.test(n)) leftFoot = true;
+      if (/r.*foot|rightfoot|foot\.r|foot_r/i.test(n) && !/end|nub/i.test(n)) rightFoot = true;
+    });
+    const bip = bipNames.size;
+    const mix = mixNames.size;
+    const family =
+      bip > mix && bip >= 3
+        ? 'bip001'
+        : mix > bip && mix >= 3
+          ? 'mixamo'
+          : bip
+            ? 'bip001'
+            : mix
+              ? 'mixamo'
+              : 'unknown';
+    skeleton = {
+      family,
+      leftFoot,
+      rightFoot,
+      bipBones: bip,
+      mixamoBones: mix,
+      boneObjects: objects,
+    };
+    // grudge6 multipack: unique Bip001 is OK; 192 usually = duplicate objects
+    if (family === 'mixamo') {
+      issues.push({
+        id: 'wrong-skeleton-mixamo',
+        severity: 'error',
+        detail: `Mixamo ${mix} bones on kit — grudge6 uses Bip001. Load models/grudge6/races/*_Characters.fbx + fleet atlas.`,
+      });
+    }
+    if (family === 'bip001' && objects > bip * 2 && objects > 100) {
+      issues.push({
+        id: 'bone-object-soup',
+        severity: 'warn',
+        detail: `${objects} Bone objects but only ${bip} unique Bip001 names — multipack skeleton copies (UI used to show ${objects} as bone count).`,
+      });
+    }
+    if (family === 'unknown') {
+      issues.push({
+        id: 'skeleton-family',
+        severity: 'warn',
+        detail: 'Unknown skeleton — expected bip001 (grudge6) or mixamo',
+      });
+    }
+    if (!leftFoot || !rightFoot) {
+      issues.push({
+        id: 'feet-bones',
+        severity: 'error',
+        detail: `Missing foot bones (L=${leftFoot} R=${rightFoot}) — feet IK / ground plant will fail`,
+      });
+    }
+    // Non-uniform bone scale = mesh stretch
+    model.traverse((o) => {
+      if (!o.isBone) return;
+      const s = o.scale;
+      if (
+        (Math.abs(s.x - s.y) > 0.05 || Math.abs(s.y - s.z) > 0.05) &&
+        (Math.abs(s.x - 1) > 0.05 || Math.abs(s.y - 1) > 0.05)
+      ) {
+        issues.push({
+          id: 'bone-stretch',
+          severity: 'error',
+          detail: `Bone ${o.name} non-uniform scale — causes mesh stretch. Fix with uniform root fit only.`,
+        });
+      }
+    });
+  } catch {
+    /* ignore */
+  }
+
+  return {
+    ok: !issues.some((i) => i.severity === 'error'),
+    issues,
+    heightM: h,
+    minY,
+    skeleton,
+    unitKind: h >= 70 && h <= 250 ? 'x100' : 'ok',
+  };
 }

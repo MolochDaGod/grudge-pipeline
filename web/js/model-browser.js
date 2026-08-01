@@ -9,6 +9,8 @@
  */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
   createViewerRenderer,
   disposeObject3D,
@@ -16,7 +18,19 @@ import {
   prepareLoadedRoot,
   isLikelyBinaryAsset,
   MAX_PIXEL_RATIO,
+  getGltfLoader,
 } from './threePipeline.js';
+import {
+  RACE_ASSETS,
+  atlasUrl as fleetAtlasUrl,
+  bindRaceAtlas,
+  loadRaceTexture,
+  EquipmentManager,
+  kitUrl as fleetKitUrl,
+  resolveCanonicalAssetUrl,
+  isTrashGrudge6Path,
+  detectFleetRaceId,
+} from './grudge6-kit.js';
 import {
   verifyAll,
   uuidStatusClass,
@@ -49,6 +63,9 @@ import {
   inferEquipSlot,
   isGameplayProductionGlb,
   hasProductionSurface,
+  purgeCatalogDuplicates,
+  isRawKillPath,
+  PROD_READY_SCORE,
 } from './productionBake.js';
 import {
   prepMaterials,
@@ -68,11 +85,13 @@ import {
 import {
   deployCharacterModel,
   reGroundAfterAnimSample,
+  reGroundAfterEquip,
   stripPositionTracks,
   diagnoseCharacterLook,
   enforceCharacterSi,
   bodyBox as charBodyBox,
   prepareSkinnedMeasure,
+  raceHeightM,
 } from './characterDeploy.js';
 import { scoreHarvestCoverage, matchHarvestNeeds } from './harvestNeeds.js';
 import {
@@ -89,6 +108,7 @@ import {
   renderModularHudHtml,
   guessPreset,
   animPackHintFromLoadout,
+  countVisibleWeaponSoup,
 } from './modularRaceHud.js';
 import {
   renderSkillTreeHtml,
@@ -149,95 +169,150 @@ function isForbiddenCharacterHost(url) {
   return FORBIDDEN_HOST_SUBSTRINGS.some((s) => u.includes(s.toLowerCase()));
 }
 
-const RACE_KITS = {
-  'western-kingdoms': {
-    label: 'WK human',
-    prefix: 'WK_',
-    // Deploy: production GLB (glb2glb). Author: FBX. Never arena character CDN.
-    glb: `${R2}/models/grudge6/races/WK_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/WK_Characters.glb`,
-    fbx: `${R2}/models/grudge6/races/WK_Characters.fbx`,
-    atlas: `${R2}/textures/grudge6/western-kingdoms/WK_Standard_Units.webp`,
-  },
-  barbarians: {
-    label: 'Barbarian',
-    prefix: 'BRB_',
-    fbx: `${R2}/models/grudge6/races/BRB_Characters.fbx`,
-    glb: `${R2}/models/grudge6/races/BRB_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/BRB_Characters.glb`,
-    atlas: `${R2}/textures/grudge6/barbarians/BRB_StandardUnits_texture.webp`,
-  },
-  'high-elves': {
-    label: 'Elf',
-    prefix: 'ELF_',
-    fbx: `${R2}/models/grudge6/races/ELF_Characters.fbx`,
-    glb: `${R2}/models/grudge6/races/ELF_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/ELF_Characters.glb`,
-    atlas: `${R2}/textures/grudge6/elves/ELF_HighElves_Texture.webp`,
-  },
-  dwarves: {
-    label: 'Dwarf',
-    prefix: 'DWF_',
-    fbx: `${R2}/models/grudge6/races/DWF_Characters.fbx`,
-    glb: `${R2}/models/grudge6/races/DWF_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/DWF_Characters.glb`,
-    atlas: `${R2}/textures/grudge6/dwarves/DWF_Standard_Units.webp`,
-  },
-  orcs: {
-    label: 'Orc',
-    prefix: 'ORC_',
-    fbx: `${R2}/models/grudge6/races/ORC_Characters.fbx`,
-    glb: `${R2}/models/grudge6/races/ORC_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/ORC_Characters.glb`,
-    atlas: `${R2}/textures/grudge6/orcs/ORC_StandardUnits.webp`,
-  },
-  undead: {
-    label: 'Undead',
-    prefix: 'UD_',
-    fbx: `${R2}/models/grudge6/races/UD_Characters.fbx`,
-    glb: `${R2}/models/grudge6/races/UD_Characters.glb`,
-    r2: `${R2}/models/grudge6/races/UD_Characters.glb`,
-    atlas: `${R2}/textures/grudge6/undead/UD_Standard_Units.webp`,
-  },
+/**
+ * Pipeline raceId → fleet grudge6-kit race id (RACE_ASSETS keys).
+ * Atlas SSOT: https://assets.grudge-studio.com/assets/{folder}/textures/{file}
+ * @see assets.grudge-studio.com/js/grudge6-kit.js
+ */
+const PIPELINE_TO_FLEET_RACE = {
+  'western-kingdoms': 'human',
+  barbarians: 'barbarian',
+  'high-elves': 'elf',
+  dwarves: 'dwarf',
+  orcs: 'orc',
+  undead: 'undead',
 };
 
-/** Baked Bip001 packs (JSON) — play on character kit */
+function fleetRaceId(pipelineRaceId) {
+  return PIPELINE_TO_FLEET_RACE[pipelineRaceId] || 'human';
+}
+
+/** UI + deep-link helpers — paths come from fleet RACE_ASSETS only */
+const RACE_KITS = Object.fromEntries(
+  Object.entries(PIPELINE_TO_FLEET_RACE).map(([pipeId, fleetId]) => {
+    const a = RACE_ASSETS[fleetId];
+    return [
+      pipeId,
+      {
+        label:
+          pipeId === 'western-kingdoms'
+            ? 'WK human'
+            : pipeId === 'barbarians'
+              ? 'Barbarian'
+              : pipeId === 'high-elves'
+                ? 'Elf'
+                : pipeId === 'dwarves'
+                  ? 'Dwarf'
+                  : pipeId === 'orcs'
+                    ? 'Orc'
+                    : 'Undead',
+        prefix: a.prefix,
+        fleetId,
+        fbx: a.fbx,
+        glb: a.glb,
+        r2: a.fbx,
+        // CANONICAL atlas: textures/grudge6/{folder}/* (stone SSOT)
+        atlas: fleetAtlasUrl(fleetId),
+      },
+    ];
+  }),
+);
+
+/**
+ * Baked Bip001 packs (JSON) — play on character kit.
+ * Gap sources (Mixamo FBX <1000KB, armature/no mesh): D:/Games/Models/_anim_packs
+ * Staged fill: _anim_packs/_gap_fill_stage · api/anim-gap-fill.json
+ */
 const BAKED_PACKS = [
+  // magic
   { id: 'magic/standing idle', name: 'Magic Idle', pack: 'magic' },
   { id: 'magic/Standing Walk Forward', name: 'Standing Walk Forward', pack: 'magic' },
   { id: 'magic/Standing Run Forward', name: 'Standing Run Forward', pack: 'magic' },
+  { id: 'magic/staffattack', name: 'Staff Attack', pack: 'magic' },
+  // sword_shield (live CDN + local gap stage for walk/death/strafe)
   { id: 'sword_shield/sword and shield idle', name: 'Sword Shield Idle', pack: 'sword_shield' },
   { id: 'sword_shield/sword and shield run', name: 'Sword Shield Run', pack: 'sword_shield' },
   { id: 'sword_shield/sword and shield attack', name: 'Sword Shield Attack', pack: 'sword_shield' },
-  { id: 'longbow/standing idle 01', name: 'Longbow Idle', pack: 'longbow' },
+  { id: 'sword_shield/sword and shield attack (2)', name: 'Sword Shield Attack 2', pack: 'sword_shield' },
+  { id: 'sword_shield/sword and shield block', name: 'Sword Shield Block', pack: 'sword_shield' },
+  { id: 'sword_shield/sword and shield slash', name: 'Sword Shield Slash', pack: 'sword_shield' },
+  // longbow
+  { id: 'longbow/idle', name: 'Longbow Idle', pack: 'longbow' },
+  { id: 'longbow/draw', name: 'Longbow Draw', pack: 'longbow' },
+  { id: 'longbow/standing idle 01', name: 'Longbow Idle 01', pack: 'longbow' },
   { id: 'longbow/standing walk forward', name: 'Longbow Walk', pack: 'longbow' },
   { id: 'longbow/standing run forward', name: 'Longbow Run', pack: 'longbow' },
+  { id: 'longbow/standing aim recoil', name: 'Longbow Aim Recoil', pack: 'longbow' },
+  // rifle / pistol (gun family)
+  { id: 'rifle/idle', name: 'Rifle Idle', pack: 'rifle' },
+  { id: 'rifle/run forward', name: 'Rifle Run', pack: 'rifle' },
+  { id: 'pistol/pistol idle', name: 'Pistol Idle', pack: 'pistol' },
+  // 2H / polearm / hammer (CDN + greatsword local stage → 2h_melee)
+  { id: 'greatsword_samurai/gs_samurai_idle', name: 'Samurai Idle', pack: 'greatsword_samurai' },
+  { id: 'greatsword_samurai/gs_samurai_combo_a', name: 'Samurai Combo A', pack: 'greatsword_samurai' },
+  { id: 'polearm/attack', name: 'Polearm Attack', pack: 'polearm' },
+  { id: 'twohand_hammer/idle', name: 'Hammer Idle (scarecrow)', pack: 'twohand_hammer' },
+  // unarmed + loco
   { id: 'unarmed/fight_idle', name: 'Unarmed Idle', pack: 'unarmed' },
   { id: 'uploads_2026_06/locomotion/torch run forward', name: 'Torch Run Forward', pack: 'locomotion' },
   { id: 'locomotion/jump', name: 'Jump', pack: 'locomotion' },
   { id: 'locomotion/dodging', name: 'Dodging', pack: 'locomotion' },
 ];
 
+/** Preferred first clip per pack when auto-playing on grudge6 host. */
+const PACK_IDLE_RELS = {
+  sword_shield: [
+    'sword_shield/sword and shield idle',
+    'sword_shield/sword and shield run',
+  ],
+  longbow: ['longbow/idle', 'longbow/draw', 'longbow/standing idle 01'],
+  magic: ['magic/standing idle', 'magic/staffattack'],
+  rifle: ['rifle/idle', 'rifle/run forward'],
+  pistol: ['pistol/pistol idle'],
+  unarmed: ['unarmed/fight_idle'],
+  greatsword_samurai: [
+    'greatsword_samurai/gs_samurai_idle',
+    'greatsword_samurai/gs_samurai_combo_a',
+  ],
+  '2h_melee': [
+    'greatsword_samurai/gs_samurai_idle',
+    'twohand_hammer/idle',
+    'sword_shield/sword and shield idle',
+  ],
+  twohand_hammer: ['twohand_hammer/idle'],
+  polearm: ['polearm/attack'],
+  cavalry: ['longbow/idle'],
+  farming: ['farming/holding idle', 'farming/watering'],
+  traversal: ['traversal/Climbing', 'traversal/Swimming (1)'],
+};
+
 // ── State ──────────────────────────────────────────────
+/** Visible inventory — DEFAULT game-ready only (never raw dumps). */
 let allModels = [];
+/** Full post-dedupe catalog (ready + raw) for opt-in author dumps. */
+let catalogAll = [];
+let catalogReady = [];
+let catalogRaw = [];
 let filtered = [];
 let page = 0;
 let activeKind = null;
 let activeGroup = null;
-/** @type {string|null} Prefer glb for game-ready inventory (null = all formats). */
-/** Prefer GLB format in inventory for gameplay-ready browsing */
-let activeFormat = 'glb';
+/**
+ * Format filter: null = game-ready formats (GLB + baked JSON).
+ * Do NOT default to 'glb' alone — that hides Bip001 baked clips.
+ * @type {string|null}
+ */
+let activeFormat = null;
 let activeSource = null;
 /** @type {string|null} Game product filter (warlords, open, mine-loader, …) */
 let activeGameUse = null;
 let activeUuid = null;
 let sortKey = 'production';
 /**
- * Deploy bake filter — DEFAULT **ready**: only textured / glb2glb production assets.
- * User can switch to "raw" or All to inspect author sources.
- * @type {string|null} null | 'ready' | 'raw'
+ * Deploy bake filter — DEFAULT **ready**: only textured / labeled / SI / converted.
+ * raw = opt-in author FBX / untextured dumps (not served by default).
+ * @type {string|null} null | 'ready' | 'raw'  (null treated as ready)
  */
-/** DEFAULT ready = game-ready only (textured GLB / baked clips). raw = author FBX dumps. */
 let activeProd = 'ready';
 /** @type {{ byUuid: Map, byPath: Map }} */
 let d1Index = { byUuid: new Map(), byPath: new Map() };
@@ -279,16 +354,29 @@ function inferGroup(m) {
 }
 
 function normalizeEntry(raw, source) {
-  const path = normalizeR2Key(raw.path || raw.r2Key || raw.sourcePath || '');
+  let path = normalizeR2Key(raw.path || raw.r2Key || raw.sourcePath || '');
+  // Mark legacy grudge6 character keys so catalog kind/filter works
+  const isLegacyRace =
+    /models\/grudge6\/(wk|brb|ud|orc|elf|dwf)\/[A-Za-z0-9_]*Characters\.(glb|fbx)$/i.test(path) ||
+    /models\/grudge6\/races\/[A-Za-z0-9_]*Characters\.(glb|fbx)$/i.test(path);
   const format = String(raw.format || path.split('.').pop() || 'glb').toLowerCase().replace(/^\./, '');
   const sizeKB =
     raw.sizeKB ??
     (raw.fileSize ? Math.round(raw.fileSize / 1024) : 0);
-  const cdnUrl =
+  // Prefer fleet SSOT CDN URL for race kits (legacy D1 path still stored as r2Key)
+  let cdnUrl =
     raw.cdnUrl ||
     raw._cdnUrl ||
     raw._gameReadyUrl ||
     (path ? `${R2}/${path}` : null);
+  if (isLegacyRace) {
+    try {
+      const canon = resolveCanonicalAssetUrl(path);
+      if (canon) cdnUrl = canon;
+    } catch {
+      /* keep */
+    }
+  }
   const grudgeUuid = raw.grudgeUuid || raw.uuid || null;
   const m = {
     id: path || grudgeUuid || raw.id || `${source}:${raw.name}`,
@@ -296,11 +384,13 @@ function normalizeEntry(raw, source) {
     path,
     r2Key: path,
     format,
-    category: raw.category || 'uncategorized',
-    group: raw.group || raw.category || 'uncategorized',
+    category: isLegacyRace ? 'character' : raw.category || 'uncategorized',
+    group: isLegacyRace ? 'grudge6/races' : raw.group || raw.category || 'uncategorized',
     sizeKB,
     fileSize: raw.fileSize ?? (sizeKB ? sizeKB * 1024 : null),
-    meshes: raw.meshes ?? null,
+    // D1 never stores mesh counts — multipacks are not "0 mesh"
+    meshes: raw.meshes ?? (isLegacyRace ? 12 : null),
+    sourceSet: raw.sourceSet || (isLegacyRace ? 'grudge6' : undefined),
     animations: raw.animations ?? null,
     textures: raw.textures ?? null,
     textureStatus: raw.textureStatus || null,
@@ -337,22 +427,28 @@ function normalizeEntry(raw, source) {
 function curatedGrudge6() {
   const out = [];
   for (const [id, kit] of Object.entries(RACE_KITS)) {
-    // Production deploy path: R2 GLB (glb2glb) first; FBX listed as author alt
-    const r2Glb = String(kit.glb || kit.r2 || '')
+    // FLEET SSOT only: races/*_Characters.fbx + assets/{folder}/textures atlas
+    // Do NOT advertise legacy models/grudge6/brb|ud|wk/* as inventory.
+    const fbxPath = String(kit.fbx || '')
+      .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
+      .replace(/^\//, '');
+    const glbPath = String(kit.glb || '')
       .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
       .replace(/^\//, '');
     out.push(
       normalizeEntry(
         {
           id: `grudge6-race-${id}`,
-          name: `${kit.label} — Characters (prod GLB)`,
-          path: r2Glb || `models/grudge6/races/${id}`,
+          name: `${kit.label} — Characters (fleet SSOT)`,
+          // Catalog key = races GLB uuid people deep-link (e.g. BRB 3ab2b12a…)
+          // Load always rewrites to FBX+atlas via loadCharacterKit
+          path: glbPath || fbxPath,
           format: 'glb',
           category: 'grudge6-races',
           group: 'grudge6/races',
           kind: 'character',
-          cdnUrl: kit.glb || kit.r2,
-          altUrls: [kit.glb, kit.r2, kit.fbx].filter(Boolean),
+          cdnUrl: kit.fbx || kit.glb,
+          altUrls: [kit.fbx, kit.glb].filter(Boolean),
           animations: 0,
           textures: 1,
           textureStatus: 'atlas',
@@ -440,7 +536,7 @@ async function fetchD1Catalog() {
             if (mime.startsWith('image/') && !key.includes('texture')) {
               if (!/\.(glb|gltf|fbx)$/i.test(key)) continue;
             }
-            // Index all model-like + known game packs
+            // Index model-like + known game packs only
             if (
               !/\.(glb|gltf|fbx|json)$/i.test(key) &&
               !key.includes('anims/baked') &&
@@ -448,6 +544,28 @@ async function fetchD1Catalog() {
             ) {
               continue;
             }
+            // Pass-2: never index raw/tmp/wip/meshy/placeholder into the browser catalog
+            if (isRawKillPath({ path: key, name: a.name || '', cdnUrl: a.cdnUrl || '' })) {
+              continue;
+            }
+            // HARD: drop legacy grudge6 trash (models/grudge6/ud|wk|brb/…, 30characters, …)
+            // Race kits come from curated fleet SSOT only (races/* + grudge6-kit atlas).
+            if (isTrashGrudge6Path(key)) continue;
+            // HARD: drop raw Mixamo/Kaykit anim dumps — only anims/baked JSON is inventory
+            if (/models\/animations\//i.test(key)) continue;
+            if (/kaykit\/rig_/i.test(key)) continue;
+            // Skip D1 races/*_Characters rows — curated grudge6-ssot owns those keys
+            if (/models\/grudge6\/races\/(wk|brb|ud|orc|elf|dwf)_characters\.(glb|fbx)$/i.test(key)) {
+              continue;
+            }
+            // Pass-2: skip multipack fragment pseudo-keys and non-mesh sidecar rows
+            if (/#mesh:/i.test(key)) continue;
+            if (/\.(png|jpg|jpeg|webp|tga|mtl|bin)$/i.test(key)) continue;
+            // Pass-2: skip author FBX at D1 ingest — only GLB/json enter the index
+            // (FBX remains on R2 for convert pipeline; not served as game inventory)
+            if (fmt === 'fbx' || fmt === 'obj' || fmt === 'dae') continue;
+            if (fmt === 'gltf') continue; // prefer production GLB only
+
             seen.add(key);
             const entry = normalizeEntry(
               {
@@ -521,37 +639,72 @@ async function loadCatalog() {
     if (m.path) d1Index.byPath.set(m.path.replace(/\\/g, '/').toLowerCase(), m);
   }
 
-  // Merge: curated base → ObjectStore → production ship list → D1 (wins identity)
+  // Merge: curated base → ObjectStore → production → D1
+  // HARD: trash grudge6 paths never enter the map
   const map = new Map();
+  let trashDropped = 0;
   for (const m of [...curated, ...os, ...production, ...d1]) {
     const k = normalizeR2Key(m.path || m.r2Key || m.id);
     if (!k) continue;
+    if (isTrashGrudge6Path(k) || isTrashGrudge6Path(m.cdnUrl || '')) {
+      trashDropped++;
+      continue;
+    }
+    // Non-curated races/*_Characters: drop — curated grudge6-ssot is sole inventory row
+    if (
+      m.source !== 'grudge6-ssot' &&
+      /models\/grudge6\/races\/(wk|brb|ud|orc|elf|dwf)_characters\.(glb|fbx)$/i.test(k)
+    ) {
+      trashDropped++;
+      continue;
+    }
     if (!map.has(k)) map.set(k, m);
     else map.set(k, mergeTruthEntries(map.get(k), m));
   }
-  allModels = [...map.values()].map((m) => enrichFleetTruth(m));
+  let merged = [...map.values()].map((m) => enrichFleetTruth(m));
+
+  // Purge path/uuid/basename duplicates — keep highest productionScore only
+  const purged = purgeCatalogDuplicates(merged);
+  catalogAll = purged.models;
+  catalogReady = catalogAll.filter((m) => isProductionDeployReady(m));
+  catalogRaw = catalogAll.filter((m) => !isProductionDeployReady(m));
+  // HARD: serve game-ready inventory only by default (raw is opt-in chip)
+  allModels = catalogReady;
+  activeProd = 'ready';
+  activeFormat = null; // GLB + baked JSON clips
+  if (purged.removed > 0 || catalogRaw.length > 0 || trashDropped > 0) {
+    console.info(
+      `[catalog] game-ready ${catalogReady.length} · raw hidden ${catalogRaw.length} · −${purged.removed} dupes · −${trashDropped} grudge6-trash`,
+    );
+  }
 
   void prefillDerivedUuids()
     .then(async () => {
-      // Re-enrich after UUIDs land
-      allModels.forEach((m) => enrichFleetTruth(m));
+      // Re-enrich after UUIDs land (prefer full catalog for uuid map, UI stays ready)
+      catalogAll.forEach((m) => enrichFleetTruth(m));
+      catalogReady = catalogAll.filter((m) => isProductionDeployReady(m));
+      catalogRaw = catalogAll.filter((m) => !isProductionDeployReady(m));
+      allModels = activeProd === 'raw' ? catalogRaw : catalogReady;
       updateUuidStat();
       applyFilters();
-      // Background D1/hash verify (does not block first paint)
+      // Background D1/hash verify on game-ready set (does not block first paint)
       try {
-        await verifyAll(allModels, d1Index, (i, n) => {
+        await verifyAll(catalogReady, d1Index, (i, n) => {
           if (i % 200 === 0 || i === n) {
             const st = document.getElementById('actionStatus');
             if (st) st.textContent = `UUID verify ${i}/${n}`;
           }
         });
         uuidVerified = true;
-        allModels.forEach((m) => {
+        catalogAll.forEach((m) => {
           if (m.grudgeUuid) {
             m.searchBlob = `${m.searchBlob} ${m.grudgeUuid} ${m.uuidStatus || ''}`.toLowerCase();
           }
           enrichFleetTruth(m);
         });
+        catalogReady = catalogAll.filter((m) => isProductionDeployReady(m));
+        catalogRaw = catalogAll.filter((m) => !isProductionDeployReady(m));
+        allModels = activeProd === 'raw' ? catalogRaw : catalogReady;
         updateUuidStat();
         renderFilters();
         const st = document.getElementById('actionStatus');
@@ -562,14 +715,18 @@ async function loadCatalog() {
     })
     .catch((e) => console.warn('[uuid] prefill', e));
 
-  const summary = truthSummary(allModels);
-  const sources = new Set(allModels.flatMap((m) => m.sources || [m.source]));
+  const summary = truthSummary(catalogAll);
+  const readyN = catalogReady.length;
+  const sources = new Set(catalogReady.flatMap((m) => m.sources || [m.source]));
   if (status) {
     status.className = 'r2-status online';
-    status.innerHTML = `<span class="r2-dot"></span> ${summary.total} assets · D1 ${summary.d1} · UUID ${summary.uuidPct}% · truth v${FLEET_TRUTH_VERSION}`;
-    status.title = Object.entries(summary.bySource)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(' · ');
+    status.innerHTML = `<span class="r2-dot"></span> ${readyN} game-ready (≥${PROD_READY_SCORE}) · ${summary.total} indexed · −${purged.removed} dupes · ${catalogRaw.length} raw hidden · D1 ${summary.d1} · UUID ${summary.uuidPct}%`;
+    status.title =
+      `Serving game-ready only (score ≥ ${PROD_READY_SCORE} · textured · labeled · SI · converted). ` +
+      `Indexed ${summary.total}, ready ${readyN}, raw hidden ${catalogRaw.length}, purged ${purged.removed} dups. ` +
+      Object.entries(summary.bySource)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(' · ');
   }
   document.getElementById('sourceCount').textContent = String(sources.size);
   const d1El = document.getElementById('d1Count');
@@ -578,6 +735,17 @@ async function loadCatalog() {
   if (truthEl) truthEl.textContent = `${summary.uuidPct}%`;
   updateThumbStat();
   renderGameUseFilters();
+}
+
+/** Switch inventory between game-ready and opt-in raw author dumps. */
+function setProdInventory(mode) {
+  const next = mode === 'raw' ? 'raw' : 'ready';
+  activeProd = next;
+  allModels = next === 'raw' ? catalogRaw : catalogReady;
+  // Ready inventory shows GLB + baked JSON; raw often FBX — clear format pin
+  if (next === 'ready') activeFormat = null;
+  page = 0;
+  applyFilters();
 }
 
 async function prefillDerivedUuids() {
@@ -633,6 +801,7 @@ function tokens(q) {
 function applyFilters() {
   const q = document.getElementById('searchBox')?.value || '';
   const toks = tokens(q);
+  // Inventory is already split (ready vs raw); still re-gate ready for safety
   filtered = allModels.filter((m) => {
     if (activeKind && m.kind !== activeKind) return false;
     if (activeGroup && m.group !== activeGroup) return false;
@@ -641,7 +810,7 @@ function applyFilters() {
       return false;
     if (activeGameUse && !(m.gameUses || []).includes(activeGameUse)) return false;
     if (activeUuid && (m.uuidStatus || 'pending') !== activeUuid) return false;
-    if (activeProd === 'ready' && !isProductionDeployReady(m)) return false;
+    if (activeProd !== 'raw' && !isProductionDeployReady(m)) return false;
     if (activeProd === 'raw' && isProductionDeployReady(m)) return false;
     if (toks.length && !toks.every((t) => m.searchBlob.includes(t))) return false;
     return true;
@@ -716,18 +885,18 @@ function renderFilters() {
     uuids[us] = (uuids[us] || 0) + 1;
   }
   const sortEntries = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]);
-  const prodReady = allModels.filter((m) => isProductionDeployReady(m)).length;
-  const prodRaw = allModels.length - prodReady;
+  const prodReady = catalogReady.length || allModels.filter((m) => isProductionDeployReady(m)).length;
+  const prodRaw = catalogRaw.length;
   chipRow(
     document.getElementById('prodFilters'),
     [
       ['ready', prodReady],
       ['raw', prodRaw],
     ],
-    activeProd,
+    activeProd === 'raw' ? 'raw' : 'ready',
     (v) => {
-      activeProd = v;
-      applyFilters();
+      // null/"All" still means game-ready — never expand to raw by accident
+      setProdInventory(v === 'raw' ? 'raw' : 'ready');
     },
     (v) => (v === 'ready' ? 'prod-ready' : 'prod-raw'),
   );
@@ -995,37 +1164,30 @@ function renderPage() {
   });
 }
 
-// ── Materials (kill yellow / chrome + rebind missing atlases) ──
-// Core logic lives in materials.js (1×1 FBX2glTF placeholders, bow atlas, etc.)
+// ── Materials ──
+// grudge6 race kits: ONLY fleet bindRaceAtlas / loadRaceTexture (grudge6-kit.js).
+// Non-race props still use materials.js prepAndRebindMaterials.
 
-async function tryBindAtlas(root, raceId) {
-  const kit = RACE_KITS[raceId];
-  if (!kit?.atlas) return false;
-  try {
-    if (!textureLoader) {
-      textureLoader = new THREE.TextureLoader();
-      textureLoader.setCrossOrigin('anonymous');
-    }
-    const tex = await textureLoader.loadAsync(kit.atlas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.flipY = false;
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-    tex.generateMipmaps = true;
-    tex.minFilter = THREE.LinearMipmapLinearFilter;
-    const mat = new THREE.MeshStandardMaterial({
-      map: tex,
-      color: 0xffffff,
-      metalness: 0,
-      roughness: 0.75,
-      side: THREE.DoubleSide,
-    });
-    root.traverse((o) => {
-      if (o.isMesh || o.isSkinnedMesh) o.material = mat;
-    });
-    return true;
-  } catch {
+/**
+ * Bind canonical race atlas — same as Unity/toon RTS / assets grudge6-kit.
+ * @param {THREE.Object3D} root
+ * @param {string} pipelineRaceId  e.g. barbarians
+ */
+async function tryBindAtlas(root, pipelineRaceId) {
+  const fid = fleetRaceId(pipelineRaceId);
+  const url = fleetAtlasUrl(fid);
+  if (!url) return false;
+  const tex = await loadRaceTexture(THREE, fid);
+  if (!tex) {
+    console.warn('[grudge6] fleet atlas failed', fid, url);
     return false;
   }
+  const n = bindRaceAtlas(THREE, root, tex);
+  root.userData.atlasUrl = url;
+  root.userData.fleetRaceId = fid;
+  root.userData.forceAtlasRebound = n > 0;
+  console.info('[grudge6] fleet atlas', fid, url, 'mats', n);
+  return n > 0;
 }
 
 // ── Deploy: height, XZ, Y, bones ───────────────────────
@@ -1039,11 +1201,32 @@ function findBone(root, re) {
 }
 
 function listBones(root) {
-  const names = [];
+  // UNIQUE names only — Toon multipacks leave 3× Bip001 copies in the graph
+  // (naive count looks like "192 bones"). grudge6 = Bip001 ~40–80 unique, not Mixamo 25.
+  const names = new Set();
   root.traverse((o) => {
-    if (o.isBone && o.name) names.push(o.name);
+    if (o.isBone && o.name) names.add(o.name);
   });
-  return names;
+  return [...names];
+}
+
+/** Bip001 / Mixamo truth for deploy panel */
+function boneTruthLabel(root) {
+  let bip = 0;
+  let mix = 0;
+  let objects = 0;
+  const bipNames = new Set();
+  const mixNames = new Set();
+  root?.traverse((o) => {
+    if (!o.isBone || !o.name) return;
+    objects++;
+    if (/bip001/i.test(o.name)) bipNames.add(o.name);
+    else if (/mixamorig/i.test(o.name)) mixNames.add(o.name);
+  });
+  bip = bipNames.size;
+  mix = mixNames.size;
+  if (mix > bip) return `Mixamo ${mix} unique (WRONG — need Bip001 races/*)`;
+  return `Bip001 ${bip} unique` + (objects > bip + 5 ? ` (${objects} scene objs)` : '');
 }
 
 function bodyBox(root) {
@@ -1096,14 +1279,20 @@ function deployModel(root, { facePlusZ, entry = null } = {}) {
         : facePlusZ === true
           ? true
           : 'auto';
+    const raceForSi =
+      root.userData.grudgeRaceId ||
+      document.getElementById('previewRace')?.value ||
+      'western-kingdoms';
     const d = deployCharacterModel(root, {
       facePlusZ: face,
       importPipeline: root.userData.importPipeline,
       forceRefit: true, // anim/mesh host: never trust sticky wrong scale
+      raceId: raceForSi,
+      targetHeightM: raceHeightM(raceForSi),
     });
-    // Hard SI re-gate (100× residual after secondary/stale GLB)
-    const si = enforceCharacterSi(root, 1.8);
-    const look = diagnoseCharacterLook(root);
+    // SI vs race height truth (orc=2.0, human=1.8) — unit snap only, no force-1.8
+    const si = enforceCharacterSi(root, raceForSi);
+    const look = diagnoseCharacterLook(root, { raceId: raceForSi });
     const heightM = si.heightM || d.heightM;
     const uf = root.userData.grudgeUnitFix ?? d.fit?.unitFix ?? si.unitFix ?? 1;
     return {
@@ -1219,7 +1408,15 @@ function fillUsePanel(entry) {
   const uuid = entry?.grudgeUuid || '—';
   const r2 = entry ? r2KeyOf(entry) || '—' : '—';
   const cdn = entry ? cdnUrlOf(entry) || entry.cdnUrl || '—' : '—';
-  const pack = entry ? animPackHint(entry) || (entry.kind === 'animation' ? '—' : 'n/a') : '—';
+  // grudge6 multipacks default to sword_shield until loadout/pack button sets it
+  let pack = entry
+    ? animPackHint(entry) ||
+      (entry.kind === 'animation' || entry.isBakedClip ? '—' : null)
+    : '—';
+  if (!pack && entry && (entry.kind === 'character' || entry.source === 'grudge6-ssot')) {
+    pack = 'sword_shield';
+  }
+  if (!pack) pack = entry?.kind === 'animation' ? '—' : 'n/a';
   document.getElementById('useUuid').textContent = uuid;
   document.getElementById('useR2').textContent = r2;
   document.getElementById('useCdn').textContent = cdn;
@@ -1436,22 +1633,12 @@ function wireModularHud(bySlot) {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-anim-pack');
       const pack = ANIM_PACKS[id];
-      const packEl = document.getElementById('useAnimPackActive');
-      if (packEl) packEl.textContent = id;
-      const useAnim = document.getElementById('useAnimPack');
-      if (useAnim) useAnim.textContent = id;
-      flashUse(`Anim pack ${pack?.label || id} · ${pack?.baked || ''}`);
-      // Try select matching clip if loaded
-      const sel = document.getElementById('animSelect');
-      if (sel && pack) {
-        const opt = [...sel.options].find((o) =>
-          new RegExp(id.replace(/_/g, '.*'), 'i').test(o.textContent || o.value),
-        );
-        if (opt) {
-          sel.value = opt.value;
-          sel.dispatchEvent(new Event('change'));
-        }
-      }
+      // Actually fetch + play baked Bip001 clips (was a no-op label-only before)
+      void loadAnimPackOntoCurrent(id).catch((e) => {
+        console.error(e);
+        flashUse(`Anim pack failed: ${e.message || id}`);
+      });
+      flashUse(`Loading ${pack?.label || id}…`);
     });
   });
 }
@@ -1631,6 +1818,20 @@ function setDiag(info, mats, mode, entry = null) {
   const statusClass = (s) =>
     ({ ok: 'ok', warn: 'warn', fail: 'bad', info: 'info', na: 'dim' }[s] || '');
 
+  // Bone list: unique Bip001 names first (never dump 192 duplicate objects)
+  if (bl) {
+    const names = info.bones || [];
+    const bip = names.filter((n) => /bip001/i.test(n));
+    const mix = names.filter((n) => /mixamorig/i.test(n));
+    const head =
+      mix.length > bip.length
+        ? `WRONG Mixamo ${mix.length} unique — need Bip001 races/*\n`
+        : `Bip001 ${bip.length} unique` +
+          (mix.length ? ` · Mixamo ${mix.length}` : '') +
+          `\n(grudge6 kit = Bip001; Mixamo ~25 is for clips only)\n\n`;
+    bl.textContent = head + (bip.length ? bip : names).slice(0, 80).join('\n');
+  }
+
   if (list) {
     list.innerHTML = report.checks
       .map(
@@ -1650,10 +1851,6 @@ function setDiag(info, mats, mode, entry = null) {
       `${report.summary.pass ? 'PASS' : 'FAIL'} · ${profile.label} · score ${sc} · ` +
       `${report.summary.ok} ok / ${report.summary.warn} warn / ${report.summary.fail} fail` +
       (mode ? ` · ${mode}` : '');
-  }
-
-  if (bl) {
-    bl.textContent = (info.bones || []).slice(0, 80).join('\n') || '(no bones)';
   }
 
   window._lastDeployReport = report;
@@ -1837,43 +2034,63 @@ async function resolveUrl(entry) {
   return safe || null;
 }
 
+/**
+ * Load grudge6 race kit EXACTLY like fleet / Unity path:
+ *   FBX (SSOT) + assets/{folder}/textures/{atlas}.webp via grudge6-kit.js
+ * Do NOT run prepMaterials after atlas bind (destroys maps → orange sludge).
+ */
 async function loadCharacterKit(raceId) {
   const { clone } = await import('three/addons/utils/SkeletonUtils.js');
+  const fid = fleetRaceId(raceId);
+  const race = RACE_ASSETS[fid];
+  if (!race) throw new Error(`Unknown fleet race ${fid}`);
+
+  // Always rebuild template if atlas missing (no sticky broken cache)
   if (characterTemplateCache.has(raceId)) {
-    return clone(characterTemplateCache.get(raceId));
-  }
-  const kit = RACE_KITS[raceId] || RACE_KITS['western-kingdoms'];
-  // Deploy order: production GLB (glb2glb) → R2 GLB → FBX author only.
-  // Never arena secondary character CDN.
-  const urls = raceKitDeployUrls(kit, isForbiddenCharacterHost);
-  let gltf = null;
-  let loadedUrl = null;
-  for (const url of urls) {
-    try {
-      gltf = await loadGltfOrFbx(url);
-      loadedUrl = url;
-      break;
-    } catch (e) {
-      console.warn('[grudge6 host] load failed', url, e?.message || e);
+    const cached = characterTemplateCache.get(raceId);
+    if (cached.userData.forceAtlasRebound === true && cached.userData.atlasUrl) {
+      const c = clone(cached);
+      c.userData.grudgeRaceId = raceId;
+      c.userData.grudgeRaceHeightM = raceHeightM(raceId);
+      c.userData.grudge6SsotHost = true;
+      c.userData.fleetRaceId = fid;
+      c.userData.importPipeline = 'fbx-atlas';
+      c.userData.artForwardSet = false;
+      c.userData.grudgeHeightFit = false;
+      c.userData.atlasUrl = cached.userData.atlasUrl;
+      c.userData.forceAtlasRebound = true;
+      return c;
     }
+    characterTemplateCache.delete(raceId);
   }
-  if (!gltf) {
-    throw new Error(
-      `Failed to load grudge6 race kit (${raceId}) from R2 SSOT. ` +
-        `Tried: ${urls.join(', ')}. Secondary arena character hosts are disabled.`,
-    );
+
+  // 1) Load FBX SSOT via resolveCanonicalAssetUrl (rewrites legacy D1 paths)
+  const fbxUrl = resolveCanonicalAssetUrl(fleetKitUrl(fid, 'fbx'));
+  if (isForbiddenCharacterHost(fbxUrl)) {
+    throw new Error(`Blocked character host: ${fbxUrl}`);
   }
-  const root = gltf.scene;
-  // production-glb = deploy bake (textures/scale in mesh); fbx-atlas = author + runtime atlas
-  root.userData.importPipeline = /\.fbx($|\?)/i.test(loadedUrl || '')
-    ? 'fbx-atlas'
-    : 'production-glb';
-  root.userData.sourceUrl = loadedUrl || kit.glb || kit.fbx;
+  let root;
+  let loadedUrl = fbxUrl;
+  try {
+    const fbxLoader = new FBXLoader();
+    root = await fbxLoader.loadAsync(fbxUrl);
+  } catch (e) {
+    console.warn('[grudge6] FBX failed, races GLB fallback', fbxUrl, e?.message || e);
+    const glbUrl = resolveCanonicalAssetUrl(fleetKitUrl(fid, 'glb'));
+    const gltf = await getGltfLoader().loadAsync(glbUrl);
+    root = gltf.scene || gltf;
+    loadedUrl = glbUrl;
+  }
+
+  root.userData.importPipeline = /\.fbx($|\?)/i.test(loadedUrl) ? 'fbx-atlas' : 'production-glb';
+  root.userData.sourceUrl = loadedUrl;
   root.userData.grudge6SsotHost = true;
-  root.userData.productionBaked = root.userData.importPipeline === 'production-glb';
-  root.userData.grudgeHeightFit = false; // never trust template sticky fit
+  root.userData.fleetRaceId = fid;
+  root.userData.grudgeHeightFit = false;
+  root.userData.artForwardSet = false;
   prepareLoadedRoot(root);
-  // Unify skeletons lightly (Toon RTS multi-skeleton kits)
+
+  // Unify multi-skeleton kits
   const canon = new Map();
   root.traverse((o) => {
     if (o.isBone && o.name && !canon.has(o.name)) canon.set(o.name, o);
@@ -1885,78 +2102,363 @@ async function loadCharacterKit(raceId) {
       o.frustumCulled = false;
     }
   });
-  // Prefer baked mats; strip 1×1 placeholders; race atlas if still bare
-  let { prep: mats } = await prepAndRebindMaterials(root, {
-    path: kit.r2 || kit.glb || kit.fbx,
-    name: raceId,
-  });
-  if (mats.withMap === 0) {
-    await tryBindAtlas(root, raceId);
-    mats = prepMaterials(root);
+
+  // 2) Fleet atlas ONLY — assets/{folder}/textures/{file}
+  const atlasOk = await tryBindAtlas(root, raceId);
+  if (!atlasOk) {
+    throw new Error(
+      `Fleet atlas bind failed for ${fid}. Expected ${fleetAtlasUrl(fid)}. ` +
+        `SSOT is textures/grudge6/{race-folder}/*.webp on assets CDN.`,
+    );
   }
+
+  // 3) Default equip via fleet EquipmentManager (hide soup, body+sword)
+  const equip = new EquipmentManager(race.prefix);
+  const slotSummary = equip.catalog(root);
+  equip.applyDefaultLoadout();
+  const visibleN = equip.allMeshes.filter((m) => m.visible).length;
+  root.userData.grudge6Equip = equip;
+  root.userData.equipSlots = slotSummary;
+  root.userData.equipVisible = visibleN;
+  if (!visibleN) {
+    console.warn('[grudge6] equip left 0 visible — unhid skinned meshes', fid, slotSummary);
+  }
+
+  root.userData.grudgeRaceId = raceId;
+  root.userData.grudgeRaceHeightM = raceHeightM(raceId);
   characterTemplateCache.set(raceId, root);
-  return clone(root);
+
+  const c = clone(root);
+  c.userData.grudgeRaceId = raceId;
+  c.userData.grudgeRaceHeightM = raceHeightM(raceId);
+  c.userData.grudge6SsotHost = true;
+  c.userData.fleetRaceId = fid;
+  c.userData.importPipeline = root.userData.importPipeline;
+  c.userData.sourceUrl = root.userData.sourceUrl;
+  c.userData.atlasUrl = root.userData.atlasUrl;
+  c.userData.forceAtlasRebound = true;
+  c.userData.artForwardSet = false;
+  c.userData.grudgeHeightFit = false;
+  // Fresh equip manager on clone (mesh refs differ)
+  const equip2 = new EquipmentManager(race.prefix);
+  equip2.catalog(c);
+  equip2.applyDefaultLoadout();
+  c.userData.grudge6Equip = equip2;
+  c.userData.equipVisible = equip2.allMeshes.filter((m) => m.visible).length;
+  return c;
+}
+
+/**
+ * Encode anims/baked pack/clip path (spaces in clip names).
+ * encodeURI alone breaks folder/file splits — encode each segment.
+ */
+function bakedClipUrl(host, rel) {
+  const clean = String(rel || '')
+    .replace(/^\/+/, '')
+    .replace(/\.json$/i, '');
+  const parts = clean.split('/').map((s) => encodeURIComponent(s));
+  return `${host}/anims/baked/${parts.join('/')}.json`;
+}
+
+/**
+ * Fetch one baked Bip001 JSON clip. Quaternion-only + rematch onto grudge6 kit.
+ * Hosts: open → assets → arena (prefer open — assets often missing packs).
+ * @returns {Promise<THREE.AnimationClip|null>}
+ */
+async function fetchBakedClip(rel, model) {
+  if (!rel) return null;
+  // Refuse raw Mixamo dump paths
+  if (/models\/animations\//i.test(rel)) {
+    console.warn('[anim] refuse raw models/animations path', rel);
+    return null;
+  }
+  const urls = [
+    bakedClipUrl(OPEN, rel),
+    bakedClipUrl(R2, rel),
+    bakedClipUrl(ARENA, rel),
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { mode: 'cors' });
+      if (!r.ok) continue;
+      const ct = r.headers.get('content-type') || '';
+      if (ct.includes('text/html')) continue;
+      const json = await r.json();
+      // Accept AnimationClip JSON or { name, duration, tracks }
+      let clip;
+      if (json.tracks || json.type === 'AnimationClip') {
+        clip = THREE.AnimationClip.parse(json);
+      } else if (Array.isArray(json)) {
+        continue;
+      } else {
+        clip = THREE.AnimationClip.parse(json);
+      }
+      // Rotation-only Bip001 contract
+      const qTracks = (clip.tracks || []).filter(
+        (t) =>
+          /\.quaternion$/.test(t.name) ||
+          /\.rotation$/.test(t.name) ||
+          /quaternion/i.test(t.name),
+      );
+      if (!qTracks.length) {
+        console.warn('[anim] no quaternion tracks', rel, url);
+        continue;
+      }
+      clip = new THREE.AnimationClip(
+        clip.name || rel.split('/').pop() || 'clip',
+        clip.duration,
+        qTracks,
+        clip.blendMode,
+      );
+      if (model) clip = rematchClip(model, clip);
+      clip = stripPositionTracks(clip);
+      // Drop mixamorig tracks that failed rematch (still on wrong skeleton)
+      if (clip.tracks?.some((t) => /mixamorig/i.test(t.name))) {
+        clip = new THREE.AnimationClip(
+          clip.name,
+          clip.duration,
+          clip.tracks.filter((t) => !/mixamorig/i.test(t.name)),
+          clip.blendMode,
+        );
+      }
+      if (!clip.tracks?.length) continue;
+      return clip;
+    } catch (e) {
+      console.warn('[anim] fetch fail', url, e?.message || e);
+    }
+  }
+  return null;
+}
+
+/** Load known baked clips for a pack id (for dropdown + auto-idle). */
+async function fetchPackClips(packId, model) {
+  const fromCatalog = BAKED_PACKS.filter((c) => c.pack === packId).map((c) => c.id);
+  const fromIdle = PACK_IDLE_RELS[packId] || [];
+  const rels = [...new Set([...fromIdle, ...fromCatalog])];
+  const clips = [];
+  for (const rel of rels) {
+    const clip = await fetchBakedClip(rel, model);
+    if (clip) clips.push(clip);
+  }
+  return clips;
+}
+
+/**
+ * HARD multipack presentation (BRB/WK screenshot fix):
+ * 1) hide EVERY equippable mesh (kills floating weapon soup / logs / axes)
+ * 2) warrior mesh_ids only: body+legs+arms+head + ONE weapon + optional shield
+ * 3) re-ground AFTER equip (feet, not pelvis)
+ * 4) baked idle with position+scale tracks stripped, then re-ground again
+ * 5) never report "look OK" when weapon soup or hip-float remains
+ */
+async function finalizeGrudge6CharacterPresentation(model, opts = {}) {
+  const preset = opts.preset || 'warrior';
+  const packId = opts.packId || 'sword_shield';
+  const wantAnim =
+    opts.autoAnim !== false && document.getElementById('chkAnimOnChar')?.checked !== false;
+  const raceId =
+    model.userData.grudgeRaceId ||
+    document.getElementById('previewRace')?.value ||
+    'western-kingdoms';
+
+  rebuildMeshIndex(model);
+  const bySlot = groupMeshesBySlot(meshIndex);
+  const loadout = guessPreset(bySlot, preset);
+  // Mandatory body parts — never ground a torso-only multipack (hip-float)
+  for (const slot of ['body', 'legs', 'arms', 'head']) {
+    if (!loadout[slot] && (bySlot.get(slot) || [])[0]) {
+      loadout[slot] = bySlot.get(slot)[0];
+    }
+  }
+  // sword_shield: one sword preferred; strip multi-weapon soup
+  if (packId === 'sword_shield' && !loadout.weapon) {
+    const weapons = bySlot.get('weapon') || [];
+    loadout.weapon =
+      weapons.find((n) => /sword/i.test(n)) ||
+      weapons.find((n) => /axe|mace|blade/i.test(n)) ||
+      weapons[0] ||
+      null;
+  }
+  applyLoadout(meshIndex, loadout);
+
+  // Sync mesh list checkboxes to loadout (prevent UI from re-showing soup)
+  document.querySelectorAll('#meshList input.mesh-vis').forEach((inp) => {
+    const n = inp.dataset.mesh;
+    const s = modularEquipSlot(n);
+    const on = !!(loadout[s] && loadout[s] === n);
+    inp.checked = on;
+  });
+
+  // Ground bind pose with correct body parts visible (BEFORE anim)
+  prepareSkinnedMeasure(model);
+  reGroundAfterEquip(model, 0);
+  enforceCharacterSi(model, raceId);
+
+  const pack = ANIM_PACKS[packId] || ANIM_PACKS.sword_shield;
+  const packEl = document.getElementById('useAnimPackActive');
+  if (packEl) packEl.textContent = pack.id;
+  const useAnim = document.getElementById('useAnimPack');
+  if (useAnim) useAnim.textContent = pack.id;
+
+  let clips = [];
+  if (wantAnim) {
+    clips = await fetchPackClips(pack.id, model);
+    // Extra strip — belt & suspenders against hip-float
+    clips = clips.map((c) => stripPositionTracks(c));
+    if (clips.length) {
+      if (mixer) {
+        try {
+          mixer.stopAllAction();
+        } catch {
+          /* */
+        }
+      }
+      mixer = new THREE.AnimationMixer(model);
+      window._currentAnimations = clips;
+      const action = mixer.clipAction(clips[0]);
+      action.reset().play();
+      // Sample two frames then re-ground (position tracks already stripped)
+      mixer.update(1 / 30);
+      reGroundAfterAnimSample(model, 0);
+      mixer.update(1 / 30);
+      reGroundAfterAnimSample(model, 0);
+      enforceCharacterSi(model, raceId);
+      reGroundAfterAnimSample(model, 0);
+      fillAnimUi(clips);
+    } else {
+      fillAnimUi([]);
+      console.warn('[grudge6] no baked clips for pack', pack.id);
+    }
+  } else {
+    fillAnimUi([]);
+  }
+
+  // Final soup audit
+  const soup = countVisibleWeaponSoup(meshIndex);
+  if (soup.soup) {
+    console.warn('[grudge6] weapon soup still visible — re-hiding', soup);
+    applyLoadout(meshIndex, loadout);
+    reGroundAfterAnimSample(model, 0);
+  }
+
+  return { loadout, packId: pack.id, clips, preset, soup };
+}
+
+/** Load a full anim pack onto the current character root (HUD pack buttons). */
+async function loadAnimPackOntoCurrent(packId) {
+  if (!currentRoot) {
+    flashUse('Load a grudge6 character first');
+    return;
+  }
+  const clips = await fetchPackClips(packId, currentRoot);
+  if (!clips.length) {
+    flashUse(`No baked clips for ${packId}`);
+    return;
+  }
+  if (mixer) {
+    try {
+      mixer.stopAllAction();
+    } catch {
+      /* */
+    }
+  }
+  mixer = new THREE.AnimationMixer(currentRoot);
+  window._currentAnimations = clips;
+  mixer.clipAction(clips[0]).reset().play();
+  mixer.update(1 / 30);
+  reGroundAfterAnimSample(currentRoot, 0);
+  const raceSi =
+    currentRoot.userData.grudgeRaceId ||
+    document.getElementById('previewRace')?.value ||
+    'western-kingdoms';
+  enforceCharacterSi(currentRoot, raceSi);
+  fillAnimUi(clips);
+  const useAnim = document.getElementById('useAnimPack');
+  if (useAnim) useAnim.textContent = packId;
+  const packEl = document.getElementById('useAnimPackActive');
+  if (packEl) packEl.textContent = packId;
+  flashUse(`${packId}: ${clips.length} clips · playing ${clips[0].name}`);
 }
 
 async function playBakedOnCharacter(entry, raceId) {
   const model = await loadCharacterKit(raceId);
-  const { prep: mats } = await prepAndRebindMaterials(model, {
-    path: entry.path || entry.r2Key,
-    name: entry.name,
-  });
+  // NEVER prepAndRebindMaterials on grudge6 — fleet atlas already bound
+  const mats = materialHealth(model);
   const hostEntry = {
     kind: 'character',
     name: raceId,
     path: 'models/grudge6/races',
     cdnUrl: RACE_KITS[raceId]?.fbx || RACE_KITS[raceId]?.r2,
   };
-  const info = deployModel(model, { entry: hostEntry });
+  const info = deployModel(model, { facePlusZ: true, entry: hostEntry });
   currentRoot = model;
   scene.add(model);
   rebuildMeshIndex(model);
+
+  // Resolve pack + clip rel from entry
+  let rel =
+    entry.bakedRel ||
+    (entry.path && /anims\/baked\//i.test(entry.path)
+      ? String(entry.path)
+          .replace(/^.*anims\/baked\//i, '')
+          .replace(/\.json$/i, '')
+      : null);
+  const packHint =
+    (rel && String(rel).split('/')[0]) ||
+    animPackHint(entry) ||
+    'sword_shield';
+
+  await finalizeGrudge6CharacterPresentation(model, {
+    preset: /bow|longbow|ranger/i.test(packHint)
+      ? 'ranger'
+      : /magic|staff/i.test(packHint)
+        ? 'mage'
+        : 'warrior',
+    packId: packHint,
+    autoAnim: false,
+  });
   setDiag(info, mats, `baked-on-grudge6 (${raceId})`, hostEntry);
 
-  const rel = entry.bakedRel;
-  const urls = [
-    `${ARENA}/anims/baked/${encodeURI(rel)}.json`,
-    `${OPEN}/anims/baked/${encodeURI(rel)}.json`,
-  ];
-  let clip = null;
-  for (const url of urls) {
-    try {
-      const r = await fetch(url, { mode: 'cors' });
-      if (!r.ok) continue;
-      const json = await r.json();
-      clip = THREE.AnimationClip.parse(json);
-      // Best practice: baked Bip001 = quaternion-only on grounded kit
-      clip = new THREE.AnimationClip(
-        clip.name,
-        clip.duration,
-        clip.tracks.filter((t) => t.name.endsWith('.quaternion')),
-        clip.blendMode,
-      );
-      clip = rematchClip(model, clip);
-      break;
-    } catch {
-      /* next */
-    }
+  let clip = rel ? await fetchBakedClip(rel, model) : null;
+  if (!clip) {
+    // Fall back to pack idle list
+    const packClips = await fetchPackClips(packHint, model);
+    clip = packClips[0] || null;
+    if (clip && !rel) rel = `${packHint}/${clip.name}`;
   }
-  if (!clip) throw new Error('Baked Bip001 clip not found (prefer anims/baked/*.json)');
-  clip = stripPositionTracks(clip); // also drops .scale (100× retarget)
+  if (!clip) {
+    throw new Error(
+      `Baked Bip001 clip not found for ${rel || entry.name}. ` +
+        `Need anims/baked/{pack}/{clip}.json (open.grudge-studio.com or assets CDN).`,
+    );
+  }
+
+  const packId = (rel && String(rel).split('/')[0]) || packHint || 'sword_shield';
+  const siblings = await fetchPackClips(packId, model);
+  const clips = [clip];
+  for (const c of siblings) {
+    if (c.name !== clip.name) clips.push(c);
+  }
+
   mixer = new THREE.AnimationMixer(model);
-  mixer.clipAction(clip).play();
+  mixer.clipAction(clip).reset().play();
   mixer.update(1 / 30);
   reGroundAfterAnimSample(model, 0);
-  const si = enforceCharacterSi(model, 1.8);
-  const look = diagnoseCharacterLook(model);
-  window._currentAnimations = [clip];
-  fillAnimUi([clip]);
+  mixer.update(1 / 30);
+  reGroundAfterAnimSample(model, 0);
+  const si = enforceCharacterSi(model, raceId);
+  const look = diagnoseCharacterLook(model, { raceId });
+  window._currentAnimations = clips;
+  fillAnimUi(clips);
   frameCamera(model);
   const h = si.heightM || info.height;
   const face = info.facingApplied ? ' +Z' : '';
+  const thr = raceHeightM(raceId);
   document.getElementById('viewerInfo').textContent =
-    `baked Bip001 JSON · ${clip.duration.toFixed(2)}s · bones ${info.bones.length} · h=${h.toFixed(2)}m · feetY=${charBodyBox(model).min.y.toFixed(3)}${face}` +
+    `baked Bip001 · ${clip.name} · ${clip.duration.toFixed(2)}s · ${boneTruthLabel(model)} · h=${h.toFixed(2)}m (race ${thr}m) · feetY=${charBodyBox(model).min.y.toFixed(3)}${face}` +
     (look.ok ? ' · look OK' : ` · LOOK ${look.issues.map((i) => i.id).join(',')}`);
+  const useAnim = document.getElementById('useAnimPack');
+  if (useAnim) useAnim.textContent = packId;
 }
 
 function fillAnimUi(anims) {
@@ -1994,15 +2496,19 @@ function playAnimIndex(i) {
   const clip = stripPositionTracks(window._currentAnimations[i]);
   window._currentAnimations[i] = clip;
   mixer.clipAction(clip).reset().play();
-  // Sample one frame then re-ground + SI gate — kills hip-float / 100× after attack
+  // Sample one frame then re-ground + race-height SI (not force-1.8)
   if (currentRoot) {
     mixer.update(1 / 30);
     reGroundAfterAnimSample(currentRoot, 0);
-    const si = enforceCharacterSi(currentRoot, 1.8);
+    const raceSi =
+      currentRoot.userData.grudgeRaceId ||
+      document.getElementById('previewRace')?.value ||
+      'western-kingdoms';
+    const si = enforceCharacterSi(currentRoot, raceSi);
     if (si.fixed) {
-      console.warn('[character-correctness] SI re-enforced after clip', si.heightM);
+      console.warn('[character-correctness] SI re-enforced after clip', si.heightM, 'race', raceSi);
     }
-    const look = diagnoseCharacterLook(currentRoot);
+    const look = diagnoseCharacterLook(currentRoot, { raceId: raceSi });
     if (look.issues.length) {
       console.warn('[character-correctness]', look.issues);
     }
@@ -2023,43 +2529,82 @@ function frameCamera(obj) {
 }
 
 function guessRaceId(entry) {
-  const blob = `${entry?.path || ''} ${entry?.name || ''} ${entry?.cdnUrl || ''}`.toLowerCase();
-  if (/brb_|barbarian/.test(blob)) return 'barbarians';
-  if (/elf_|high-?elf|elves/.test(blob)) return 'high-elves';
-  if (/dwf_|dwarf/.test(blob)) return 'dwarves';
-  if (/orc_/.test(blob)) return 'orcs';
-  if (/ud_|undead/.test(blob)) return 'undead';
-  if (/wk_|western|human/.test(blob)) return 'western-kingdoms';
+  const blob = `${entry?.path || ''} ${entry?.r2Key || ''} ${entry?.name || ''} ${entry?.cdnUrl || ''} ${entry?.id || ''}`.toLowerCase();
+  // Legacy D1 folders: models/grudge6/ud|wk|brb|orc|elf|dwf/
+  if (/\/brb\/|brb_|barbarian/.test(blob)) return 'barbarians';
+  if (/\/elf\/|elf_|high-?elf|elves/.test(blob)) return 'high-elves';
+  if (/\/dwf\/|dwf_|dwarf/.test(blob)) return 'dwarves';
+  if (/\/orc\/|orc_/.test(blob)) return 'orcs';
+  if (/\/ud\/|ud_|undead/.test(blob)) return 'undead';
+  if (/\/wk\/|wk_|western|human/.test(blob)) return 'western-kingdoms';
   return document.getElementById('previewRace')?.value || 'western-kingdoms';
 }
 
 async function loadMeshAsset(entry) {
-  // grudge6 race kits always load via SSOT host path (R2 FBX/GLB) — never arena CDN
-  if (isGrudge6RaceKitEntry(entry) && entry.kind === 'character') {
+  // grudge6 race kits (canonical races/ OR legacy grudge6/ud|wk|…) → fleet kit only
+  // kind may be missing on D1; name/path is enough
+  if (isGrudge6RaceKitEntry(entry)) {
     const raceId = guessRaceId(entry);
     const model = await loadCharacterKit(raceId);
-    const { prep: mats } = await prepAndRebindMaterials(model, {
-      path: entry.path || RACE_KITS[raceId]?.fbx,
-      name: entry.name,
-    });
+    // NEVER prepAndRebindMaterials here — it strips fleet bindRaceAtlas maps
+    const mats = materialHealth(model);
     const hostEntry = {
       ...entry,
       kind: 'character',
       path: entry.path || `models/grudge6/races`,
-      cdnUrl: RACE_KITS[raceId]?.fbx,
+      cdnUrl: RACE_KITS[raceId]?.fbx || RACE_KITS[raceId]?.glb,
       source: 'grudge6-ssot',
+      atlasUrl: model.userData.atlasUrl,
     };
-    const info = deployModel(model, { entry: hostEntry });
+    const info = deployModel(model, { facePlusZ: true, entry: hostEntry });
     currentRoot = model;
     scene.add(model);
+    // CRITICAL: multipack default is "everything visible" → floating weapons T-pose soup.
+    // Apply warrior equip + baked idle when Play anims is on (all packs, not just s&s).
+    const presentation = await finalizeGrudge6CharacterPresentation(model, {
+      preset: 'warrior',
+      packId: 'sword_shield',
+      autoAnim: true,
+    });
+    // Re-measure after equip+anim re-ground (deploy info.height can be stale)
+    prepareSkinnedMeasure(model);
+    const feetBox = charBodyBox(model);
+    const h = feetBox.getSize(new THREE.Vector3()).y || info.measure || info.height;
+    const look = diagnoseCharacterLook(model, { raceId });
+    const soup = presentation.soup || countVisibleWeaponSoup(meshIndex);
+    if (soup.soup) {
+      look.ok = false;
+      look.issues.push({
+        id: 'weapon-soup',
+        severity: 'error',
+        detail: `${soup.weapons} weapons + ${soup.extras} props visible — multipack not isolated`,
+      });
+    }
+    if (Math.abs(feetBox.min.y) > 0.08) {
+      look.ok = false;
+      look.issues.push({
+        id: 'hip-float-or-sink',
+        severity: 'error',
+        detail: `feet minY=${feetBox.min.y.toFixed(3)} after equip+anim`,
+      });
+    }
     const report = setDiag(info, mats, `grudge6 R2 SSOT host (${raceId})`, hostEntry);
-    fillAnimUi([]);
     frameCamera(model);
-    const h = info.measure ?? info.height;
+    const nClips = presentation.clips?.length || 0;
+    const loadoutBits = Object.entries(presentation.loadout || {})
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}:${String(v).replace(/^BRB_|^WK_|^ELF_|^DWF_|^ORC_|^UD_/i, '').slice(0, 18)}`)
+      .join(' ');
     document.getElementById('viewerInfo').textContent =
-      `grudge6 SSOT · ${raceId} · h=${h.toFixed(2)}m · feetY=${charBodyBox(model).min.y.toFixed(3)} · unit ${info.unitKind || 'ok'}` +
-      (info.siEnforced ? ' · SI-enforced' : '');
-    return { model, anims: [] };
+      `grudge6 SSOT · ${raceId} · h=${h.toFixed(2)}m · feetY=${feetBox.min.y.toFixed(3)} · unit ${info.unitKind || 'ok'}` +
+      (info.siEnforced ? ' · SI-enforced' : '') +
+      ` · equip ${presentation.preset}` +
+      (loadoutBits ? ` [${loadoutBits}]` : '') +
+      ` · pack ${presentation.packId}` +
+      (nClips ? ` · ${nClips} clips` : ' · ⚠ no baked idle') +
+      (soup.soup ? ' · ⚠ WEAPON SOUP' : '') +
+      (look.ok ? ' · look OK' : ` · LOOK ${look.issues.map((i) => i.id).join(',')}`);
+    return { model, anims: presentation.clips || [] };
   }
 
   let url = await resolveUrl(entry);
@@ -2097,7 +2642,11 @@ async function loadMeshAsset(entry) {
     mixer.update(1 / 30);
     if (report?.profile?.kind === 'character' || report?.profile?.kind === 'animation') {
       reGroundAfterAnimSample(model, 0);
-      enforceCharacterSi(model, 1.8);
+      const raceSi =
+        model.userData.grudgeRaceId ||
+        document.getElementById('previewRace')?.value ||
+        'western-kingdoms';
+      enforceCharacterSi(model, raceSi);
     }
     fillAnimUi(remapped);
   } else {
@@ -2121,113 +2670,73 @@ async function loadMeshAsset(entry) {
  * Everything else under "Play anims on character" is **clips only** → R2 host.
  */
 function isGrudge6RaceKitEntry(entry) {
-  const p = `${entry?.path || ''} ${entry?.cdnUrl || ''} ${entry?.source || ''}`.toLowerCase();
+  const p = `${entry?.path || ''} ${entry?.r2Key || ''} ${entry?.cdnUrl || ''} ${entry?.id || ''} ${entry?.name || ''} ${entry?.source || ''}`.toLowerCase();
   return (
     entry?.source === 'grudge6-ssot' ||
     entry?.source === 'grudge6-curated' ||
+    entry?.sourceSet === 'grudge6' ||
+    // Canonical
     /models\/grudge6\/races\/.*(wk|brb|elf|dwf|orc|ud)_characters/i.test(p) ||
-    /grudge6\/races/i.test(p)
+    /grudge6\/races/i.test(p) ||
+    // Legacy D1 keys (uuid d762b5b8… = models/grudge6/ud/UD_Characters.glb)
+    /models\/grudge6\/(wk|brb|ud|orc|elf|dwf)\/[a-z0-9_]*characters\.(glb|fbx)/i.test(p) ||
+    /(wk|brb|ud|orc|elf|dwf)_characters\.(glb|fbx)/i.test(p)
   );
 }
 
 async function loadAnimClipOnCharacter(entry, raceId) {
-  // Load animation file, then apply to grudge6 R2 host (never secondary mannequin)
-  const onChar = document.getElementById('chkAnimOnChar')?.checked !== false;
-  if (!onChar) {
-    await loadMeshAsset(entry);
-    return;
+  /**
+   * HARD: kind=animation in pipeline = baked Bip001 JSON only
+   * (anims/baked/{pack}/{clip}.json on open/assets CDN).
+   *
+   * models/animations/** Mixamo/Kaykit GLBs are TRASH — never play as anim kind.
+   */
+  const path = String(entry.path || entry.r2Key || entry.cdnUrl || '');
+  if (/models\/animations\//i.test(path) || /kaykit\/rig_/i.test(path)) {
+    throw new Error(
+      'Raw anim dump (models/animations or Kaykit Rig) is not a fleet animation.\n' +
+        'Only anims/baked/{pack}/{clip}.json (Bip001 rotation) is kind=animation.\n' +
+        'Bake Mixamo → Bip001 JSON first, then re-register.',
+    );
   }
-  if (entry.isBakedClip || entry.format === 'json') {
+
+  // Baked JSON SSOT
+  if (entry.isBakedClip || entry.format === 'json' || /anims\/baked\//i.test(path)) {
     await playBakedOnCharacter(entry, raceId);
     return;
   }
 
-  // Race kit entries: show the kit itself (SSOT mesh), not "anim file as body"
-  if (isGrudge6RaceKitEntry(entry) && entry.kind === 'character') {
-    await loadMeshAsset(entry);
+  // Race kit opened under anim filter by mistake
+  if (isGrudge6RaceKitEntry(entry)) {
+    await loadMeshAsset({ ...entry, kind: 'character', source: 'grudge6-ssot' });
     return;
   }
 
-  const url = await resolveUrl(entry);
-  if (!url) throw new Error('No animation URL');
-  if (isForbiddenCharacterHost(url)) {
-    throw new Error(
-      'Blocked secondary character host URL. Use R2 models/grudge6/races/* or baked Bip001 JSON.',
-    );
-  }
-
-  const gltf = await loadGltfOrFbx(url);
-  let anims = gltf.animations || [];
-
-  // KILL: "embedded skinned anim" path — Mixamo/GLB mannequins are 100× wrong scale
-  // and wrong skeleton. Always extract clips onto grudge6 R2 host when on-character.
-  let hasSkin = false;
-  gltf.scene?.traverse((o) => {
-    if (o.isSkinnedMesh) hasSkin = true;
-  });
-
-  if (!anims.length) {
-    // mesh-only file — still do not use as grudge6 substitute
-    if (hasSkin && !isGrudge6RaceKitEntry(entry)) {
-      throw new Error(
-        'This file has a skinned mesh but no clips, and is not a grudge6 race kit. ' +
-          'Use models/grudge6/races/*_Characters.fbx/glb or baked anims/baked/*.json.',
-      );
-    }
-    await loadMeshAsset(entry);
-    return;
-  }
-
-  const model = await loadCharacterKit(raceId);
-  const { prep: mats } = await prepAndRebindMaterials(model, {
-    path: entry.path || entry.r2Key,
-    name: entry.name,
-  });
-  const hostEntry = {
-    kind: 'character',
-    name: raceId,
-    path: 'models/grudge6/races',
-    cdnUrl: RACE_KITS[raceId]?.fbx || RACE_KITS[raceId]?.r2,
-  };
-  const info = deployModel(model, { entry: hostEntry });
-  currentRoot = model;
-  scene.add(model);
-  setDiag(
-    info,
-    mats,
-    hasSkin
-      ? `clips-from-raw→grudge6 host (${raceId}) · embedded mesh discarded`
-      : `clip-on-grudge6 (${raceId})`,
-    hostEntry,
+  // Everything else that D1 labeled "animation" is wrong — do not extract Mixamo onto kit
+  throw new Error(
+    `Not a valid fleet animation: ${path || entry.name}\n` +
+      'Expected anims/baked/**/*.json (Bip001). ' +
+      'Raw FBX/GLB anim packs are author inputs only.',
   );
-  mixer = new THREE.AnimationMixer(model);
-  // strip position + scale tracks (100× retarget); rematch Bip001 names
-  const remapped = anims.map((c) => stripPositionTracks(rematchClip(model, c)));
-  window._currentAnimations = remapped;
-  mixer.clipAction(remapped[0]).play();
-  mixer.update(1 / 30);
-  reGroundAfterAnimSample(model, 0);
-  const si = enforceCharacterSi(model, 1.8);
-  fillAnimUi(remapped);
-  frameCamera(model);
-  const look = diagnoseCharacterLook(model);
-  const fmt = (entry.format || url.split('.').pop() || '').toUpperCase();
-  const warnFmt =
-    fmt !== 'JSON'
-      ? ` · ⚠ raw ${fmt} (prefer baked Bip001 JSON)`
-      : '';
-  document.getElementById('viewerInfo').textContent =
-    `anim→grudge6 R2 host · ${anims.length} clips · rematched · h=${si.heightM.toFixed(2)}m · feetY=${charBodyBox(model).min.y.toFixed(3)}` +
-    warnFmt +
-    (look.ok ? ' · look OK' : ` · LOOK ${look.issues.map((i) => i.id).join(',')}`);
 }
 
 function pushDeepLink(entry) {
   if (!entry || !window.history?.replaceState) return;
   const sp = new URLSearchParams();
   if (entry.grudgeUuid) sp.set('uuid', entry.grudgeUuid);
-  if (entry.path) sp.set('path', entry.path);
-  if (entry.kind) sp.set('kind', entry.kind);
+  // Always publish canonical races/ path for race kits (never legacy ud/wk/brb folders)
+  let path = entry.path || '';
+  if (isGrudge6RaceKitEntry(entry) || isTrashGrudge6Path(path)) {
+    const pipeId = guessRaceId(entry);
+    const kit = RACE_KITS[pipeId];
+    if (kit?.glb) {
+      path = String(kit.glb)
+        .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
+        .replace(/^\//, '');
+    }
+  }
+  if (path) sp.set('path', path);
+  if (entry.kind || isGrudge6RaceKitEntry(entry)) sp.set('kind', entry.kind || 'character');
   const q = document.getElementById('searchBox')?.value?.trim();
   if (q) sp.set('q', q);
   const url = `${location.pathname}?${sp.toString()}`;
@@ -2236,6 +2745,26 @@ function pushDeepLink(entry) {
 
 async function openViewer(entry) {
   if (!entry) return;
+  // HARD: never open trash grudge6 paths — swap to fleet SSOT row
+  if (isTrashGrudge6Path(entry.path || entry.r2Key || entry.cdnUrl || '')) {
+    const pipeId = guessRaceId(entry);
+    const ssot = (catalogAll || allModels || []).find(
+      (m) =>
+        (m.source === 'grudge6-ssot' || (m.sources || []).includes('grudge6-ssot')) &&
+        guessRaceId(m) === pipeId,
+    );
+    if (ssot) entry = ssot;
+    else {
+      // synthesize minimal SSOT entry
+      entry = {
+        ...entry,
+        source: 'grudge6-ssot',
+        kind: 'character',
+        path: RACE_KITS[pipeId]?.glb?.replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '') || entry.path,
+        cdnUrl: RACE_KITS[pipeId]?.fbx,
+      };
+    }
+  }
   if (!renderer) initViewer();
   else {
     viewerLoopActive = true;
@@ -2248,7 +2777,7 @@ async function openViewer(entry) {
   document.body.style.overflow = 'hidden';
   const le = document.getElementById('viewerLoading');
   le.style.display = 'flex';
-  le.innerHTML = '<div class="spinner"></div><p>Loading production mesh…</p>';
+  le.innerHTML = '<div class="spinner"></div><p>Loading fleet SSOT mesh…</p>';
   clearSceneModel();
   setDiag(null);
   fillAnimUi([]);
@@ -2256,10 +2785,16 @@ async function openViewer(entry) {
   selectedMeshName = null;
   fillUsePanel(entry);
   pushDeepLink(entry);
-  const raceId = document.getElementById('previewRace')?.value || 'western-kingdoms';
+  const raceId =
+    (isGrudge6RaceKitEntry(entry) ? guessRaceId(entry) : null) ||
+    document.getElementById('previewRace')?.value ||
+    'western-kingdoms';
   try {
     if (entry.kind === 'animation' || entry.isBakedClip) {
       await loadAnimClipOnCharacter(entry, raceId);
+    } else if (isGrudge6RaceKitEntry(entry)) {
+      // Always fleet kit — ignore entry.cdnUrl pointing at trash/legacy GLB
+      await loadMeshAsset({ ...entry, kind: 'character', source: 'grudge6-ssot' });
     } else {
       await loadMeshAsset(entry);
     }
@@ -2273,6 +2808,12 @@ async function openViewer(entry) {
   }
 }
 
+/**
+ * Deep-link by grudgeUuid / path.
+ * Race kits ALWAYS resolve to curated fleet SSOT (never legacy D1 trash).
+ * Example: ?uuid=3ab2b12a-…&path=models/grudge6/races/BRB_Characters.glb
+ *   → barbarians grudge6-ssot → loadCharacterKit FBX+atlas
+ */
 function findEntryByDeepLink() {
   const sp = new URLSearchParams(location.search);
   const uuid = sp.get('uuid');
@@ -2287,17 +2828,66 @@ function findEntryByDeepLink() {
   if (!uuid && !path) return null;
   const pathN = (path || '').replace(/\\/g, '/').replace(/^\//, '').toLowerCase();
   const uuidN = (uuid || '').toLowerCase();
-  return (
-    allModels.find(
+
+  // 1) Force fleet race SSOT from path or trash rewrite
+  const fleetFromPath = detectFleetRaceId(pathN) || detectFleetRaceId(path || '');
+  if (fleetFromPath || isTrashGrudge6Path(pathN) || /races\/.*(wk|brb|ud|orc|elf|dwf)_characters/i.test(pathN)) {
+    const pipeId =
+      {
+        human: 'western-kingdoms',
+        barbarian: 'barbarians',
+        elf: 'high-elves',
+        dwarf: 'dwarves',
+        orc: 'orcs',
+        undead: 'undead',
+      }[fleetFromPath || detectFleetRaceId(pathN)] || guessRaceId({ path: pathN, name: pathN });
+    const ssot =
+      (catalogAll || []).find(
+        (m) =>
+          (m.source === 'grudge6-ssot' || (m.sources || []).includes('grudge6-ssot')) &&
+          guessRaceId(m) === pipeId,
+      ) ||
+      (allModels || []).find(
+        (m) =>
+          (m.source === 'grudge6-ssot' || (m.sources || []).includes('grudge6-ssot')) &&
+          guessRaceId(m) === pipeId,
+      );
+    if (ssot) {
+      if (uuidN) ssot.grudgeUuid = ssot.grudgeUuid || uuidN;
+      return ssot;
+    }
+  }
+
+  // 2) Search full catalog (ready filter may hide rows) + ready list
+  const pool = [...(catalogAll || []), ...(allModels || [])];
+  const seen = new Set();
+  const uniq = [];
+  for (const m of pool) {
+    const id = m.id || m.path || m.grudgeUuid;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    uniq.push(m);
+  }
+  let hit =
+    uniq.find(
       (m) =>
         (uuidN && m.grudgeUuid && m.grudgeUuid.toLowerCase() === uuidN) ||
         (pathN && (m.path || '').toLowerCase() === pathN),
     ) ||
-    allModels.find(
-      (m) => pathN && (m.path || '').toLowerCase().endsWith(pathN),
-    ) ||
-    null
-  );
+    uniq.find((m) => pathN && (m.path || '').toLowerCase().endsWith(pathN)) ||
+    null;
+
+  // 3) UUID hit on trash path → redirect to SSOT race kit
+  if (hit && (isTrashGrudge6Path(hit.path) || isGrudge6RaceKitEntry(hit))) {
+    const pipeId = guessRaceId(hit);
+    const ssot = uniq.find(
+      (m) =>
+        (m.source === 'grudge6-ssot' || (m.sources || []).includes('grudge6-ssot')) &&
+        guessRaceId(m) === pipeId,
+    );
+    if (ssot) return ssot;
+  }
+  return hit;
 }
 
 // ── Local drop ─────────────────────────────────────────
@@ -2859,7 +3449,8 @@ function filterToHarvestAssets() {
   if (box) box.value = 'harvest tree rock ore pebble stump debris nature crystal';
   activeKind = 'harvest';
   activeGroup = null;
-  activeProd = null; // show ready + partial so gaps are visible
+  setProdInventory('ready'); // game-ready only — never unhide raw dumps
+  activeFormat = null; // GLB meshes (json clips rarely harvest)
   page = 0;
   applyFilters();
   // If kind filter empty (no harvest-tagged yet), fall back to search-only
@@ -2878,7 +3469,8 @@ function filterToCombatAssets() {
   }
   activeKind = 'projectile';
   activeGroup = null;
-  activeProd = null;
+  setProdInventory('ready');
+  activeFormat = null;
   page = 0;
   applyFilters();
   if (!filtered.length) {

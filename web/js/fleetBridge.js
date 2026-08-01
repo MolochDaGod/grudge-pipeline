@@ -18,30 +18,39 @@ export const FLEET_HOSTS = {
   aiWorker: 'https://grudge-asset-deploy-ai.grudge-studio.workers.dev',
 };
 
-/** Anim packs shared across RTS_TOON / grudge6 races (Bip001). */
+/**
+ * Anim packs shared across RTS_TOON / grudge6 races (Bip001).
+ * Local Mixamo sources (armature FBX <1000KB, no mesh): D:/Games/Models/_anim_packs
+ * Gap stage: D:/Games/Models/_anim_packs/_gap_fill_stage
+ * Inventory: /api/anim-gap-fill.json · /api/anim-gap-summary.json
+ */
 export const ANIM_PACKS = {
   sword_shield: {
     id: 'sword_shield',
     label: '1H + Shield',
     baked: 'anims/baked/sword_shield',
+    local: 'D:/Games/Models/_anim_packs/sword_shield',
     weapons: ['sword', 'dagger', 'knife'],
   },
   '2h_melee': {
     id: '2h_melee',
     label: '2H Melee',
     baked: 'anims/baked/2h_melee',
+    local: 'D:/Games/Models/_anim_packs/greatsword',
     weapons: ['greatsword', 'axe', 'hammer', 'mace', 'spear'],
   },
   longbow: {
     id: 'longbow',
     label: 'Longbow',
     baked: 'anims/baked/longbow',
+    local: 'D:/Games/Models/_anim_packs/longbow',
     weapons: ['bow', 'crossbow'],
   },
   magic: {
     id: 'magic',
     label: 'Magic / Staff',
     baked: 'anims/baked/magic',
+    local: 'D:/Games/Models/_anim_packs/magic_spell',
     weapons: ['staff', 'wand', 'tome'],
   },
   unarmed: {
@@ -50,11 +59,51 @@ export const ANIM_PACKS = {
     baked: 'anims/baked/unarmed',
     weapons: ['unarmed', 'fists'],
   },
+  rifle: {
+    id: 'rifle',
+    label: 'Rifle / Gun',
+    baked: 'anims/baked/rifle',
+    local: 'D:/Games/Models/_anim_packs/rifle',
+    weapons: ['rifle', 'gun', 'musket'],
+  },
+  pistol: {
+    id: 'pistol',
+    label: 'Pistol',
+    baked: 'anims/baked/pistol',
+    local: 'D:/Games/Models/_anim_packs/pistol',
+    weapons: ['pistol', 'sidearm'],
+  },
+  farming: {
+    id: 'farming',
+    label: 'Farming / Harvest',
+    baked: 'anims/baked/farming',
+    local: 'D:/Games/Models/_anim_packs/farming',
+    weapons: ['hoe', 'watering', 'wheelbarrow', 'pickaxe', 'hatchet'],
+  },
+  traversal: {
+    id: 'traversal',
+    label: 'Climb / Swim',
+    baked: 'anims/baked/traversal',
+    local: 'D:/Games/Models/_anim_packs/traversal',
+    weapons: [],
+  },
   cavalry: {
     id: 'cavalry',
     label: 'Cavalry / Mount',
     baked: 'anims/baked/cavalry',
     weapons: ['mount'],
+  },
+  twohand_hammer: {
+    id: 'twohand_hammer',
+    label: '2H Hammer (scarecrow)',
+    baked: 'anims/baked/twohand_hammer',
+    weapons: ['hammer', 'mace', 'warhammer'],
+  },
+  polearm: {
+    id: 'polearm',
+    label: 'Polearm',
+    baked: 'anims/baked/polearm',
+    weapons: ['spear', 'polearm', 'halberd'],
   },
 };
 

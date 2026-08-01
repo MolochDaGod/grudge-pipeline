@@ -81,7 +81,7 @@ ${forgeHint}
 // layer: ${profile.physicsLayer}
 // badge: ${productionBadge(m).label} · score ${productionScore(m)}
 const modelUrl = ${JSON.stringify(url)};
-// GLTFLoader + enforceCharacterSi(${HUMAN_HEIGHT_M}) + feet y=0 + art-forward +Z
+// GLTFLoader + enforceCharacterSi(raceId) — race heights (orc=2m, human=1.8m), unit snap only
 // Equipment = child mesh visibility (mesh_ids), not model swap.
 // Modular HUD: head/body/arms/legs/cloak/wings/mount/weapon/shield
 // Anims: Bip001 pack sword_shield|2h_melee|longbow|magic — stripPositionTracks`;
@@ -121,16 +121,24 @@ const url = ${JSON.stringify(url)};
 
 export function animPackHint(m) {
   if (!m) return null;
-  const blob = `${m.group || ''} ${m.path || ''} ${m.name || ''} ${m.bakedRel || ''}`.toLowerCase();
+  const blob = `${m.group || ''} ${m.path || ''} ${m.name || ''} ${m.bakedRel || ''} ${m.source || ''}`.toLowerCase();
+  if (m.isBakedClip && m.bakedRel) {
+    const pack = String(m.bakedRel).split('/')[0];
+    return pack || null;
+  }
   if (blob.includes('sword') || blob.includes('shield')) return 'sword_shield';
   if (blob.includes('longbow') || blob.includes('bow')) return 'longbow';
   if (blob.includes('magic') || blob.includes('cast')) return 'magic';
   if (blob.includes('polearm') || blob.includes('spear')) return 'polearm';
   if (blob.includes('unarmed') || blob.includes('punch')) return 'unarmed';
   if (blob.includes('loco') || blob.includes('walk') || blob.includes('run')) return 'locomotion';
-  if (m.isBakedClip && m.bakedRel) {
-    const pack = m.bakedRel.split('/')[0];
-    return pack || null;
+  // grudge6 race multipacks — default warrior pack (equip hides weapon soup)
+  if (
+    m.kind === 'character' ||
+    m.source === 'grudge6-ssot' ||
+    /grudge6\/races|wk_|brb_|elf_|dwf_|orc_|ud_/.test(blob)
+  ) {
+    return 'sword_shield';
   }
   return m.kind === 'animation' ? 'unknown' : null;
 }

@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-08-01T03:53:22.073Z",
+  "rule": "Mixamo armature FBX under 1000KB — no mesh body required; retarget → Bip001 JSON",
+  "animRoot": "D:/Games/Models/_anim_packs",
+  "stageRoot": "D:/Games/Models/_anim_packs/_gap_fill_stage",
+  "totals": {
+    "localScanned": 204,
+    "onCdn": 0,
+    "gaps": 204,
+    "stagedPriority": 159
+  },
+  "gapsByPack": {
+    "longbow": 39,
+    "rifle": 14,
+    "sword_shield": 17,
+    "pistol": 20,
+    "2h_melee": 51,
+    "farming": 25,
+    "magic": 29,
+    "traversal": 9
+  },
+  "roleGaps": {
+    "utility": 48,
+    "block": 6,
+    "death": 6,
+    "other": 25,
+    "run": 31,
+    "idle": 24,
+    "attack": 31,
+    "hit": 7,
+    "walk": 26
+  }
+}

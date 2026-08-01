@@ -15,9 +15,46 @@ export const PROD_TEXTURE_MAX_PX = 1024;
 export const CDN_ROOT = 'https://assets.grudge-studio.com';
 /**
  * Minimum score for "Deploy bake → ready" when metadata is sparse.
- * Raised so bare / weakly-tagged GLBs never pass as game-ready.
+ * Pass-2 floor (85): bare / weakly-tagged / unlabeled GLBs never pass as game-ready.
  */
-export const PROD_READY_SCORE = 72;
+export const PROD_READY_SCORE = 85;
+
+/** Secondary floors for flagged-but-weak rows. */
+export const PROD_BAKED_MIN_SCORE = 72;
+export const PROD_DEPLOY_FLAG_MIN_SCORE = 78;
+export const PROD_CLIP_MIN_SCORE = 70;
+
+/** Path fragments that mean author/temp junk — never inventory as game-ready. */
+export const RAW_PATH_KILL = [
+  /\/raw\//i,
+  /\/tmp\//i,
+  /\/temp\//i,
+  /\/scratch\//i,
+  /\/wip\//i,
+  /\/_backup/i,
+  /\/backup_/i,
+  /\.pre-opt\./i,
+  /\.raw\./i,
+  /\/test\//i,
+  /\/debug\//i,
+  /\/unused\//i,
+  /\/archive\//i,
+  /\/old\//i,
+  /\/drop\//i,
+  /\/draft\//i,
+  /\/staging\//i,
+  /\/import\//i,
+  /meshy/i,
+  /placeholder/i,
+  /t-pose|tpose/i,
+  /\/exports?\//i,
+  /\/_trash/i,
+  /\/deleted\//i,
+  // Raw Mixamo / Kaykit / author anim GLBs — NOT Bip001 baked JSON
+  /models\/animations\//i,
+  /\/animations\/(grudge6|mixamo|kaykit|rig_)/i,
+  /rig_medium_/i,
+];
 
 /** Named bake stages (align with ObjectStore grudge-convert). */
 export const BAKE_STAGES = {
@@ -28,11 +65,25 @@ export const BAKE_STAGES = {
 };
 
 function pathOf(m) {
-  return String(m?.path || m?.cdnUrl || m?.r2Key || '').toLowerCase();
+  // Strip URL origin, query, and multipack mesh fragments (…glb#mesh:sword)
+  let p = String(m?.path || m?.r2Key || m?.cdnUrl || '');
+  p = p.replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '');
+  p = p.split('?')[0].split('#')[0];
+  return p.toLowerCase();
 }
 
 function fmtOf(m) {
-  return String(m?.format || '').toLowerCase().replace(/^\./, '');
+  let fmt = String(m?.format || '').toLowerCase().replace(/^\./, '');
+  // Guard multipack garbage like "glb#mesh:axe-2"
+  if (fmt.includes('#') || fmt.includes('/')) fmt = fmt.split('#')[0].split('/').pop();
+  if (fmt && /^[a-z0-9]+$/i.test(fmt) && fmt.length <= 5) return fmt;
+  const p = pathOf(m);
+  const base = p.split('/').pop() || '';
+  const ext = base.includes('.') ? base.split('.').pop() : '';
+  return String(ext || fmt || '')
+    .toLowerCase()
+    .replace(/^\./, '')
+    .split('#')[0];
 }
 
 function isCdnSsot(m) {
@@ -44,6 +95,28 @@ function isCdnSsot(m) {
   return false;
 }
 
+/**
+ * Known production prefixes on R2 — GLBs here are fleet-shipped packs.
+ * Metadata is often sparse in D1; path + glb is enough to treat as surface candidates.
+ */
+const PROD_PATH_PREFIXES = [
+  /^models\/grudge6\//i,
+  /^models\/projectiles\//i,
+  /^models\/weapons\//i,
+  /^models\/codex\//i,
+  /^models\/harvest\//i,
+  /^models\/nature\//i,
+  /^models\/vfx\//i,
+  /^models\/buildings\//i,
+  /^anims\/baked\//i,
+  /^ui\/icons\//i,
+];
+
+export function isKnownProductionPath(m) {
+  const p = pathOf(m);
+  return PROD_PATH_PREFIXES.some((re) => re.test(p));
+}
+
 /** True when catalog metadata claims usable albedo / atlas / vcol (not bare grey mesh). */
 export function hasProductionSurface(m) {
   if (!m) return false;
@@ -51,11 +124,41 @@ export function hasProductionSurface(m) {
   if (m.textureStatus === 'atlas' || m.textureStatus === 'embedded') return true;
   if (m.textureStatus === 'vertex-color') return true;
   if ((m.textures || 0) > 0) return true;
-  // Explicit glb2glb bake implies textures were processed (may be atlas-bound)
+  // Explicit glb2glb / production bake implies textures were processed (atlas-bound OK)
   if (m.productionBaked === true || m.bakePipeline === 'glb2glb') return true;
-  // Weapons/icons often ship as single-atlas multipacks without textures count
-  if (m.kind === 'weapon' && fmtOf(m) === 'glb' && isCdnSsot(m)) return true;
+  // Known production R2 prefixes (codex / grudge6 / weapons / projectiles) —
+  // D1 often omits textureStatus; these packs were shipped as textured GLBs.
+  if (fmtOf(m) === 'glb' && isCdnSsot(m) && isKnownProductionPath(m)) {
+    // Still reject multipack fragment junk and untitled mesh extracts
+    const name = String(m.name || '').toLowerCase();
+    if (/^untitled|mesh:|#mesh/i.test(name)) return false;
+    if (/#mesh:/i.test(String(m.path || m.r2Key || ''))) return false;
+    return true;
+  }
+  // Weapons: production-flagged or multipack race kit path
+  if (
+    m.kind === 'weapon' &&
+    fmtOf(m) === 'glb' &&
+    isCdnSsot(m) &&
+    (m.deployReady === true ||
+      m.productionBaked === true ||
+      /grudge6|weapons\/|multipack|toon/i.test(pathOf(m)))
+  ) {
+    return true;
+  }
   return false;
+}
+
+/**
+ * True when path/name is author/temp junk that should never live in the ready index.
+ * Used by D1 purge planner and ready gate.
+ */
+export function isRawKillPath(m) {
+  if (!m) return false;
+  const path = pathOf(m);
+  const cdn = String(m.cdnUrl || '');
+  const name = String(m.name || '');
+  return RAW_PATH_KILL.some((re) => re.test(path) || re.test(cdn) || re.test(name));
 }
 
 /**
@@ -81,6 +184,7 @@ export function productionScore(m) {
   else if (m.textureStatus === 'vertex-color') score += 12;
   else if (m.isBakedClip) score += 10;
   else if (m.productionBaked || m.bakePipeline === 'glb2glb') score += 10;
+  else if (fmt === 'glb' && isKnownProductionPath(m)) score += 12; // D1-sparse fleet packs
   else score -= 18; // bare mesh / missing maps
 
   // Meshed
@@ -89,6 +193,8 @@ export function productionScore(m) {
 
   // SI / glb2glb bake
   if (m.scaleBaked || m.productionBaked || m.bakePipeline === 'glb2glb') score += 18;
+  else if (fmt === 'glb' && isKnownProductionPath(m))
+    score += 12; // fleet packs on production prefixes (D1 often omits scale flags)
   if (m.scaleProfile === 'character' || m.scaleProfile === 'animation_clip') score += 6;
 
   // Web deploy packaging
@@ -99,9 +205,10 @@ export function productionScore(m) {
   if (isCdnSsot(m)) score += 14;
   if (cdn.includes('grudge-arena') && /cdn\/assets\/characters/i.test(cdn)) score -= 60;
 
-  // Explicit production flags
+  // Explicit production flags + known path boost
   if (m.productionBaked === true || m.deployReady === true) score += 12;
   if (m.source === 'grudge6-ssot' || m.source === 'baked-bip001') score += 8;
+  if (isKnownProductionPath(m) && fmt === 'glb') score += 8;
 
   // Bip001 / grudge6 skeleton contract
   if (
@@ -116,9 +223,8 @@ export function productionScore(m) {
 
 /**
  * Strict gameplay / pipeline inventory gate (DEFAULT catalog filter):
- * - **Game-ready only**: textured / atlas / embedded / glb2glb production surface
- * - GLB on R2 (or baked Bip001 JSON clips)
- * - **Never** FBX, OBJ, bare untextured dumps, arena character CDN, or unknown hosts
+ * - **Game-ready only**: labeled · textured · scaled · converted (GLB/json) · CDN
+ * - **Never** FBX/OBJ/raw dumps, untextured greys, unlabeled junk, backup/wip paths
  *
  * Used when activeProd === 'ready' on grudge-pipeline.vercel.app.
  */
@@ -128,6 +234,7 @@ export function isProductionDeployReady(m) {
   const path = pathOf(m);
   const fmt = fmtOf(m);
   const cdn = String(m.cdnUrl || '');
+  const name = String(m.name || '').trim();
 
   // KILL: secondary arena character host (stale 100× / wrong scale)
   if (cdn.includes('grudge-arena') && /cdn\/assets\/characters/i.test(cdn)) {
@@ -135,9 +242,38 @@ export function isProductionDeployReady(m) {
   }
   if (/cdn\/assets\/characters/i.test(path)) return false;
 
-  // Baked anim clips (rotation-only Bip001) — deploy-ready for play-on-character
+  // KILL: legacy grudge6 trash folders (models/grudge6/ud|wk|brb/… — not races/)
+  // These are D1 ghosts that open as empty/no-mesh; fleet SSOT is races/* only.
+  if (
+    /models\/grudge6\/(wk|brb|ud|orc|elf|dwf)\//i.test(path) ||
+    /models\/grudge6\/30characters/i.test(path) ||
+    /models\/characters\/grudge6\//i.test(path)
+  ) {
+    return false;
+  }
+
+  // KILL: author/temp/backup/WIP paths
+  if (isRawKillPath(m)) return false;
+
+  // Must have a usable label (name or path basename)
+  if (!name && !path) return false;
+  if (/^(untitled|mesh|object|model|geo|export|new|asset)[\s_-]*\d*$/i.test(name)) {
+    return false;
+  }
+
+  // Baked anim clips (rotation-only Bip001 JSON ONLY)
+  // KILL: models/animations/** Mixamo GLB dumps classified as "animation" in D1
+  if (/models\/animations\//i.test(path)) return false;
   if (m.isBakedClip || (fmt === 'json' && /anims\/baked/.test(path))) {
-    return true;
+    // Prefer labeled pack path: anims/baked/{pack}/{clip}.json
+    if (/anims\/baked\/[^/]+\/.+\.json/i.test(path) || m.bakedRel) return true;
+    // Or curated BAKED_PACKS entries with group
+    if (m.group && /baked\//i.test(m.group)) return true;
+    return productionScore(m) >= PROD_CLIP_MIN_SCORE;
+  }
+  // Never treat raw FBX/GLB under anim folders as ready
+  if (fmt !== 'json' && (/\/anim/i.test(path) || m.kind === 'animation')) {
+    return false;
   }
 
   // Mesh deploy: production GLB only (never author FBX/OBJ as "ready")
@@ -149,11 +285,25 @@ export function isProductionDeployReady(m) {
   // HARD: must have real surface — no grey/yellow bare mesh in game inventory
   if (!hasProductionSurface(m)) return false;
 
-  // Prefer explicit production bake flags
-  if (m.productionBaked === true || m.bakePipeline === 'glb2glb') {
-    return true;
+  // Kind/label: require inferred or explicit kind (not empty "other" without path signals)
+  const kind = String(m.kind || '').toLowerCase();
+  const labeled =
+    !!kind &&
+    kind !== 'other' &&
+    kind !== 'unknown' &&
+    kind !== '';
+  const pathKindHint =
+    /models\/|characters|weapons|props|nature|ui\/|anims\//i.test(path) ||
+    /grudge6|harvest|projectile|building|codex/i.test(path);
+  if (!labeled && !pathKindHint && !m.labels?.length && !(m.gameUses || []).length) {
+    return false;
   }
-  if (m.deployReady === true && hasProductionSurface(m)) {
+
+  // Prefer explicit production bake flags — still need high score (pass-2)
+  if (m.productionBaked === true || m.bakePipeline === 'glb2glb') {
+    return productionScore(m) >= PROD_BAKED_MIN_SCORE;
+  }
+  if (m.deployReady === true && hasProductionSurface(m) && productionScore(m) >= PROD_DEPLOY_FLAG_MIN_SCORE) {
     return true;
   }
 
@@ -161,6 +311,93 @@ export function isProductionDeployReady(m) {
   if (productionScore(m) >= PROD_READY_SCORE) return true;
 
   return false;
+}
+
+/**
+ * Collapse catalog duplicates: same basename / uuid / near-identical path.
+ * Keeps the highest productionScore entry; marks losers with _dedupedOf.
+ * @param {object[]} models
+ * @returns {{ models: object[], removed: number, groups: number }}
+ */
+export function purgeCatalogDuplicates(models) {
+  if (!Array.isArray(models) || !models.length) {
+    return { models: [], removed: 0, groups: 0 };
+  }
+
+  const byUuid = new Map();
+  const byStem = new Map();
+
+  const stemOf = (m) => {
+    const p = pathOf(m);
+    let base = p.split('/').pop() || '';
+    base = base.replace(/\.(glb|gltf|fbx|obj|dae|json)$/i, '');
+    // Collapse author suffixes so sword.raw / sword.prod / sword share one stem
+    base = base
+      .replace(
+        /[._-](raw|pre-opt|preopt|prod|opt|meshopt|glb2glb|bak|old|wip|copy|final|v\d+|duplicate|dup)$/i,
+        '',
+      )
+      .replace(/[_\s]+copy$/i, '')
+      .replace(/\s*\(\d+\)$/i, '');
+    // Prefer dir+stem for common multipacks so WK_Characters ≠ BRB_Characters
+    const dir = p.includes('/') ? p.split('/').slice(-2, -1)[0] || '' : '';
+    const stem = base.toLowerCase();
+    if (dir && stem.length >= 2) return `${dir.toLowerCase()}/${stem}`;
+    return stem;
+  };
+
+  // First pass: uuid winners
+  for (const m of models) {
+    const u = (m.grudgeUuid || '').toLowerCase();
+    if (!u) continue;
+    const prev = byUuid.get(u);
+    if (!prev || productionScore(m) > productionScore(prev)) byUuid.set(u, m);
+  }
+
+  // Second: stem winners (among survivors / no uuid)
+  const uuidWinners = new Set([...byUuid.values()]);
+  for (const m of models) {
+    const u = (m.grudgeUuid || '').toLowerCase();
+    if (u && byUuid.get(u) !== m) continue; // lost uuid duel
+    const stem = stemOf(m);
+    if (!stem || stem.length < 2) continue;
+    const prev = byStem.get(stem);
+    if (!prev || productionScore(m) > productionScore(prev)) byStem.set(stem, m);
+  }
+
+  const keep = new Set();
+  for (const m of byUuid.values()) keep.add(m);
+  for (const m of byStem.values()) {
+    // if this stem's winner lost a uuid duel, skip
+    const u = (m.grudgeUuid || '').toLowerCase();
+    if (u && byUuid.has(u) && byUuid.get(u) !== m) continue;
+    keep.add(m);
+  }
+
+  // Always keep curated SSOT even if stem collided
+  for (const m of models) {
+    if (m.source === 'grudge6-ssot' || m.source === 'baked-bip001') keep.add(m);
+  }
+
+  // Assets with unique full paths and no stem collision
+  for (const m of models) {
+    if (keep.has(m)) continue;
+    const stem = stemOf(m);
+    if (!stem) {
+      if (isProductionDeployReady(m) || m.source === 'production') keep.add(m);
+      continue;
+    }
+    const winner = byStem.get(stem);
+    if (winner === m) keep.add(m);
+    else if (!winner && isProductionDeployReady(m)) keep.add(m);
+  }
+
+  const out = models.filter((m) => keep.has(m));
+  return {
+    models: out,
+    removed: models.length - out.length,
+    groups: byStem.size + byUuid.size,
+  };
 }
 
 /**
@@ -177,8 +414,27 @@ export function isGameplayProductionGlb(m) {
     m.productionBaked === true ||
     m.bakePipeline === 'glb2glb' ||
     m.deployReady === true ||
-    productionScore(m) >= 70
+    productionScore(m) >= PROD_READY_SCORE
   );
+}
+
+/**
+ * Classify why a row is NOT game-ready (for D1 purge reports).
+ * @returns {string|null} reason code, or null if ready
+ */
+export function notReadyReason(m) {
+  if (!m) return 'null';
+  if (isProductionDeployReady(m)) return null;
+  const path = pathOf(m);
+  const fmt = fmtOf(m);
+  if (isRawKillPath(m)) return 'raw_kill_path';
+  if (fmt === 'fbx' || fmt === 'obj' || fmt === 'dae') return 'author_source_format';
+  if (fmt === 'gltf') return 'unoptimized_gltf';
+  if (fmt !== 'glb' && fmt !== 'json') return `format_${fmt || 'unknown'}`;
+  if (!isCdnSsot(m)) return 'not_cdn_ssot';
+  if (fmt === 'glb' && !hasProductionSurface(m)) return 'no_surface';
+  if (productionScore(m) < PROD_READY_SCORE) return `score_below_${PROD_READY_SCORE}`;
+  return 'gate_fail';
 }
 
 /**
@@ -242,19 +498,25 @@ export function productionBadge(m) {
 }
 
 /**
- * Ordered candidate URLs for a race kit: production GLB first, then FBX author.
+ * Ordered candidate URLs for a race kit.
+ *
+ * HARD (2026-07-31 BRB screenshot): grudge6 multipack **GLB convert is yellow/orange
+ * sludge + often still +X art-forward**. Skill SSOT: load **FBX + race atlas** first.
+ * GLB is fallback only when FBX fails.
  */
 export function raceKitDeployUrls(kit, isForbidden = () => false) {
-  const ordered = [kit?.glb, kit?.r2, kit?.fbx].filter(Boolean);
+  // FBX first (author + atlas rebind), then GLB deploy attempts
+  const ordered = [kit?.fbx, kit?.glb, kit?.r2].filter(Boolean);
   const uniq = [];
   for (const u of ordered) {
     if (isForbidden(u)) continue;
     if (!uniq.includes(u)) uniq.push(u);
   }
   return uniq.sort((a, b) => {
-    const ag = /\.glb($|\?)/i.test(a) ? 0 : 1;
-    const bg = /\.glb($|\?)/i.test(b) ? 0 : 1;
-    return ag - bg;
+    // Prefer FBX over GLB for grudge6 race multipacks
+    const af = /\.fbx($|\?)/i.test(a) ? 0 : 1;
+    const bf = /\.fbx($|\?)/i.test(b) ? 0 : 1;
+    return af - bf;
   });
 }
 

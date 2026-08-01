@@ -1,0 +1,5481 @@
+{
+  "version": 1,
+  "updated": "2026-08-01",
+  "source": "C:/Users/nugye/Desktop/grudgeproduction/grudgenew/FRESH GRUDGE/Assets/uMMORPG",
+  "count": 1498,
+  "byCategory": {
+    "other": 662,
+    "vehicle": 54,
+    "mage": 31,
+    "dungeon": 8,
+    "dark_elf": 9,
+    "monster": 121,
+    "boss": 11,
+    "npc": 74,
+    "commander": 18,
+    "traveler": 13,
+    "journeyman": 13,
+    "harvestable": 83,
+    "pet_merc": 69,
+    "mount": 101,
+    "shaman": 1,
+    "ranger": 12,
+    "warrior": 15,
+    "player": 68,
+    "structure": 135
+  },
+  "waves": {
+    "wave1_races_npcs": [
+      "traveler",
+      "journeyman",
+      "commander",
+      "shaman",
+      "warrior",
+      "mage",
+      "ranger",
+      "npc"
+    ],
+    "wave2_monsters_bosses": [
+      "monster",
+      "boss",
+      "dark_elf",
+      "pet_merc"
+    ],
+    "wave3_mounts_vehicles": [
+      "mount",
+      "vehicle"
+    ],
+    "wave4_world": [
+      "harvestable",
+      "dungeon",
+      "structure",
+      "other",
+      "player"
+    ]
+  },
+  "priorityCount": 542,
+  "priority": [
+    {
+      "name": "Boat Model",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Boat Model.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Boat_Model.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Boat_Model/",
+      "status": "pending_export"
+    },
+    {
+      "name": "DamagePopup",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/DamagePopup.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/DamagePopup.glb",
+      "animTarget": "anims/baked/ummorpg/mage/DamagePopup/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Elf Castle lv1",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Dungeons/Dark Elf Castle lv1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_Elf_Castle_lv1.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_Elf_Castle_lv1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark elf Castle",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Dungeons/Dark elf Castle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_elf_Castle.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_elf_Castle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Berserker",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/Berserker.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Berserker.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Berserker/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Centaur",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/Centaur.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Centaur.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Centaur/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Hunter",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/Hunter.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Hunter.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Hunter/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lancer",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/Lancer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Lancer.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Lancer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "LowPoly_Cyc",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/LowPoly_Cyc.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/LowPoly_Cyc.glb",
+      "animTarget": "anims/baked/ummorpg/monster/LowPoly_Cyc/",
+      "status": "pending_export"
+    },
+    {
+      "name": "LowPoly_Skeleton",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/LowPoly_Skeleton.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/LowPoly_Skeleton.glb",
+      "animTarget": "anims/baked/ummorpg/monster/LowPoly_Skeleton/",
+      "status": "pending_export"
+    },
+    {
+      "name": "LowPoly_Sus",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/LowPoly_Sus.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/LowPoly_Sus.glb",
+      "animTarget": "anims/baked/ummorpg/monster/LowPoly_Sus/",
+      "status": "pending_export"
+    },
+    {
+      "name": "minotaur1",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/minotaur1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/minotaur1.glb",
+      "animTarget": "anims/baked/ummorpg/monster/minotaur1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Minotos",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/Minotos.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Minotos.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Minotos/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Tortoise_Boss_Anims (1)",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/Tortoise_Boss_Anims (1).prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Tortoise_Boss_Anims_1_.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Tortoise_Boss_Anims_1_/",
+      "status": "pending_export"
+    },
+    {
+      "name": "troll",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Backup mobs/troll.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/troll.glb",
+      "animTarget": "anims/baked/ummorpg/monster/troll/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Camp",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian Camp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Barbarian_Camp.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Barbarian_Camp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Scout",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCs/Barbarian Scout.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Barbarian_Scout.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Barbarian_Scout/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Watchman",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCs/Barbarian Watchman.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Barbarian_Watchman.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Barbarian_Watchman/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCs/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bounty Board",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCs/Bounty Board.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Bounty_Board.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Bounty_Board/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCs/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCs/scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Storage",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCs/Storage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Storage.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Storage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCs/Traveler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian NPCS",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Barbarian NPCS.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Barbarian_NPCS.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Barbarian_NPCS/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarf Camp",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf Camp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Dwarf_Camp.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Dwarf_Camp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf NPCs/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bounty Board",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf NPCs/Bounty Board.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Bounty_Board.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Bounty_Board/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf NPCs/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarf Scout",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf NPCs/Dwarf Scout.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Dwarf_Scout.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Dwarf_Scout/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarf Watchman",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf NPCs/Dwarf Watchman.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Dwarf_Watchman.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Dwarf_Watchman/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf NPCs/Scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Storage",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf NPCs/Storage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Storage.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Storage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarf NPCs/Traveler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve NPCS",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Dwarve NPCS.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Dwarve_NPCS.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Dwarve_NPCS/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Camp",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf Camp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Elf_Camp.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Elf_Camp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCs/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bounty Board",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCs/Bounty Board.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Bounty_Board.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Bounty_Board/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCs/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Scout",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCs/Elf Scout.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Elf_Scout.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Elf_Scout/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Watchman",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCs/Elf Watchman.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Elf_Watchman.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Elf_Watchman/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCs/Scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Storage",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCs/Storage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Storage.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Storage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCs/Traveler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf NPCS",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Elf NPCS.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Elf_NPCS.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Elf_NPCS/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Camp",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human Camp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Human_Camp.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Human_Camp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCs/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bounty Board",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCs/Bounty Board.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Bounty_Board.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Bounty_Board/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCs/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Scout",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCs/Human Scout.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Human_Scout.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Human_Scout/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Watchman",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCs/Human Watchman.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Human_Watchman.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Human_Watchman/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCs/Scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Storage",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCs/Storage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Storage.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Storage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCs/Traveler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human NPCS",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Human NPCS.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Human_NPCS.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Human_NPCS/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Camp",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Camp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Orc_Camp.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Orc_Camp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Npcs/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bounty Board",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Npcs/Bounty Board.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Bounty_Board.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Bounty_Board/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Npcs/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Scout",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Npcs/Orc Scout.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Orc_Scout.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Orc_Scout/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Watchman",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Npcs/Orc Watchman.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Orc_Watchman.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Orc_Watchman/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Npcs/Scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Storage",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Npcs/Storage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Storage.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Storage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc Npcs/Traveler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc NPCS",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Orc NPCS.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Orc_NPCS.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Orc_NPCS/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blue Portal",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Crusade Scholar/Blue Portal.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Blue_Portal.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Blue_Portal/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Old Ruins",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Crusade Scholar/Old Ruins.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Old_Ruins.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Old_Ruins/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Old Temple",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Crusade Scholar/Old Temple.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Old_Temple.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Old_Temple/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Forest Portal",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Fabled Scholar/Forest Portal.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Forest_Portal.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Forest_Portal/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Mage Tower",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Fabled Scholar/Mage Tower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Mage_Tower.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Mage_Tower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Oasis",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Fabled Scholar/Oasis.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Oasis.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Oasis/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ancient Potal",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Legion Scholar/Ancient Potal.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Ancient_Potal.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Ancient_Potal/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Flaming Portal",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Legion Scholar/Flaming Portal.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Flaming_Portal.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Flaming_Portal/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ogre Thorns",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Legion Scholar/Ogre Thorns.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Ogre_Thorns.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Ogre_Thorns/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ancient Ruins",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Advisor/Ancient Ruins.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Ancient_Ruins.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Ancient_Ruins/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Catacombs",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Advisor/Catacombs.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Catacombs.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Catacombs/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Cemetary",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Advisor/Cemetary.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Cemetary.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Cemetary/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frozen Lands",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Advisor/Frozen Lands.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Frozen_Lands.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Frozen_Lands/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Conquest 1",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Conquest/Conquest 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Conquest_1.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Conquest_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Conquest 2",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Conquest/Conquest 2.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Conquest_2.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Conquest_2/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Conquest 3",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Conquest/Conquest 3.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Conquest_3.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Conquest_3/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 1",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_1.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 10",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 10.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_10.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_10/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 2",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 2.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_2.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_2/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 3",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 3.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_3.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_3/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 4",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 4.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_4.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_4/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 5",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 5.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_5.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_5/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 6",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 6.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_6.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_6/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 7",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 7.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_7.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_7/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 8",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 8.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_8.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_8/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Journey 9",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Journey/Journey 9.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/Journey_9.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/Journey_9/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Corruption 1",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Traveler/Corruption 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Corruption_1.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Corruption_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Corruption 2",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Traveler/Corruption 2.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Corruption_2.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Corruption_2/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Corruption 3",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Traveler/Corruption 3.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Corruption_3.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Corruption_3/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Corruption 4",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Overlay Quest Traveler/Corruption 4.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Corruption_4.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Corruption_4/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler NPCS",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Traveler NPCS.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler_NPCS.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler_NPCS/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Camp",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Camp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Undead_Camp.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Undead_Camp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Npcs/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bounty Board",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Npcs/Bounty Board.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Bounty_Board.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Bounty_Board/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Npcs/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Npcs/scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Storage",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Npcs/Storage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Storage.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Storage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Npcs/Traveler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Scout",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Npcs/Undead Scout.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Undead_Scout.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Undead_Scout/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Watchman",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead Npcs/Undead Watchman.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Undead_Watchman.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Undead_Watchman/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead NPCS",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/Undead NPCS.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Undead_NPCS.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Undead_NPCS/",
+      "status": "pending_export"
+    },
+    {
+      "name": "AcceptQuest",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/ZQuest Overlays/AcceptQuest.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/AcceptQuest.glb",
+      "animTarget": "anims/baked/ummorpg/npc/AcceptQuest/",
+      "status": "pending_export"
+    },
+    {
+      "name": "CompleteQuest",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/ZQuest Overlays/CompleteQuest.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/CompleteQuest.glb",
+      "animTarget": "anims/baked/ummorpg/npc/CompleteQuest/",
+      "status": "pending_export"
+    },
+    {
+      "name": "QuestAudio",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/ZQuest Overlays/QuestAudio.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/QuestAudio.glb",
+      "animTarget": "anims/baked/ummorpg/npc/QuestAudio/",
+      "status": "pending_export"
+    },
+    {
+      "name": "QuestOverlayPosition",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/ZQuest Overlays/QuestOverlayPosition.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/QuestOverlayPosition.glb",
+      "animTarget": "anims/baked/ummorpg/npc/QuestOverlayPosition/",
+      "status": "pending_export"
+    },
+    {
+      "name": "QuestOverlayText",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/GRUDGE NPCS/ZQuest Overlays/QuestOverlayText.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/QuestOverlayText.glb",
+      "animTarget": "anims/baked/ummorpg/npc/QuestOverlayText/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lv10 Spawner",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Arena Monsters/Lv10 Spawner.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Lv10_Spawner.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Lv10_Spawner/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lv15 Spawner",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Arena Monsters/Lv15 Spawner.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Lv15_Spawner.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Lv15_Spawner/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lv20 Spawner",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Arena Monsters/Lv20 Spawner.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Lv20_Spawner.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Lv20_Spawner/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lv5 Spawner",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Arena Monsters/Lv5 Spawner.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Lv5_Spawner.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Lv5_Spawner/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Notification",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Arena Monsters/Notification.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Notification.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Notification/",
+      "status": "pending_export"
+    },
+    {
+      "name": "PvPTeleport Bindpoint",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Arena Monsters/PvPTeleport Bindpoint.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/PvPTeleport_Bindpoint.glb",
+      "animTarget": "anims/baked/ummorpg/monster/PvPTeleport_Bindpoint/",
+      "status": "pending_export"
+    },
+    {
+      "name": "SpawnAfter",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Arena Monsters/SpawnAfter.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/SpawnAfter.glb",
+      "animTarget": "anims/baked/ummorpg/monster/SpawnAfter/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bandit Boss",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Bandit Boss.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Bandit_Boss.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Bandit_Boss/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bandit",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Bandit.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Bandit.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Bandit/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Durahan The Destroyer",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Castle Dungeon/Durahan The Destroyer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Durahan_The_Destroyer.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Durahan_The_Destroyer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Gargoyle",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Castle Dungeon/Gargoyle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Gargoyle.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Gargoyle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "War Bear",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Castle Dungeon/War Bear.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/War_Bear.glb",
+      "animTarget": "anims/baked/ummorpg/monster/War_Bear/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Arachnid",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Catacombs/Arachnid.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Arachnid.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Arachnid/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Arachnoid",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Catacombs/Arachnoid.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Arachnoid.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Arachnoid/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Enforcer",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Catacombs/Enforcer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Enforcer.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Enforcer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Maldor",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Catacombs/Maldor.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Maldor.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Maldor/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Cave Hound",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Cave/Cave Hound.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Cave_Hound.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Cave_Hound/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Grobler",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Cave/Grobler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Grobler.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Grobler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Abomination",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Cemetary/Abomination.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Abomination.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Abomination/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Cyclopse",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Cemetary/Cyclopse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Cyclopse.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Cyclopse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Grunt",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Cemetary/Grunt.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Grunt.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Grunt/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Grog",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/CITIDEL/Grog.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Grog.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Grog/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Naga",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/CITIDEL/Naga.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Naga.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Naga/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Reptilian",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/CITIDEL/Reptilian.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Reptilian.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Reptilian/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Shadow Lancer",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/CITIDEL/Shadow Lancer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Shadow_Lancer.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Shadow_Lancer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blue Crystal",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Blue Crystal.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Blue_Crystal.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Blue_Crystal/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blue Spirit",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Blue Spirit.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Blue_Spirit.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Blue_Spirit/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blue Whisp",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Blue Whisp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Blue_Whisp.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Blue_Whisp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Green Crystal",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Green Crystal.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Green_Crystal.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Green_Crystal/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Green Spirit",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Green Spirit.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Green_Spirit.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Green_Spirit/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Green Whisp",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Green Whisp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Green_Whisp.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Green_Whisp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Mimic",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Mimic.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Mimic.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Mimic/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Purple Crystal",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Purple Crystal.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Purple_Crystal.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Purple_Crystal/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Purple Spirit",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Purple Spirit.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Purple_Spirit.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Purple_Spirit/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Purple Whisp",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Purple Whisp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Purple_Whisp.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Purple_Whisp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Red Crystal",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Red Crystal.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Red_Crystal.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Red_Crystal/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Red Spirit",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Red Spirit.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Red_Spirit.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Red_Spirit/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Red Whisp",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Red Whisp.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Red_Whisp.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Red_Whisp/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Whisp Cast Effect",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Corruption/Whisp Cast Effect.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Whisp_Cast_Effect.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Whisp_Cast_Effect/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Elf Defender",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Dark Elf Camp/Dark Elf Defender.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_Elf_Defender.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_Elf_Defender/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Elf Guard",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Dark Elf Camp/Dark Elf Guard.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_Elf_Guard.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_Elf_Guard/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Elf Archer",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Dark Elf Encampment/Dark Elf Archer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_Elf_Archer.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_Elf_Archer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Elf Commander",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Dark Elf Encampment/Dark Elf Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_Elf_Commander.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_Elf_Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Elf Cavallry",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Dark Elf Stronghold/Dark Elf Cavallry.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_Elf_Cavallry.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_Elf_Cavallry/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Elf Lord",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Dark Elf Stronghold/Dark Elf Lord.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_Elf_Lord.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_Elf_Lord/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Elf Warrior",
+      "category": "dark_elf",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Dark Elf Stronghold/Dark Elf Warrior.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/dark_elf/Dark_Elf_Warrior.glb",
+      "animTarget": "anims/baked/ummorpg/dark_elf/Dark_Elf_Warrior/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crusade Heavy Tower",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense/Crusade Heavy Tower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Crusade_Heavy_Tower.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Crusade_Heavy_Tower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crusade Tower",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense/Crusade Tower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Crusade_Tower.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Crusade_Tower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fabled Heavy Tower",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense/Fabled Heavy Tower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Fabled_Heavy_Tower.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Fabled_Heavy_Tower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fabled Tower",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense/Fabled Tower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Fabled_Tower.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Fabled_Tower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "GameObject",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense/GameObject.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/GameObject.glb",
+      "animTarget": "anims/baked/ummorpg/monster/GameObject/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Legion Heavy Tower",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense/Legion Heavy Tower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Legion_Heavy_Tower.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Legion_Heavy_Tower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Legion Tower",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense/Legion Tower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Legion_Tower.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Legion_Tower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crusade Heavy Tower Preview",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense Preview/Crusade Heavy Tower Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Crusade_Heavy_Tower_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Crusade_Heavy_Tower_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crusade Tower Preview",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense Preview/Crusade Tower Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Crusade_Tower_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Crusade_Tower_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fabled Heavy Tower Preview",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense Preview/Fabled Heavy Tower Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Fabled_Heavy_Tower_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Fabled_Heavy_Tower_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fabled Tower Preview",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense Preview/Fabled Tower Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Fabled_Tower_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Fabled_Tower_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Legion Heavy Tower Preview",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense Preview/Legion Heavy Tower Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Legion_Heavy_Tower_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Legion_Heavy_Tower_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Legion Tower Preview",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Defense Preview/Legion Tower Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Legion_Tower_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Legion_Tower_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Barbarian Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Barbarian_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Barbarian_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Dwarve Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Dwarve_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Dwarve_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Elf Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Elf_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Elf_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Heavy Barbarian Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Heavy Barbarian Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Heavy_Barbarian_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Heavy_Barbarian_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Heavy Dwarve Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Heavy Dwarve Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Heavy_Dwarve_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Heavy_Dwarve_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Heavy Elf Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Heavy Elf Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Heavy_Elf_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Heavy_Elf_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Heavy Human Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Heavy Human Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Heavy_Human_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Heavy_Human_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Heavy Orc Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Heavy Orc Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Heavy_Orc_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Heavy_Orc_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Heavy Undead Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Heavy Undead Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Heavy_Undead_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Heavy_Undead_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Human Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Human_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Human_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Orc Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Orc_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Orc_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Merc Preview",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Merc Preview/Undead Merc Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Undead_Merc_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Undead_Merc_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Defender",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Barbarian Defender.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Barbarian_Defender.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Barbarian_Defender/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Guard",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Barbarian Guard.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Barbarian_Guard.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Barbarian_Guard/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Defender",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Dwarve Defender.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Dwarve_Defender.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Dwarve_Defender/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Guard",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Dwarve Guard.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Dwarve_Guard.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Dwarve_Guard/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Defender",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Elf Defender.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Elf_Defender.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Elf_Defender/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Guard",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Elf Guard.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Elf_Guard.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Elf_Guard/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Defender",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Human Defender.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Human_Defender.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Human_Defender/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Guard",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Human Guard.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Human_Guard.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Human_Guard/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Defender",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Orc Defender.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Orc_Defender.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Orc_Defender/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Guard",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Orc Guard.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Orc_Guard.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Orc_Guard/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Defender",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Undead Defender.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Undead_Defender.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Undead_Defender/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Guard",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Deployable Mercs/Undead Guard.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Undead_Guard.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Undead_Guard/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Bone Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Dragon Bone Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dragon_Bone_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dragon_Bone_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Emerald Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Emerald Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Emerald_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Emerald_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Forest Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Forest Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Forest_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Forest_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frigid Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Frigid Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Frigid_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Frigid_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frost Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Frost Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Frost_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Frost_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Hellfire Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Hellfire Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Hellfire_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Hellfire_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lava Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Lava Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Lava_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Lava_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Nightstalker Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Nightstalker Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Nightstalker_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Nightstalker_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Rock Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Rock Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Rock_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Rock_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Void Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/DRAKES/Void Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Void_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Void_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Gigatour",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Floating Dungeon/Gigatour.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Gigatour.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Gigatour/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Minotaur Elder",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Floating Dungeon/Minotaur Elder.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Minotaur_Elder.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Minotaur_Elder/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Minotaur",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Floating Dungeon/Minotaur.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Minotaur.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Minotaur/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Shaman",
+      "category": "shaman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Floating Dungeon/Orc Shaman.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/shaman/Orc_Shaman.glb",
+      "animTarget": "anims/baked/ummorpg/shaman/Orc_Shaman/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Eldron The Stag",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Forest Dungeon/Eldron The Stag.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Eldron_The_Stag.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Eldron_The_Stag/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Forest Golem",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Forest Dungeon/Forest Golem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Forest_Golem.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Forest_Golem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Horn Beetle",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Forest Dungeon/Horn Beetle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Horn_Beetle.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Horn_Beetle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ornithopter",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Forest Dungeon/Ornithopter.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Ornithopter.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Ornithopter/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Forest Giant",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Forest Giant.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Forest_Giant.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Forest_Giant/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Bandit",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Harbor/Undead Bandit.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Undead_Bandit.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Undead_Bandit/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ice Golem",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Ice Dungeon/Ice Golem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Ice_Golem.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Ice_Golem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Kraken",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Ice Dungeon/Kraken.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Kraken.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Kraken/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Yeti",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Ice Dungeon/Yeti.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Yeti.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Yeti/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Rolly Polly",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/LARGE RUINS/Rolly Polly.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Rolly_Polly.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Rolly_Polly/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scorpion",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/LARGE RUINS/Scorpion.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Scorpion.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Scorpion/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Stone Golem",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/LARGE RUINS/Stone Golem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Stone_Golem.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Stone_Golem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Arch Demon",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Lava Dungeon/Arch Demon.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Arch_Demon.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Arch_Demon/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Demon",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Lava Dungeon/Demon.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Demon.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Demon/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lava Golem",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Lava Dungeon/Lava Golem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Lava_Golem.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Lava_Golem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Spider",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/MINES/Spider.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Spider.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Spider/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Knight",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Barbarian Knight.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Barbarian_Knight.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Barbarian_Knight/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Barbarian.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Barbarian.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Barbarian/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dummy",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Dummy.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Dummy.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Dummy/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Knight",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Dwarve Knight.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Dwarve_Knight.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Dwarve_Knight/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Dwarve.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Dwarve.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Dwarve/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Knight",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Elf Knight.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Elf_Knight.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Elf_Knight/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Elf.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Elf.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Elf/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Knight",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Human Knight.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Human_Knight.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Human_Knight/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Human.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Human.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Human/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Knight",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Orc Knight.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Orc_Knight.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Orc_Knight/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Orc.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Orc.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Orc/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Knight",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Undead Knight.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Undead_Knight.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Undead_Knight/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/NPC Monsters/Undead.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Undead.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Undead/",
+      "status": "pending_export"
+    },
+    {
+      "name": "The Kraken",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Ocean Monsters/The Kraken.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/The_Kraken.glb",
+      "animTarget": "anims/baked/ummorpg/monster/The_Kraken/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ogre Bone Crusher",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/OGRE THORNS/Ogre Bone Crusher.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Ogre_Bone_Crusher.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Ogre_Bone_Crusher/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ogre",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/OGRE THORNS/Ogre.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Ogre.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Ogre/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Energus",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Portal Dungeon/Energus.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Energus.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Energus/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fiend",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Portal Dungeon/Fiend.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Fiend.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Fiend/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Necromancer",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Portal Dungeon/Necromancer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Necromancer.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Necromancer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Hopper",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/SPARKLING OASIS/Hopper.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Hopper.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Hopper/",
+      "status": "pending_export"
+    },
+    {
+      "name": "MurMadin",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/SPARKLING OASIS/MurMadin.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/MurMadin.glb",
+      "animTarget": "anims/baked/ummorpg/monster/MurMadin/",
+      "status": "pending_export"
+    },
+    {
+      "name": "MurMuncher",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/SPARKLING OASIS/MurMuncher.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/MurMuncher.glb",
+      "animTarget": "anims/baked/ummorpg/monster/MurMuncher/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dryad",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/STONE RUINS/Dryad.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Dryad.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Dryad/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Stone Mason",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/STONE RUINS/Stone Mason.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Stone_Mason.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Stone_Mason/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ancient Guardian",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Temple Dungeon/Ancient Guardian.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Ancient_Guardian.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Ancient_Guardian/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ancient Mason",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Temple Dungeon/Ancient Mason.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Ancient_Mason.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Ancient_Mason/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Galgoran Hammerhand",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/Temple Dungeon/Galgoran Hammerhand.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Galgoran_Hammerhand.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Galgoran_Hammerhand/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ancient Thresher",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Ancient Thresher.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Ancient_Thresher.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Ancient_Thresher/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Cerb",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Cerb.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Cerb.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Cerb/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Cerberus",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Cerberus.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Cerberus.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Cerberus/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Corrupted Flame Eater",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Corrupted Flame Eater.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Corrupted_Flame_Eater.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Corrupted_Flame_Eater/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ghorao The Corrupted",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Ghorao The Corrupted.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Ghorao_The_Corrupted.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Ghorao_The_Corrupted/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Gorgoz",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Gorgoz.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Gorgoz.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Gorgoz/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Juggernaut",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Juggernaut.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Juggernaut.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Juggernaut/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scorge",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Scorge.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Scorge.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Scorge/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Vile Terror Bringer",
+      "category": "boss",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Boss's/Vile Terror Bringer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/boss/Vile_Terror_Bringer.glb",
+      "animTarget": "anims/baked/ummorpg/boss/Vile_Terror_Bringer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Corrupted Ent",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Corrupted Ent.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Corrupted_Ent.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Corrupted_Ent/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crab",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Crab.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Crab.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Crab/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Boar",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Dragon Boar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Dragon_Boar.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Dragon_Boar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elder Ent",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Elder Ent.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Elder_Ent.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Elder_Ent/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Goat",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Goat.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Goat.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Goat/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Grunk",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Grunk.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Grunk.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Grunk/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Hairy Spider",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Hairy Spider.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Hairy_Spider.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Hairy_Spider/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Poison Spider",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Poison Spider.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Poison_Spider.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Poison_Spider/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Raptor",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Raptor.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Raptor.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Raptor/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Rhino",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Rhino.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Rhino.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Rhino/",
+      "status": "pending_export"
+    },
+    {
+      "name": "War Saber",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/War Saber.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/War_Saber.glb",
+      "animTarget": "anims/baked/ummorpg/monster/War_Saber/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Ent",
+      "category": "monster",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Monsters/World Mobs/Young Ent.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/Young_Ent.glb",
+      "animTarget": "anims/baked/ummorpg/monster/Young_Ent/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ancient Thrasher",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Ancient Thrasher.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Ancient_Thrasher.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Ancient_Thrasher/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Dark Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dark_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dark_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Bone Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Dragon Bone Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dragon_Bone_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dragon_Bone_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Emerald Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Emerald Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Emerald_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Emerald_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Forest Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Forest Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Forest_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Forest_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frigid Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Frigid Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Frigid_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Frigid_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frost Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Frost Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Frost_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Frost_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Hellfire Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Hellfire Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Hellfire_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Hellfire_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lava Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Lava Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Lava_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Lava_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Nightstalker Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Nightstalker Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Nightstalker_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Nightstalker_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Rock Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Rock Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Rock_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Rock_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Void Drake Preview",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake Preview/Void Drake Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Void_Drake_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Void_Drake_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Bone Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Dragon Bone Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dragon_Bone_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dragon_Bone_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Emerald Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Emerald Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Emerald_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Emerald_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Forest Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Forest Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Forest_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Forest_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frigid Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Frigid Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Frigid_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Frigid_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frost Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Frost Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Frost_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Frost_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Hellfire Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Hellfire Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Hellfire_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Hellfire_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lava Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Lava Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Lava_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Lava_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Nightstalker Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Nightstalker Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Nightstalker_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Nightstalker_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Rock Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Rock Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Rock_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Rock_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Void Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drake World Mounts/Void Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Void_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Void_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Bone Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Dragon Bone Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dragon_Bone_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dragon_Bone_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Emerald Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Emerald Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Emerald_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Emerald_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Forest Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Forest Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Forest_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Forest_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frigid Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Frigid Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Frigid_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Frigid_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Frost Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Frost Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Frost_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Frost_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Hellfire Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Hellfire Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Hellfire_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Hellfire_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lava Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Lava Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Lava_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Lava_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Nightstalker Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Nightstalker Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Nightstalker_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Nightstalker_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Rock Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Rock Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Rock_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Rock_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Void Drake Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Drakes/Void Drake Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Void_Drake_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Void_Drake_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Light Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Light Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Light_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Light_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Brute Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mecha/Brute Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Brute_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Brute_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scorpid Launcher Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mecha/Scorpid Launcher Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Scorpid_Launcher_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Scorpid_Launcher_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Skeeter Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mecha/Skeeter Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Skeeter_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Skeeter_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Brute Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mecha Preview/Brute Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Brute_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Brute_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scorpid Launcher Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mecha Preview/Scorpid Launcher Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Scorpid_Launcher_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Scorpid_Launcher_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Skeeter Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mecha Preview/Skeeter Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Skeeter_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Skeeter_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Mount",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mount Animators/Dragon Mount.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dragon_Mount.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dragon_Mount/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ancient Thrasher 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/Ancient Thrasher 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Ancient_Thrasher_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Ancient_Thrasher_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Horse 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/Dark Horse 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dark_Horse_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dark_Horse_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Horse 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/Horse 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Horse_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Horse_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Light Horse 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/Light Horse 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Light_Horse_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Light_Horse_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ram 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/Ram 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Ram_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Ram_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Horse 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/Undead Horse 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Undead_Horse_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Undead_Horse_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "War Saber 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/War Saber 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/War_Saber_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/War_Saber_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "White Horse 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/White Horse 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/White_Horse_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/White_Horse_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Wolf 1",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Mounts Preview/Wolf 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Wolf_1.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Wolf_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ram",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Ram.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Ram.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Ram/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Undead Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Undead_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Undead_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "War Saber",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/War Saber.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/War_Saber.glb",
+      "animTarget": "anims/baked/ummorpg/mount/War_Saber/",
+      "status": "pending_export"
+    },
+    {
+      "name": "White Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/White Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/White_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/White_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Wolf",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/Wolf.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Wolf.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Wolf/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ancient Thrasher",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Ancient Thrasher.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Ancient_Thrasher.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Ancient_Thrasher/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Brute Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Brute Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Brute_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Brute_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dark Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Dark Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dark_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dark_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Fly Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Dragon Fly Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Dragon_Fly_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Dragon_Fly_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Light Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Light Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Light_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Light_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ram",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Ram.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Ram.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Ram/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scorpid Launcher Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Scorpid Launcher Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Scorpid_Launcher_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Scorpid_Launcher_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Skeeter Mecha",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Skeeter Mecha.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Skeeter_Mecha.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Skeeter_Mecha/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Undead Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Undead_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Undead_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "War Saber",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/War Saber.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/War_Saber.glb",
+      "animTarget": "anims/baked/ummorpg/mount/War_Saber/",
+      "status": "pending_export"
+    },
+    {
+      "name": "White Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/White Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/White_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/White_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Wolf",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mounts/World Mounts/Wolf.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Wolf.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Wolf/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Mount_SmokePuff",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Mount_SmokePuff.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Mount_SmokePuff.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Mount_SmokePuff/",
+      "status": "pending_export"
+    },
+    {
+      "name": "JourneyMan",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/NewAINPCs/JourneyMan.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/JourneyMan.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/JourneyMan/",
+      "status": "pending_export"
+    },
+    {
+      "name": "JourneyManSkin",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/NewAINPCs/JourneyManSkin.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/JourneyManSkin.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/JourneyManSkin/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Alchemist",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Alchemist.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Alchemist.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Alchemist/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Barbarian/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Barbarian/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Barbarian/scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bounty Board",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Bounty Board.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Bounty_Board.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Bounty_Board/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dealer",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Dealer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Dealer.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Dealer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Dwarve/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Dwarve/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Dwarve/Scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Elf/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Elf/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scholar 1",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Elf/Scholar 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Scholar_1.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Scholar_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Guardian",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Guardian.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Guardian.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Guardian/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Human/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Human/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scholar 2",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Human/Scholar 2.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Scholar_2.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Scholar_2/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Orc/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Orc/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Orc/Scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Storage",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Storage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Storage.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Storage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler 1",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Traveler 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler_1.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Traveler",
+      "category": "traveler",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Traveler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/traveler/Traveler.glb",
+      "animTarget": "anims/baked/ummorpg/traveler/Traveler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Undead/Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Commander",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Undead/Commander.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Commander.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Commander/",
+      "status": "pending_export"
+    },
+    {
+      "name": "scholar",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Npcs/Undead/scholar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/scholar.glb",
+      "animTarget": "anims/baked/ummorpg/mage/scholar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "ORC_Cavalry_Archer",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/ORC_Cavalry_Archer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/ORC_Cavalry_Archer.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/ORC_Cavalry_Archer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Arachnoid",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Arachnoid.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Arachnoid.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Arachnoid/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Cave Hound",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Cave Hound.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Cave_Hound.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Cave_Hound/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crab",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Crab.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Crab.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Crab/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Demon",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Demon.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Demon.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Demon/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Boar",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Dragon Boar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Dragon_Boar.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Dragon_Boar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Dragon Bone Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Dragon Bone Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Dragon_Bone_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Dragon_Bone_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Emerald Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Emerald Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Emerald_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Emerald_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Forest Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Forest Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Forest_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Forest_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Frigid Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Frigid Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Frigid_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Frigid_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Frost Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Frost Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Frost_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Frost_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Hellfire Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Hellfire Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Hellfire_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Hellfire_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Lava Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Lava Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Lava_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Lava_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Nightstalker Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Nightstalker Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Nightstalker_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Nightstalker_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Rock Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Rock Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Rock_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Rock_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Baby Void Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Baby Void Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Baby_Void_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Baby_Void_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Dragon Bone Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Dragon Bone Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Dragon_Bone_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Dragon_Bone_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Emerald Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Emerald Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Emerald_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Emerald_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Forest Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Forest Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Forest_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Forest_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Frigid Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Frigid Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Frigid_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Frigid_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Frost Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Frost Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Frost_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Frost_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Hellfire Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Hellfire Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Hellfire_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Hellfire_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Lava Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Lava Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Lava_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Lava_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Nightstalker Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Nightstalker Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Nightstalker_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Nightstalker_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Rock Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Rock Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Rock_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Rock_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Young Void Drake",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/DRAKES/Young Void Drake.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Young_Void_Drake.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Young_Void_Drake/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dryad",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Dryad.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Dryad.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Dryad/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fiend",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Fiend.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Fiend.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Fiend/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Forest Golem",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Forest Golem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Forest_Golem.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Forest_Golem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Gargoyle",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Gargoyle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Gargoyle.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Gargoyle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Grobler",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Grobler.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Grobler.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Grobler/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Hairy Spider",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Hairy Spider.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Hairy_Spider.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Hairy_Spider/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Horn Beetle",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Horn Beetle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Horn_Beetle.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Horn_Beetle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ice Golem",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Ice Golem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Ice_Golem.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Ice_Golem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "JourneyMenPet",
+      "category": "journeyman",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/JourneyMenPet.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/journeyman/JourneyMenPet.glb",
+      "animTarget": "anims/baked/ummorpg/journeyman/JourneyMenPet/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Kraken",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Kraken.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Kraken.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Kraken/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Lava Golem",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Lava Golem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Lava_Golem.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Lava_Golem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Mage",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Barbarian Mage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Barbarian_Mage.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Barbarian_Mage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Paladin",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Barbarian Paladin.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Barbarian_Paladin.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Barbarian_Paladin/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Ranger",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Barbarian Ranger.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Barbarian_Ranger.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Barbarian_Ranger/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Warrior",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Barbarian Warrior.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Barbarian_Warrior.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Barbarian_Warrior/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Mage",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Dwarve Mage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Dwarve_Mage.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Dwarve_Mage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Paladin",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Dwarve Paladin.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Dwarve_Paladin.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Dwarve_Paladin/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Ranger",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Dwarve Ranger.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Dwarve_Ranger.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Dwarve_Ranger/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Warrior",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Dwarve Warrior.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Dwarve_Warrior.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Dwarve_Warrior/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Mage",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Elf Mage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Elf_Mage.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Elf_Mage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Paladin",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Elf Paladin.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Elf_Paladin.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Elf_Paladin/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Ranger",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Elf Ranger.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Elf_Ranger.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Elf_Ranger/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Warrior",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Elf Warrior.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Elf_Warrior.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Elf_Warrior/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Mage",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Human Mage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Human_Mage.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Human_Mage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Paladin",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Human Paladin.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Human_Paladin.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Human_Paladin/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Ranger",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Human Ranger.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Human_Ranger.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Human_Ranger/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Warrior",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Human Warrior.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Human_Warrior.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Human_Warrior/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Mage",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Orc Mage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Orc_Mage.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Orc_Mage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Paladin",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Orc Paladin.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Orc_Paladin.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Orc_Paladin/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Ranger",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Orc Ranger.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Orc_Ranger.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Orc_Ranger/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Warrior",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Orc Warrior.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Orc_Warrior.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Orc_Warrior/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Mage",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Undead Mage.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Undead_Mage.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Undead_Mage/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Paladin",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Undead Paladin.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Undead_Paladin.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Undead_Paladin/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Ranger",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Undead Ranger.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Undead_Ranger.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Undead_Ranger/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Warrior",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Mercs/Undead Warrior.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Undead_Warrior.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Undead_Warrior/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Minotaur",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Minotaur.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Minotaur.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Minotaur/",
+      "status": "pending_export"
+    },
+    {
+      "name": "MurMuncher",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/MurMuncher.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/MurMuncher.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/MurMuncher/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ogre",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Ogre.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Ogre.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Ogre/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Ornithopter",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Ornithopter.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Ornithopter.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Ornithopter/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Poison Spider",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Poison Spider.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Poison_Spider.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Poison_Spider/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Raptor",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Raptor.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Raptor.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Raptor/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Rhino",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Rhino.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Rhino.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Rhino/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Sapling",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Sapling.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Sapling.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Sapling/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Scorpion",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Scorpion.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Scorpion.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Scorpion/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crusade Bolt Thrower",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Crusade Bolt Thrower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Crusade_Bolt_Thrower.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Crusade_Bolt_Thrower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crusade Catapult",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Crusade Catapult.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Crusade_Catapult.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Crusade_Catapult/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Crusade Heavy Catapult",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Crusade Heavy Catapult.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Crusade_Heavy_Catapult.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Crusade_Heavy_Catapult/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fabled Bolt Thrower",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Fabled Bolt Thrower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Fabled_Bolt_Thrower.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Fabled_Bolt_Thrower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fabled Catapult",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Fabled Catapult.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Fabled_Catapult.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Fabled_Catapult/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Fabled Heavy Catapult",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Fabled Heavy Catapult.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Fabled_Heavy_Catapult.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Fabled_Heavy_Catapult/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Legion Bolt Thrower",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Legion Bolt Thrower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Legion_Bolt_Thrower.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Legion_Bolt_Thrower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Legion Catapult",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Legion Catapult.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Legion_Catapult.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Legion_Catapult/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Legion Heavy Catapult",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Siege/Legion Heavy Catapult.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Legion_Heavy_Catapult.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Legion_Heavy_Catapult/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Spider",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Spider.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Spider.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Spider/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Stone Golem",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Stone Golem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Stone_Golem.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Stone_Golem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "War Bear",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/War Bear.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/War_Bear.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/War_Bear/",
+      "status": "pending_export"
+    },
+    {
+      "name": "War Saber",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/War Saber.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/War_Saber.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/War_Saber/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Worge Bear",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Worge Pets/Worge Bear.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Worge_Bear.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Worge_Bear/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Yeti",
+      "category": "pet_merc",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Pets/Yeti.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/pet_merc/Yeti.glb",
+      "animTarget": "anims/baked/ummorpg/pet_merc/Yeti/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Air Ship Prewview",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicle Land Preview/Air Ship Prewview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Air_Ship_Prewview.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Air_Ship_Prewview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Glider Preview",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicle Land Preview/Dragon Glider Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Dragon_Glider_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Dragon_Glider_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Siege Tower Preview",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicle Land Preview/Siege Tower Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Siege_Tower_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Siege_Tower_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Wing",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicle Land Preview/Wing.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Wing.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Wing/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Yolocopter Preview",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicle Land Preview/Yolocopter Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Yolocopter_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Yolocopter_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Air Ship",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles Land/Air Ship.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Air_Ship.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Air_Ship/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dragon Glider",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles Land/Dragon Glider.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Dragon_Glider.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Dragon_Glider/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Siege Tower",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles Land/Siege Tower.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Siege_Tower.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Siege_Tower/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Yolocopter",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles Land/Yolocopter.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Yolocopter.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Yolocopter/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Battle Ship",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles Water/Battle Ship.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Battle_Ship.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Battle_Ship/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Catamaran",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles Water/Catamaran.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Catamaran.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Catamaran/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Vehicle Small Sailboat 1",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles Water/Vehicle Small Sailboat 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Vehicle_Small_Sailboat_1.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Vehicle_Small_Sailboat_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "SailMultipleLocalParent",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/SailMultipleLocalParent.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/SailMultipleLocalParent.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/SailMultipleLocalParent/",
+      "status": "pending_export"
+    },
+    {
+      "name": "UnderVehicleKiller",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/UnderVehicleKiller.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/UnderVehicleKiller.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/UnderVehicleKiller/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleBoat",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleBoat.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleBoat.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleBoat/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleBoatDriverAttack",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleBoatDriverAttack.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleBoatDriverAttack.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleBoatDriverAttack/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleBoatPassengerAttack",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleBoatPassengerAttack.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleBoatPassengerAttack.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleBoatPassengerAttack/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleCar",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleCar.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleCar.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleCar/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleCarDriverAttack",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleCarDriverAttack.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleCarDriverAttack.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleCarDriverAttack/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleCarPassengerAttack",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleCarPassengerAttack.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleCarPassengerAttack.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleCarPassengerAttack/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleFuelDrag",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleFuelDrag.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleFuelDrag.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleFuelDrag/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleLocalParent",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleLocalParent.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleLocalParent.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleLocalParent/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleOtherTrigger",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleOtherTrigger.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleOtherTrigger.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleOtherTrigger/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleRaft",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleRaft.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleRaft.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleRaft/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleSail",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleSail.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleSail.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleSail/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleSpaceShip",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleSpaceShip.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleSpaceShip.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleSpaceShip/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleSpaceShipDriverAttack",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleSpaceShipDriverAttack.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleSpaceShipDriverAttack.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleSpaceShipDriverAttack/",
+      "status": "pending_export"
+    },
+    {
+      "name": "VehicleSpaceShipPassengerAttack",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Vehicles(original)/VehicleSpaceShipPassengerAttack.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/VehicleSpaceShipPassengerAttack.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/VehicleSpaceShipPassengerAttack/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Wild Horse",
+      "category": "mount",
+      "type": "prefab",
+      "rel": "Prefabs/Entities/Wild Horse.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/Wild_Horse.glb",
+      "animTarget": "anims/baked/ummorpg/mount/Wild_Horse/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Boat",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Environment/Boat.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Boat.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Boat/",
+      "status": "pending_export"
+    },
+    {
+      "name": "cart_2w",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Environment/Props/cart_2w.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/cart_2w.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/cart_2w/",
+      "status": "pending_export"
+    },
+    {
+      "name": "cart_4w",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Environment/Props/cart_4w.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/cart_4w.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/cart_4w/",
+      "status": "pending_export"
+    },
+    {
+      "name": "pfb_WaterTotem (6)",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Environment/Props/pfb_WaterTotem (6).prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/pfb_WaterTotem_6_.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/pfb_WaterTotem_6_/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Water4Simple",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Environment/Water4Simple.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Water4Simple.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Water4Simple/",
+      "status": "pending_export"
+    },
+    {
+      "name": "NoTargetTurretPassengerSailBullet",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Guns/NoTargetTurretPassengerSailBullet.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/NoTargetTurretPassengerSailBullet.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/NoTargetTurretPassengerSailBullet/",
+      "status": "pending_export"
+    },
+    {
+      "name": "NoTargetTurretPassengerSailBulletPhysic",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Guns/NoTargetTurretPassengerSailBulletPhysic.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/NoTargetTurretPassengerSailBulletPhysic.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/NoTargetTurretPassengerSailBulletPhysic/",
+      "status": "pending_export"
+    },
+    {
+      "name": "TargetTurretPassengerBoatSword",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Guns/TargetTurretPassengerBoatSword.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/TargetTurretPassengerBoatSword.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/TargetTurretPassengerBoatSword/",
+      "status": "pending_export"
+    },
+    {
+      "name": "TargetTurretPassengerCarArrow",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Guns/TargetTurretPassengerCarArrow.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/TargetTurretPassengerCarArrow.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/TargetTurretPassengerCarArrow/",
+      "status": "pending_export"
+    },
+    {
+      "name": "TargetTurretPassengerCarSword",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Guns/TargetTurretPassengerCarSword.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/TargetTurretPassengerCarSword.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/TargetTurretPassengerCarSword/",
+      "status": "pending_export"
+    },
+    {
+      "name": "TargetTurretPassengerSailSword",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Guns/TargetTurretPassengerSailSword.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/TargetTurretPassengerSailSword.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/TargetTurretPassengerSailSword/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Archer Boots",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Archer Clothes/Archer Boots.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Archer_Boots.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Archer_Boots/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Archer Chest",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Archer Clothes/Archer Chest.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Archer_Chest.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Archer_Chest/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Archer Legs",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Archer Clothes/Archer Legs.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Archer_Legs.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Archer_Legs/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Archer Shoulders",
+      "category": "ranger",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Archer Clothes/Archer Shoulders.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Archer_Shoulders.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Archer_Shoulders/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Arms",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Warrior Clothes/Arms.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Arms.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Arms/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Boots",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Warrior Clothes/Boots.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Boots.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Boots/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Gloves",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Warrior Clothes/Gloves.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Gloves.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Gloves/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Helmet",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Warrior Clothes/Helmet.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Helmet.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Helmet/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Legs",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Warrior Clothes/Legs.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Legs.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Legs/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Shoulders",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Prefabs/ItemModels/Warrior Clothes/Shoulders.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/Shoulders.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/Shoulders/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Damage Totem Preview",
+      "category": "mage",
+      "type": "prefab",
+      "rel": "Prefabs/Structure Preview/Damage Totem Preview.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mage/Damage_Totem_Preview.glb",
+      "animTarget": "anims/baked/ummorpg/mage/Damage_Totem_Preview/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Water totem",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Structures/Water totem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Water_totem.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Water_totem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Water Totem",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Totem Buffs/Water Totem.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Water_Totem.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Water_Totem/",
+      "status": "pending_export"
+    },
+    {
+      "name": "SlotCraftingIngredient",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/UI/SlotCraftingIngredient.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/SlotCraftingIngredient.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/SlotCraftingIngredient/",
+      "status": "pending_export"
+    },
+    {
+      "name": "SlotCraftingResult",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/UI/SlotCraftingResult.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/SlotCraftingResult.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/SlotCraftingResult/",
+      "status": "pending_export"
+    },
+    {
+      "name": "SlotNpcDialogueOffer",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/UI/SlotNpcDialogueOffer.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/SlotNpcDialogueOffer.glb",
+      "animTarget": "anims/baked/ummorpg/npc/SlotNpcDialogueOffer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "SlotNpcQuest",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/UI/SlotNpcQuest.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/SlotNpcQuest.glb",
+      "animTarget": "anims/baked/ummorpg/npc/SlotNpcQuest/",
+      "status": "pending_export"
+    },
+    {
+      "name": "SlotNpcTrading",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Prefabs/UI/SlotNpcTrading.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/SlotNpcTrading.glb",
+      "animTarget": "anims/baked/ummorpg/npc/SlotNpcTrading/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Arrow Vehicle",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Vehicle SkillEffects/Arrow Vehicle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Arrow_Vehicle.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Arrow_Vehicle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bullet Physic Vehicle (NOTARGET)",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Vehicle SkillEffects/Bullet Physic Vehicle (NOTARGET).prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Bullet_Physic_Vehicle_NOTARGET_.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Bullet_Physic_Vehicle_NOTARGET_/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Bullet Vehicle (NOTARGET)",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Vehicle SkillEffects/Bullet Vehicle (NOTARGET).prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Bullet_Vehicle_NOTARGET_.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Bullet_Vehicle_NOTARGET_/",
+      "status": "pending_export"
+    },
+    {
+      "name": "FireArrow Vehicle",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Vehicle SkillEffects/FireArrow Vehicle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/FireArrow_Vehicle.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/FireArrow_Vehicle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "IceArrow Vehicle",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Vehicle SkillEffects/IceArrow Vehicle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/IceArrow_Vehicle.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/IceArrow_Vehicle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "PoisonArrow Vehicle",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Vehicle SkillEffects/PoisonArrow Vehicle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/PoisonArrow_Vehicle.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/PoisonArrow_Vehicle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Sword Vehicle",
+      "category": "vehicle",
+      "type": "prefab",
+      "rel": "Prefabs/Vehicle SkillEffects/Sword Vehicle.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/vehicle/Sword_Vehicle.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/Sword_Vehicle/",
+      "status": "pending_export"
+    },
+    {
+      "name": "forest-monster-final",
+      "category": "monster",
+      "type": "fbx",
+      "rel": "Models/Entities/(Public Domain) Forest Monster/forest-monster-final.fbx",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/forest-monster-final.glb",
+      "animTarget": "anims/baked/ummorpg/monster/forest-monster-final/",
+      "status": "pending_export"
+    },
+    {
+      "name": "horse.FBX",
+      "category": "mount",
+      "type": "fbx",
+      "rel": "Models/Entities/(Public Domain) Horse/horse.FBX",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/mount/horse_FBX.glb",
+      "animTarget": "anims/baked/ummorpg/mount/horse_FBX/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Archer",
+      "category": "ranger",
+      "type": "fbx",
+      "rel": "Models/Entities/Archer/Archer.fbx",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/ranger/Archer.glb",
+      "animTarget": "anims/baked/ummorpg/ranger/Archer/",
+      "status": "pending_export"
+    },
+    {
+      "name": "male_warrior used only for animations).FBX",
+      "category": "warrior",
+      "type": "fbx",
+      "rel": "Models/Entities/Blacksmith/male_warrior used only for animations).FBX",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/male_warrior_used_only_for_animations_FBX.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/male_warrior_used_only_for_animations_FBX/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Blacksmith 1",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Barbarian Blacksmith 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Barbarian_Blacksmith_1.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Barbarian_Blacksmith_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Barbarian Commander 1",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Barbarian Commander 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Barbarian_Commander_1.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Barbarian_Commander_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Blacksmith 1",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Dwarve Blacksmith 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Dwarve_Blacksmith_1.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Dwarve_Blacksmith_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Dwarve Commander 1",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Dwarve Commander 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Dwarve_Commander_1.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Dwarve_Commander_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Blacksmith 1",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Elf Blacksmith 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Elf_Blacksmith_1.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Elf_Blacksmith_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Elf Commander 1",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Elf Commander 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Elf_Commander_1.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Elf_Commander_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Flag1.FBX",
+      "category": "npc",
+      "type": "fbx",
+      "rel": "Models/Entities/NPC models/Flag1.FBX",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Flag1_FBX.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Flag1_FBX/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Blacksmith",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Human Blacksmith.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Human_Blacksmith.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Human_Blacksmith/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Human Commander 1",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Human Commander 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Human_Commander_1.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Human_Commander_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Blacksmith 1",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Orc Blacksmith 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Orc_Blacksmith_1.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Orc_Blacksmith_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Orc Commander 1",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Orc Commander 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Orc_Commander_1.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Orc_Commander_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Blacksmith 1",
+      "category": "npc",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Undead Blacksmith 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/npc/Undead_Blacksmith_1.glb",
+      "animTarget": "anims/baked/ummorpg/npc/Undead_Blacksmith_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "Undead Commander 1",
+      "category": "commander",
+      "type": "prefab",
+      "rel": "Models/Entities/NPC models/Undead Commander 1.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/commander/Undead_Commander_1.glb",
+      "animTarget": "anims/baked/ummorpg/commander/Undead_Commander_1/",
+      "status": "pending_export"
+    },
+    {
+      "name": "SkeletonMonster2KPoly",
+      "category": "monster",
+      "type": "fbx",
+      "rel": "Models/Entities/SkeletonNew/Models/SkeletonMonster2KPoly.fbx",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/monster/SkeletonMonster2KPoly.glb",
+      "animTarget": "anims/baked/ummorpg/monster/SkeletonMonster2KPoly/",
+      "status": "pending_export"
+    },
+    {
+      "name": "warrior.Fbx",
+      "category": "warrior",
+      "type": "fbx",
+      "rel": "Models/Entities/Warrior/Model/warrior.Fbx",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/warrior_Fbx.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/warrior_Fbx/",
+      "status": "pending_export"
+    },
+    {
+      "name": "warrior",
+      "category": "warrior",
+      "type": "prefab",
+      "rel": "Models/Entities/Warrior/Prefab/warrior.prefab",
+      "pack": "ummorpg",
+      "r2Target": "models/ummorpg/warrior/warrior.glb",
+      "animTarget": "anims/baked/ummorpg/warrior/warrior/",
+      "status": "pending_export"
+    },
+    {
+      "name": "BRB_mage_11_cast_B.FBX",
+      "category": "mage",
+      "type": "fbx",
+      "rel": "Toon_RTS/Barbarians/animation/Mage/BRB_mage_11_cast_B.FBX",
+      "pack": "toon_rts",
+      "r2Target": "models/ummorpg/mage/BRB_mage_11_cast_B_FBX.glb",
+      "animTarget": "anims/baked/ummorpg/mage/BRB_mage_11_cast_B_FBX/",
+      "status": "pending_export"
+    },
+    {
+      "name": "ELF_cavalry_mage_08_attack_B.FBX",
+      "category": "mage",
+      "type": "fbx",
+      "rel": "Toon_RTS/Elves/animation/Cavalry_Mage/ELF_cavalry_mage_08_attack_B.FBX",
+      "pack": "toon_rts",
+      "r2Target": "models/ummorpg/mage/ELF_cavalry_mage_08_attack_B_FBX.glb",
+      "animTarget": "anims/baked/ummorpg/mage/ELF_cavalry_mage_08_attack_B_FBX/",
+      "status": "pending_export"
+    },
+    {
+      "name": "run_land",
+      "category": "vehicle",
+      "type": "fbx",
+      "rel": "Toon_RTS/grudge-creator/public/models/synty/run_land.fbx",
+      "pack": "toon_rts",
+      "r2Target": "models/ummorpg/vehicle/run_land.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/run_land/",
+      "status": "pending_export"
+    },
+    {
+      "name": "walk_land",
+      "category": "vehicle",
+      "type": "fbx",
+      "rel": "Toon_RTS/grudge-creator/public/models/synty/walk_land.fbx",
+      "pack": "toon_rts",
+      "r2Target": "models/ummorpg/vehicle/walk_land.glb",
+      "animTarget": "anims/baked/ummorpg/vehicle/walk_land/",
+      "status": "pending_export"
+    }
+  ],
+  "fullManifest": "reports/ummorpg-migration-manifest.json",
+  "docs": "docs/UMMORPG_MIGRATION.md"
+}

@@ -417,10 +417,25 @@ export const DEPLOY_PROFILES = {
  */
 export function inferAssetKind(m) {
   if (!m) return 'other';
+  const path = String(m.path || m.r2Key || m.cdnUrl || '').toLowerCase();
+  const fmt = String(m.format || path.split('.').pop() || '')
+    .toLowerCase()
+    .replace(/^\./, '');
   const c = `${m.category || ''} ${m.group || ''} ${m.path || ''} ${m.name || ''} ${m.kind || ''}`.toLowerCase();
 
-  if (m.isBakedClip || c.includes('/anims/') || c.includes('animation') || m.scaleProfile === 'animation_clip') {
+  // HARD: kind=animation ONLY for baked Bip001 rotation JSON (anims/baked/**).
+  // D1 "models/animations/**" Mixamo/Kaykit GLBs are NOT game anims — never classify as animation.
+  if (
+    m.isBakedClip ||
+    m.scaleProfile === 'animation_clip' ||
+    (fmt === 'json' && /anims\/baked\//i.test(path)) ||
+    /anims\/baked\/[^/]+\/.+\.json/i.test(path)
+  ) {
     return 'animation';
+  }
+  // Explicit reject of raw anim dumps (so they fall through to other / get purged as raw)
+  if (/models\/animations\//i.test(path) || /\/animations\/(grudge6|mixamo|kaykit)/i.test(path)) {
+    return 'other'; // author dump — not playable fleet anim
   }
   if (
     /(?:^|[\s/_-])arrow(?:s)?(?:$|[\s/_-])/.test(c) ||
@@ -775,19 +790,44 @@ export function runDeployChecks(opts) {
     });
   }
 
+  // Unique names only — multipack bone *objects* can be 192 while Bip001 unique is ~60
+  const boneNames = [
+    ...new Set(
+      (bones || [])
+        .map((b) => (typeof b === 'string' ? b : b?.name))
+        .filter(Boolean),
+    ),
+  ];
+  const bipN = boneNames.filter((n) => /bip001/i.test(n)).length;
+  const mixN = boneNames.filter((n) => /mixamorig/i.test(n)).length;
+  const boneDetail =
+    bipN > 0
+      ? `Bip001 ${bipN} unique` + (mixN ? ` · Mixamo ${mixN}` : '')
+      : mixN > 0
+        ? `Mixamo ${mixN} (clips only — not grudge6 kit)`
+        : boneNames.length
+          ? `${boneNames.length} unique`
+          : 'none';
   if (profile.requireBones) {
     checks.push({
       id: 'bones',
       label: 'Skeleton',
-      status: bones.length > 10 ? 'ok' : bones.length > 0 ? 'warn' : 'fail',
-      detail: `${bones.length} bones`,
+      status:
+        mixN > bipN
+          ? 'fail'
+          : bipN >= 20 || boneNames.length > 10
+            ? 'ok'
+            : boneNames.length > 0
+              ? 'warn'
+              : 'fail',
+      detail: boneDetail,
     });
   } else {
     checks.push({
       id: 'bones',
       label: 'Skeleton',
       status: 'na',
-      detail: bones.length ? `${bones.length} bones (optional)` : 'not required',
+      detail: boneNames.length ? `${boneDetail} (optional)` : 'not required',
     });
   }
 

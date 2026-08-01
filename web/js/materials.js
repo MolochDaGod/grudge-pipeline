@@ -39,24 +39,42 @@ export const ATLAS_BINDINGS = [
       `${R2}/models/craftpix_lowpoly/texture_map.png`,
     ],
   },
+  // Fleet SSOT only: assets/{folder}/textures/{file} (grudge6-kit atlasUrl)
   {
     id: 'grudge6-wk',
     matName: /wk_|western|kingdom|polyart|toon/i,
     path: /grudge6\/races\/wk|WK_Characters|western-kingdoms/i,
-    urls: [
-      `${R2}/models/grudge6/races/WK_Standard_Units.webp`,
-      `${R2}/models/grudge6/races/WK_Standard_Units.png`,
-      `${R2}/models/grudge6/atlases/WK_Standard_Units.webp`,
-    ],
+    urls: [`${R2}/assets/western-kingdoms/textures/WK_Standard_Units.webp`],
   },
   {
     id: 'grudge6-brb',
     matName: /brb_|barbarian/i,
     path: /grudge6\/races\/brb|BRB_Characters|barbarian/i,
-    urls: [
-      `${R2}/models/grudge6/races/BRB_Standard_Units.webp`,
-      `${R2}/models/grudge6/races/BRB_Standard_Units.png`,
-    ],
+    urls: [`${R2}/assets/barbarians/textures/BRB_StandardUnits_texture.webp`],
+  },
+  {
+    id: 'grudge6-elf',
+    matName: /elf_|high.?elf/i,
+    path: /grudge6\/races\/elf|ELF_Characters/i,
+    urls: [`${R2}/assets/elves/textures/ELF_HighElves_Texture.webp`],
+  },
+  {
+    id: 'grudge6-dwf',
+    matName: /dwf_|dwarf/i,
+    path: /grudge6\/races\/dwf|DWF_Characters/i,
+    urls: [`${R2}/assets/dwarves/textures/DWF_Standard_Units.webp`],
+  },
+  {
+    id: 'grudge6-orc',
+    matName: /orc_/i,
+    path: /grudge6\/races\/orc|ORC_Characters/i,
+    urls: [`${R2}/assets/orcs/textures/ORC_StandardUnits.webp`],
+  },
+  {
+    id: 'grudge6-ud',
+    matName: /ud_|undead/i,
+    path: /grudge6\/races\/ud|UD_Characters/i,
+    urls: [`${R2}/assets/undead/textures/UD_Standard_Units.webp`],
   },
   {
     id: 'codex-glitch',

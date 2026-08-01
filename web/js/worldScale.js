@@ -1,22 +1,47 @@
 /**
- * World SI scale SSOT — 1.8 m human is the yardstick for everything.
+ * World SI scale SSOT — 1 unit = 1 metre. Race heights are character truth.
  *
- * Three.js / fleet: 1 unit = 1 metre. Average adult human height ≈ 1.8 m.
- * Characters, weapons, buildings, boats, towns, islands, buildables must
- * report sizes in metres and stay realistic relative to that human.
+ * Do NOT force every hero to 1.8 m. Use RACE_HEIGHT_M (orc = 2.0, human = 1.8, …),
+ * unit-snap cm↔m against that race, leave scale alone when already true.
+ * Weapons / buildings / islands report metres relative to those humans.
  *
- * Classic failures this module detects and fixes:
- *  - ~100× oversized (cm authored as m, or world-AABB used as local scale)
- *  - ~100× undersized (m authored as cm, missing unit snap)
- *  - Category-blind "fit everything to 1.8 m" (arrows, buildings, boats)
- *  - Checks that can't tell what they're measuring (no kind + no unit report)
+ * Classic failures:
+ *  - ~100× (cm as m)
+ *  - Category-blind "fit everything to 1.8 m" (arrows, boats, ORCS)
  *
- * @see grudge-character-correctness skill
- * @see grudge-world-scale (this file + deployChecks)
+ * @see grudge-character-correctness · grudge-world-scale
  */
 
-/** Average adult human height — THE world yardstick (metres). */
+/**
+ * SI race heights are the character yardstick — not "force everything to 1.8".
+ * Orc = 2.0 m. Human (WK) = 1.8 m. Unit decade (cm↔m) is diagnosed against
+ * the race you are loading. Other assets are sized relative to these metres.
+ */
 export const HUMAN_HEIGHT_M = 1.8;
+
+export const RACE_HEIGHT_M = {
+  'western-kingdoms': 1.8,
+  human: 1.8,
+  humans: 1.8,
+  barbarians: 1.95,
+  barbarian: 1.95,
+  'high-elves': 1.85,
+  elves: 1.85,
+  elf: 1.85,
+  dwarves: 1.45,
+  dwarf: 1.45,
+  orcs: 2.0,
+  orc: 2.0,
+  undead: 1.8,
+};
+
+/** raceId / alias → expected standing height (m). */
+export function raceHeightM(raceId) {
+  if (raceId == null || raceId === '') return HUMAN_HEIGHT_M;
+  if (typeof raceId === 'number' && Number.isFinite(raceId) && raceId > 0) return raceId;
+  const k = String(raceId).toLowerCase().trim();
+  return RACE_HEIGHT_M[k] ?? RACE_HEIGHT_M[raceId] ?? HUMAN_HEIGHT_M;
+}
 
 /** 1 Three.js unit = 1 metre (never redefine). */
 export const METERS_PER_UNIT = 1;

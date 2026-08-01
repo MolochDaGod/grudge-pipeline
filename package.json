@@ -16,6 +16,11 @@
     "uuid:assign": "node scripts/uuid-assign.mjs",
     "dedupe": "node scripts/dedupe-purge.mjs",
     "dedupe:codex": "node scripts/dedupe-purge.mjs --catalog D:/Games/Models/_codex_prod/catalog.json --out reports/dedupe-codex.json --write-plan reports/purge-codex.json",
+    "d1:audit": "node scripts/d1-ready-purge.mjs",
+    "d1:purge-plan": "node scripts/d1-ready-purge.mjs --catalog web/api/production-catalog.json",
+    "d1:purge-safe": "node scripts/d1-ready-purge.mjs --execute --yes",
+    "anim:gaps": "node scripts/anim-gap-scan.mjs",
+    "ummorpg:inventory": "node scripts/ummorpg-inventory.mjs",
     "mesh:expand": "node scripts/expand-mesh-registry.mjs --dist D:/Games/Models/_codex_prod/dist --catalog D:/Games/Models/_codex_prod/catalog.json --out D:/Games/Models/_codex_prod/mesh-registry.json --seed D:/Games/Models/_codex_prod/seed-d1-meshes.sql",
     "deploy:ai-worker": "npm run deploy --prefix workers/asset-deploy-ai"
   },

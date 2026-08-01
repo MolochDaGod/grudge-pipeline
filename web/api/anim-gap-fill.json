@@ -1,0 +1,1599 @@
+{
+  "version": 1,
+  "updated": "2026-08-01",
+  "rule": "Mixamo armature FBX under 1000KB — no mesh body required; retarget → Bip001 JSON",
+  "stageRoot": "D:/Games/Models/_anim_packs/_gap_fill_stage",
+  "count": 159,
+  "clips": [
+    {
+      "pack": "longbow",
+      "role": "utility",
+      "clip": "standing draw arrow",
+      "slug": "standing draw arrow",
+      "kb": 150.3,
+      "bakeTarget": "anims/baked/longbow/standing draw arrow.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing draw arrow.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "block",
+      "clip": "standing block",
+      "slug": "standing block",
+      "kb": 194.3,
+      "bakeTarget": "anims/baked/longbow/standing block.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing block.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "death",
+      "clip": "standing death backward 01",
+      "slug": "standing death backward 01",
+      "kb": 241.9,
+      "bakeTarget": "anims/baked/longbow/standing death backward 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing death backward 01.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "death",
+      "clip": "standing death forward 01",
+      "slug": "standing death forward 01",
+      "kb": 244.8,
+      "bakeTarget": "anims/baked/longbow/standing death forward 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing death forward 01.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "run",
+      "clip": "standing run forward stop",
+      "slug": "standing run forward stop",
+      "kb": 146.8,
+      "bakeTarget": "anims/baked/longbow/standing run forward stop.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing run forward stop.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "idle",
+      "clip": "standing idle 01",
+      "slug": "standing idle 01",
+      "kb": 275.3,
+      "bakeTarget": "anims/baked/longbow/standing idle 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing idle 01.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "idle",
+      "clip": "standing idle 02 looking",
+      "slug": "standing idle 02 looking",
+      "kb": 246.2,
+      "bakeTarget": "anims/baked/longbow/standing idle 02 looking.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing idle 02 looking.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "idle",
+      "clip": "standing idle 03 examine",
+      "slug": "standing idle 03 examine",
+      "kb": 275.3,
+      "bakeTarget": "anims/baked/longbow/standing idle 03 examine.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing idle 03 examine.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "idle",
+      "clip": "unarmed idle 01",
+      "slug": "unarmed idle 01",
+      "kb": 283.9,
+      "bakeTarget": "anims/baked/longbow/unarmed idle 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/unarmed idle 01.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "idle",
+      "clip": "fall a land to standing idle 01",
+      "slug": "fall a land to standing idle 01",
+      "kb": 138.1,
+      "bakeTarget": "anims/baked/longbow/fall a land to standing idle 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/fall a land to standing idle 01.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "run",
+      "clip": "fall a land to run forward",
+      "slug": "fall a land to run forward",
+      "kb": 148.2,
+      "bakeTarget": "anims/baked/longbow/fall a land to run forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/fall a land to run forward.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "utility",
+      "clip": "standing dodge backward",
+      "slug": "standing dodge backward",
+      "kb": 178.5,
+      "bakeTarget": "anims/baked/longbow/standing dodge backward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing dodge backward.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "utility",
+      "clip": "standing dodge forward",
+      "slug": "standing dodge forward",
+      "kb": 151.1,
+      "bakeTarget": "anims/baked/longbow/standing dodge forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing dodge forward.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "utility",
+      "clip": "standing dodge left",
+      "slug": "standing dodge left",
+      "kb": 149.6,
+      "bakeTarget": "anims/baked/longbow/standing dodge left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing dodge left.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "utility",
+      "clip": "standing dodge right",
+      "slug": "standing dodge right",
+      "kb": 149.6,
+      "bakeTarget": "anims/baked/longbow/standing dodge right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing dodge right.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "attack",
+      "clip": "standing melee kick",
+      "slug": "standing melee kick",
+      "kb": 169.8,
+      "bakeTarget": "anims/baked/longbow/standing melee kick.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing melee kick.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "utility",
+      "clip": "standing aim overdraw",
+      "slug": "standing aim overdraw",
+      "kb": 266.8,
+      "bakeTarget": "anims/baked/longbow/standing aim overdraw.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing aim overdraw.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "attack",
+      "clip": "standing melee punch",
+      "slug": "standing melee punch",
+      "kb": 150,
+      "bakeTarget": "anims/baked/longbow/standing melee punch.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing melee punch.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "hit",
+      "clip": "standing react small from headshot",
+      "slug": "standing react small from headshot",
+      "kb": 148.6,
+      "bakeTarget": "anims/baked/longbow/standing react small from headshot.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing react small from headshot.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "hit",
+      "clip": "standing react small from front",
+      "slug": "standing react small from front",
+      "kb": 162.6,
+      "bakeTarget": "anims/baked/longbow/standing react small from front.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing react small from front.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "utility",
+      "clip": "standing aim recoil",
+      "slug": "standing aim recoil",
+      "kb": 136.7,
+      "bakeTarget": "anims/baked/longbow/standing aim recoil.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing aim recoil.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "run",
+      "clip": "standing run back",
+      "slug": "standing run back",
+      "kb": 136.7,
+      "bakeTarget": "anims/baked/longbow/standing run back.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing run back.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "run",
+      "clip": "standing run forward",
+      "slug": "standing run forward",
+      "kb": 145.3,
+      "bakeTarget": "anims/baked/longbow/standing run forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing run forward.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "run",
+      "clip": "standing run left",
+      "slug": "standing run left",
+      "kb": 136.7,
+      "bakeTarget": "anims/baked/longbow/standing run left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing run left.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "run",
+      "clip": "standing run right",
+      "slug": "standing run right",
+      "kb": 141,
+      "bakeTarget": "anims/baked/longbow/standing run right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing run right.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "walk",
+      "clip": "standing walk back",
+      "slug": "standing walk back",
+      "kb": 171.3,
+      "bakeTarget": "anims/baked/longbow/standing walk back.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing walk back.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "walk",
+      "clip": "standing aim walk back",
+      "slug": "standing aim walk back",
+      "kb": 171.3,
+      "bakeTarget": "anims/baked/longbow/standing aim walk back.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing aim walk back.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "walk",
+      "clip": "standing walk forward",
+      "slug": "standing walk forward",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/longbow/standing walk forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing walk forward.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "walk",
+      "clip": "standing aim walk forward",
+      "slug": "standing aim walk forward",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/longbow/standing aim walk forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing aim walk forward.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "walk",
+      "clip": "standing walk left",
+      "slug": "standing walk left",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/longbow/standing walk left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing walk left.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "walk",
+      "clip": "standing aim walk left",
+      "slug": "standing aim walk left",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/longbow/standing aim walk left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing aim walk left.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "walk",
+      "clip": "standing walk right",
+      "slug": "standing walk right",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/longbow/standing walk right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing walk right.fbx"
+    },
+    {
+      "pack": "longbow",
+      "role": "walk",
+      "clip": "standing aim walk right",
+      "slug": "standing aim walk right",
+      "kb": 164.1,
+      "bakeTarget": "anims/baked/longbow/standing aim walk right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/longbow/standing aim walk right.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "run",
+      "clip": "run forward",
+      "slug": "run forward",
+      "kb": 172.1,
+      "bakeTarget": "anims/baked/rifle/run forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/run forward.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "idle",
+      "clip": "idle",
+      "slug": "idle",
+      "kb": 194.2,
+      "bakeTarget": "anims/baked/rifle/idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/idle.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "idle",
+      "clip": "idle crouching",
+      "slug": "idle crouching",
+      "kb": 194.2,
+      "bakeTarget": "anims/baked/rifle/idle crouching.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/idle crouching.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "run",
+      "clip": "run backward",
+      "slug": "run backward",
+      "kb": 170.2,
+      "bakeTarget": "anims/baked/rifle/run backward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/run backward.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "run",
+      "clip": "run left",
+      "slug": "run left",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/rifle/run left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/run left.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "run",
+      "clip": "run right",
+      "slug": "run right",
+      "kb": 171.7,
+      "bakeTarget": "anims/baked/rifle/run right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/run right.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "run",
+      "clip": "run forward right",
+      "slug": "run forward right",
+      "kb": 171.9,
+      "bakeTarget": "anims/baked/rifle/run forward right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/run forward right.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "run",
+      "clip": "run forward left",
+      "slug": "run forward left",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/rifle/run forward left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/run forward left.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "run",
+      "clip": "run backward left",
+      "slug": "run backward left",
+      "kb": 171.8,
+      "bakeTarget": "anims/baked/rifle/run backward left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/run backward left.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "run",
+      "clip": "run backward right",
+      "slug": "run backward right",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/rifle/run backward right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/run backward right.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "idle",
+      "clip": "idle aiming",
+      "slug": "idle aiming",
+      "kb": 192,
+      "bakeTarget": "anims/baked/rifle/idle aiming.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/idle aiming.fbx"
+    },
+    {
+      "pack": "rifle",
+      "role": "death",
+      "clip": "death from front headshot",
+      "slug": "death from front headshot",
+      "kb": 230.9,
+      "bakeTarget": "anims/baked/rifle/death from front headshot.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/rifle/death from front headshot.fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "run",
+      "clip": "sword and shield run",
+      "slug": "sword and shield run",
+      "kb": 138.1,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield run.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield run.fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "utility",
+      "clip": "sword and shield strafe",
+      "slug": "sword and shield strafe",
+      "kb": 136.7,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield strafe.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield strafe.fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "utility",
+      "clip": "sword and shield strafe (2)",
+      "slug": "sword and shield strafe 2",
+      "kb": 138.1,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield strafe (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield strafe (2).fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "run",
+      "clip": "sword and shield run (2)",
+      "slug": "sword and shield run 2",
+      "kb": 130.9,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield run (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield run (2).fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "block",
+      "clip": "sword and shield block",
+      "slug": "sword and shield block",
+      "kb": 132.3,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield block.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield block.fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "idle",
+      "clip": "sword and shield block idle",
+      "slug": "sword and shield block idle",
+      "kb": 166.9,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield block idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield block idle.fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "block",
+      "clip": "sword and shield block (2)",
+      "slug": "sword and shield block 2",
+      "kb": 136.7,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield block (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield block (2).fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "attack",
+      "clip": "sword and shield attack",
+      "slug": "sword and shield attack",
+      "kb": 208.7,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield attack.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield attack.fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "attack",
+      "clip": "sword and shield attack (2)",
+      "slug": "sword and shield attack 2",
+      "kb": 166.4,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield attack (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield attack (2).fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "attack",
+      "clip": "sword and shield attack (3)",
+      "slug": "sword and shield attack 3",
+      "kb": 186.4,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield attack (3).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield attack (3).fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "attack",
+      "clip": "sword and shield attack (4)",
+      "slug": "sword and shield attack 4",
+      "kb": 151.1,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield attack (4).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield attack (4).fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "death",
+      "clip": "sword and shield death",
+      "slug": "sword and shield death",
+      "kb": 207.3,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield death.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield death.fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "idle",
+      "clip": "sword and shield idle",
+      "slug": "sword and shield idle",
+      "kb": 217.4,
+      "bakeTarget": "anims/baked/sword_shield/sword and shield idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/sword and shield idle.fbx"
+    },
+    {
+      "pack": "sword_shield",
+      "role": "utility",
+      "clip": "draw sword 1",
+      "slug": "draw sword 1",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/sword_shield/draw sword 1.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/sword_shield/draw sword 1.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "idle",
+      "clip": "pistol idle",
+      "slug": "pistol idle",
+      "kb": 162.7,
+      "bakeTarget": "anims/baked/pistol/pistol idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol idle.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "utility",
+      "clip": "pistol jump",
+      "slug": "pistol jump",
+      "kb": 194.3,
+      "bakeTarget": "anims/baked/pistol/pistol jump.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol jump.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "run",
+      "clip": "pistol run",
+      "slug": "pistol run",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/pistol/pistol run.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol run.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "utility",
+      "clip": "pistol jump (2)",
+      "slug": "pistol jump 2",
+      "kb": 142.4,
+      "bakeTarget": "anims/baked/pistol/pistol jump (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol jump (2).fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "walk",
+      "clip": "pistol walk",
+      "slug": "pistol walk",
+      "kb": 142.4,
+      "bakeTarget": "anims/baked/pistol/pistol walk.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol walk.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "run",
+      "clip": "pistol run backward",
+      "slug": "pistol run backward",
+      "kb": 130.9,
+      "bakeTarget": "anims/baked/pistol/pistol run backward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol run backward.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "walk",
+      "clip": "pistol walk backward",
+      "slug": "pistol walk backward",
+      "kb": 152.5,
+      "bakeTarget": "anims/baked/pistol/pistol walk backward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol walk backward.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "utility",
+      "clip": "pistol strafe",
+      "slug": "pistol strafe",
+      "kb": 132.3,
+      "bakeTarget": "anims/baked/pistol/pistol strafe.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol strafe.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "utility",
+      "clip": "pistol strafe (2)",
+      "slug": "pistol strafe 2",
+      "kb": 133.8,
+      "bakeTarget": "anims/baked/pistol/pistol strafe (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol strafe (2).fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "walk",
+      "clip": "pistol walk arc",
+      "slug": "pistol walk arc",
+      "kb": 139.5,
+      "bakeTarget": "anims/baked/pistol/pistol walk arc.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol walk arc.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "walk",
+      "clip": "pistol walk arc (2)",
+      "slug": "pistol walk arc 2",
+      "kb": 141,
+      "bakeTarget": "anims/baked/pistol/pistol walk arc (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol walk arc (2).fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "run",
+      "clip": "pistol run arc",
+      "slug": "pistol run arc",
+      "kb": 133.8,
+      "bakeTarget": "anims/baked/pistol/pistol run arc.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol run arc.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "run",
+      "clip": "pistol run arc (2)",
+      "slug": "pistol run arc 2",
+      "kb": 135.2,
+      "bakeTarget": "anims/baked/pistol/pistol run arc (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol run arc (2).fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "run",
+      "clip": "pistol run backward arc",
+      "slug": "pistol run backward arc",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/pistol/pistol run backward arc.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol run backward arc.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "run",
+      "clip": "pistol run backward arc (2)",
+      "slug": "pistol run backward arc 2",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/pistol/pistol run backward arc (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol run backward arc (2).fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "idle",
+      "clip": "pistol kneeling idle",
+      "slug": "pistol kneeling idle",
+      "kb": 268.2,
+      "bakeTarget": "anims/baked/pistol/pistol kneeling idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol kneeling idle.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "walk",
+      "clip": "pistol walk backward arc",
+      "slug": "pistol walk backward arc",
+      "kb": 133.8,
+      "bakeTarget": "anims/baked/pistol/pistol walk backward arc.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol walk backward arc.fbx"
+    },
+    {
+      "pack": "pistol",
+      "role": "walk",
+      "clip": "pistol walk backward arc (2)",
+      "slug": "pistol walk backward arc 2",
+      "kb": 133.8,
+      "bakeTarget": "anims/baked/pistol/pistol walk backward arc (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/pistol/pistol walk backward arc (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "idle",
+      "clip": "great sword idle",
+      "slug": "great sword idle",
+      "kb": 194.3,
+      "bakeTarget": "anims/baked/2h_melee/great sword idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword idle.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "walk",
+      "clip": "great sword walk",
+      "slug": "great sword walk",
+      "kb": 166.9,
+      "bakeTarget": "anims/baked/2h_melee/great sword walk.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword walk.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "walk",
+      "clip": "great sword walk (2)",
+      "slug": "great sword walk 2",
+      "kb": 164.1,
+      "bakeTarget": "anims/baked/2h_melee/great sword walk (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword walk (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "utility",
+      "clip": "great sword strafe",
+      "slug": "great sword strafe",
+      "kb": 155.4,
+      "bakeTarget": "anims/baked/2h_melee/great sword strafe.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword strafe.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "utility",
+      "clip": "great sword strafe (2)",
+      "slug": "great sword strafe 2",
+      "kb": 158.3,
+      "bakeTarget": "anims/baked/2h_melee/great sword strafe (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword strafe (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "run",
+      "clip": "great sword run",
+      "slug": "great sword run",
+      "kb": 139.5,
+      "bakeTarget": "anims/baked/2h_melee/great sword run.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword run.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "utility",
+      "clip": "great sword strafe (3)",
+      "slug": "great sword strafe 3",
+      "kb": 132.3,
+      "bakeTarget": "anims/baked/2h_melee/great sword strafe (3).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword strafe (3).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "utility",
+      "clip": "great sword strafe (4)",
+      "slug": "great sword strafe 4",
+      "kb": 135.2,
+      "bakeTarget": "anims/baked/2h_melee/great sword strafe (4).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword strafe (4).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "utility",
+      "clip": "great sword jump",
+      "slug": "great sword jump",
+      "kb": 135.2,
+      "bakeTarget": "anims/baked/2h_melee/great sword jump.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword jump.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "utility",
+      "clip": "great sword jump (2)",
+      "slug": "great sword jump 2",
+      "kb": 146.8,
+      "bakeTarget": "anims/baked/2h_melee/great sword jump (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword jump (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword slash",
+      "slug": "great sword slash",
+      "kb": 162.6,
+      "bakeTarget": "anims/baked/2h_melee/great sword slash.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword slash.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword slash (2)",
+      "slug": "great sword slash 2",
+      "kb": 263,
+      "bakeTarget": "anims/baked/2h_melee/great sword slash (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword slash (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword slash (3)",
+      "slug": "great sword slash 3",
+      "kb": 189.2,
+      "bakeTarget": "anims/baked/2h_melee/great sword slash (3).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword slash (3).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword slash (4)",
+      "slug": "great sword slash 4",
+      "kb": 196.5,
+      "bakeTarget": "anims/baked/2h_melee/great sword slash (4).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword slash (4).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "block",
+      "clip": "great sword blocking",
+      "slug": "great sword blocking",
+      "kb": 173.1,
+      "bakeTarget": "anims/baked/2h_melee/great sword blocking.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword blocking.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "block",
+      "clip": "great sword blocking (2)",
+      "slug": "great sword blocking 2",
+      "kb": 147.6,
+      "bakeTarget": "anims/baked/2h_melee/great sword blocking (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword blocking (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "block",
+      "clip": "great sword blocking (3)",
+      "slug": "great sword blocking 3",
+      "kb": 172.6,
+      "bakeTarget": "anims/baked/2h_melee/great sword blocking (3).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword blocking (3).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "hit",
+      "clip": "great sword impact",
+      "slug": "great sword impact",
+      "kb": 145,
+      "bakeTarget": "anims/baked/2h_melee/great sword impact.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword impact.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "hit",
+      "clip": "great sword impact (2)",
+      "slug": "great sword impact 2",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/2h_melee/great sword impact (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword impact (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "hit",
+      "clip": "great sword impact (3)",
+      "slug": "great sword impact 3",
+      "kb": 161.3,
+      "bakeTarget": "anims/baked/2h_melee/great sword impact (3).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword impact (3).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword slash (5)",
+      "slug": "great sword slash 5",
+      "kb": 169.8,
+      "bakeTarget": "anims/baked/2h_melee/great sword slash (5).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword slash (5).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "hit",
+      "clip": "great sword impact (4)",
+      "slug": "great sword impact 4",
+      "kb": 136.7,
+      "bakeTarget": "anims/baked/2h_melee/great sword impact (4).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword impact (4).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "hit",
+      "clip": "great sword impact (5)",
+      "slug": "great sword impact 5",
+      "kb": 149.6,
+      "bakeTarget": "anims/baked/2h_melee/great sword impact (5).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword impact (5).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword jump attack",
+      "slug": "great sword jump attack",
+      "kb": 206.1,
+      "bakeTarget": "anims/baked/2h_melee/great sword jump attack.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword jump attack.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword slide attack",
+      "slug": "great sword slide attack",
+      "kb": 201.5,
+      "bakeTarget": "anims/baked/2h_melee/great sword slide attack.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword slide attack.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword high spin attack",
+      "slug": "great sword high spin attack",
+      "kb": 194.5,
+      "bakeTarget": "anims/baked/2h_melee/great sword high spin attack.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword high spin attack.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword kick",
+      "slug": "great sword kick",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/2h_melee/great sword kick.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword kick.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword kick (2)",
+      "slug": "great sword kick 2",
+      "kb": 182.8,
+      "bakeTarget": "anims/baked/2h_melee/great sword kick (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword kick (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "idle",
+      "clip": "great sword idle (2)",
+      "slug": "great sword idle 2",
+      "kb": 267.8,
+      "bakeTarget": "anims/baked/2h_melee/great sword idle (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword idle (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "idle",
+      "clip": "great sword idle (3)",
+      "slug": "great sword idle 3",
+      "kb": 258.7,
+      "bakeTarget": "anims/baked/2h_melee/great sword idle (3).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword idle (3).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "idle",
+      "clip": "great sword idle (4)",
+      "slug": "great sword idle 4",
+      "kb": 262.8,
+      "bakeTarget": "anims/baked/2h_melee/great sword idle (4).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword idle (4).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "idle",
+      "clip": "great sword idle (5)",
+      "slug": "great sword idle 5",
+      "kb": 351.2,
+      "bakeTarget": "anims/baked/2h_melee/great sword idle (5).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword idle (5).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword casting",
+      "slug": "great sword casting",
+      "kb": 277.3,
+      "bakeTarget": "anims/baked/2h_melee/great sword casting.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword casting.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "great sword attack",
+      "slug": "great sword attack",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/2h_melee/great sword attack.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword attack.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "death",
+      "clip": "two handed sword death",
+      "slug": "two handed sword death",
+      "kb": 211.6,
+      "bakeTarget": "anims/baked/2h_melee/two handed sword death.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/two handed sword death.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "utility",
+      "clip": "draw a great sword 1",
+      "slug": "draw a great sword 1",
+      "kb": 172.7,
+      "bakeTarget": "anims/baked/2h_melee/draw a great sword 1.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/draw a great sword 1.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "utility",
+      "clip": "draw a great sword 2",
+      "slug": "draw a great sword 2",
+      "kb": 142.4,
+      "bakeTarget": "anims/baked/2h_melee/draw a great sword 2.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/draw a great sword 2.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "death",
+      "clip": "two handed sword death (2)",
+      "slug": "two handed sword death 2",
+      "kb": 220.3,
+      "bakeTarget": "anims/baked/2h_melee/two handed sword death (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/two handed sword death (2).fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "attack",
+      "clip": "spell cast",
+      "slug": "spell cast",
+      "kb": 156.8,
+      "bakeTarget": "anims/baked/2h_melee/spell cast.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/spell cast.fbx"
+    },
+    {
+      "pack": "2h_melee",
+      "role": "run",
+      "clip": "great sword run (2)",
+      "slug": "great sword run 2",
+      "kb": 133.8,
+      "bakeTarget": "anims/baked/2h_melee/great sword run (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/greatsword/great sword run (2).fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "idle",
+      "clip": "box idle",
+      "slug": "box idle",
+      "kb": 322.5,
+      "bakeTarget": "anims/baked/farming/box idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/box idle.fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "walk",
+      "clip": "box walk arc",
+      "slug": "box walk arc",
+      "kb": 161.2,
+      "bakeTarget": "anims/baked/farming/box walk arc.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/box walk arc.fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "idle",
+      "clip": "kneeling idle",
+      "slug": "kneeling idle",
+      "kb": 251.8,
+      "bakeTarget": "anims/baked/farming/kneeling idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/kneeling idle.fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "idle",
+      "clip": "holding idle",
+      "slug": "holding idle",
+      "kb": 312.8,
+      "bakeTarget": "anims/baked/farming/holding idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/holding idle.fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "walk",
+      "clip": "holding walk",
+      "slug": "holding walk",
+      "kb": 166.9,
+      "bakeTarget": "anims/baked/farming/holding walk.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/holding walk.fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "idle",
+      "clip": "wheelbarrow idle",
+      "slug": "wheelbarrow idle",
+      "kb": 169.5,
+      "bakeTarget": "anims/baked/farming/wheelbarrow idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/wheelbarrow idle.fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "walk",
+      "clip": "wheelbarrow walk",
+      "slug": "wheelbarrow walk",
+      "kb": 149.6,
+      "bakeTarget": "anims/baked/farming/wheelbarrow walk.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/wheelbarrow walk.fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "walk",
+      "clip": "wheelbarrow walk turn",
+      "slug": "wheelbarrow walk turn",
+      "kb": 154,
+      "bakeTarget": "anims/baked/farming/wheelbarrow walk turn.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/wheelbarrow walk turn.fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "walk",
+      "clip": "wheelbarrow walk (2)",
+      "slug": "wheelbarrow walk 2",
+      "kb": 149.6,
+      "bakeTarget": "anims/baked/farming/wheelbarrow walk (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/wheelbarrow walk (2).fbx"
+    },
+    {
+      "pack": "farming",
+      "role": "walk",
+      "clip": "wheelbarrow walk turn (2)",
+      "slug": "wheelbarrow walk turn 2",
+      "kb": 154,
+      "bakeTarget": "anims/baked/farming/wheelbarrow walk turn (2).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/farming/wheelbarrow walk turn (2).fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "idle",
+      "clip": "standing idle",
+      "slug": "standing idle",
+      "kb": 188.6,
+      "bakeTarget": "anims/baked/magic/standing idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/standing idle.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "utility",
+      "clip": "Standing Jump",
+      "slug": "standing jump",
+      "kb": 210.2,
+      "bakeTarget": "anims/baked/magic/Standing Jump.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Jump.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "run",
+      "clip": "Standing Jump Running",
+      "slug": "standing jump running",
+      "kb": 154,
+      "bakeTarget": "anims/baked/magic/Standing Jump Running.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Jump Running.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "run",
+      "clip": "Standing Jump Running Landing",
+      "slug": "standing jump running landing",
+      "kb": 166.9,
+      "bakeTarget": "anims/baked/magic/Standing Jump Running Landing.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Jump Running Landing.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "idle",
+      "clip": "Standing Land To Standing Idle",
+      "slug": "standing land to standing idle",
+      "kb": 155.4,
+      "bakeTarget": "anims/baked/magic/Standing Land To Standing Idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Land To Standing Idle.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "run",
+      "clip": "Standing Run Back",
+      "slug": "standing run back",
+      "kb": 135.2,
+      "bakeTarget": "anims/baked/magic/Standing Run Back.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Run Back.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "run",
+      "clip": "Standing Run Forward",
+      "slug": "standing run forward",
+      "kb": 139.5,
+      "bakeTarget": "anims/baked/magic/Standing Run Forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Run Forward.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "run",
+      "clip": "Standing Run Left",
+      "slug": "standing run left",
+      "kb": 141,
+      "bakeTarget": "anims/baked/magic/Standing Run Left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Run Left.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "run",
+      "clip": "Standing Run Right",
+      "slug": "standing run right",
+      "kb": 141,
+      "bakeTarget": "anims/baked/magic/Standing Run Right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Run Right.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "run",
+      "clip": "Standing Sprint Forward",
+      "slug": "standing sprint forward",
+      "kb": 132.3,
+      "bakeTarget": "anims/baked/magic/Standing Sprint Forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Sprint Forward.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "walk",
+      "clip": "Standing Walk Back",
+      "slug": "standing walk back",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/magic/Standing Walk Back.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Walk Back.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "walk",
+      "clip": "Standing Walk Forward",
+      "slug": "standing walk forward",
+      "kb": 156.8,
+      "bakeTarget": "anims/baked/magic/Standing Walk Forward.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Walk Forward.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "walk",
+      "clip": "Standing Walk Left",
+      "slug": "standing walk left",
+      "kb": 158.3,
+      "bakeTarget": "anims/baked/magic/Standing Walk Left.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Walk Left.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "walk",
+      "clip": "Standing Walk Right",
+      "slug": "standing walk right",
+      "kb": 159.7,
+      "bakeTarget": "anims/baked/magic/Standing Walk Right.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_loco/Standing Walk Right.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "standing 1H cast spell 01",
+      "slug": "standing 1h cast spell 01",
+      "kb": 205.9,
+      "bakeTarget": "anims/baked/magic/standing 1H cast spell 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/standing 1H cast spell 01.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "idle",
+      "clip": "standing idle",
+      "slug": "standing idle",
+      "kb": 188.6,
+      "bakeTarget": "anims/baked/magic/standing idle.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/standing idle.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 1H Magic Attack 01",
+      "slug": "standing 1h magic attack 01",
+      "kb": 208.5,
+      "bakeTarget": "anims/baked/magic/Standing 1H Magic Attack 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 1H Magic Attack 01.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 1H Magic Attack 02",
+      "slug": "standing 1h magic attack 02",
+      "kb": 204.3,
+      "bakeTarget": "anims/baked/magic/Standing 1H Magic Attack 02.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 1H Magic Attack 02.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 1H Magic Attack 03",
+      "slug": "standing 1h magic attack 03",
+      "kb": 208.9,
+      "bakeTarget": "anims/baked/magic/Standing 1H Magic Attack 03.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 1H Magic Attack 03.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 2H Cast Spell 01",
+      "slug": "standing 2h cast spell 01",
+      "kb": 207,
+      "bakeTarget": "anims/baked/magic/Standing 2H Cast Spell 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 2H Cast Spell 01.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 2H Magic Area Attack 01",
+      "slug": "standing 2h magic area attack 01",
+      "kb": 237.3,
+      "bakeTarget": "anims/baked/magic/Standing 2H Magic Area Attack 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 2H Magic Area Attack 01.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 2H Magic Area Attack 02",
+      "slug": "standing 2h magic area attack 02",
+      "kb": 249.1,
+      "bakeTarget": "anims/baked/magic/Standing 2H Magic Area Attack 02.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 2H Magic Area Attack 02.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 2H Magic Attack 01",
+      "slug": "standing 2h magic attack 01",
+      "kb": 224.6,
+      "bakeTarget": "anims/baked/magic/Standing 2H Magic Attack 01.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 2H Magic Attack 01.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 2H Magic Attack 02",
+      "slug": "standing 2h magic attack 02",
+      "kb": 225.7,
+      "bakeTarget": "anims/baked/magic/Standing 2H Magic Attack 02.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 2H Magic Attack 02.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 2H Magic Attack 03",
+      "slug": "standing 2h magic attack 03",
+      "kb": 256.5,
+      "bakeTarget": "anims/baked/magic/Standing 2H Magic Attack 03.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 2H Magic Attack 03.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 2H Magic Attack 04",
+      "slug": "standing 2h magic attack 04",
+      "kb": 252,
+      "bakeTarget": "anims/baked/magic/Standing 2H Magic Attack 04.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 2H Magic Attack 04.fbx"
+    },
+    {
+      "pack": "magic",
+      "role": "attack",
+      "clip": "Standing 2H Magic Attack 05",
+      "slug": "standing 2h magic attack 05",
+      "kb": 262,
+      "bakeTarget": "anims/baked/magic/Standing 2H Magic Attack 05.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/magic_spell/Standing 2H Magic Attack 05.fbx"
+    },
+    {
+      "pack": "traversal",
+      "role": "utility",
+      "clip": "Climbing Down",
+      "slug": "climbing down",
+      "kb": 243.3,
+      "bakeTarget": "anims/baked/traversal/Climbing Down.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/traversal/Climbing Down.fbx"
+    },
+    {
+      "pack": "traversal",
+      "role": "utility",
+      "clip": "Climbing Up Wall (1)",
+      "slug": "climbing up wall 1",
+      "kb": 194.3,
+      "bakeTarget": "anims/baked/traversal/Climbing Up Wall (1).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/traversal/Climbing Up Wall (1).fbx"
+    },
+    {
+      "pack": "traversal",
+      "role": "utility",
+      "clip": "Climbing (1)",
+      "slug": "climbing 1",
+      "kb": 273.6,
+      "bakeTarget": "anims/baked/traversal/Climbing (1).json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/traversal/Climbing (1).fbx"
+    },
+    {
+      "pack": "traversal",
+      "role": "utility",
+      "clip": "Climbing To Top",
+      "slug": "climbing to top",
+      "kb": 280.8,
+      "bakeTarget": "anims/baked/traversal/Climbing To Top.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/traversal/Climbing To Top.fbx"
+    },
+    {
+      "pack": "traversal",
+      "role": "utility",
+      "clip": "Climbing Down Wall",
+      "slug": "climbing down wall",
+      "kb": 194.3,
+      "bakeTarget": "anims/baked/traversal/Climbing Down Wall.json",
+      "status": "staged_for_bake",
+      "source": "D:/Games/Models/_anim_packs/traversal/Climbing Down Wall.fbx"
+    }
+  ]
+}
