@@ -11,7 +11,10 @@
  */
 export const CDN = 'https://assets.grudge-studio.com';
 
-/** Canonical race kits — FBX is SSOT until GLB passes visual gate */
+/**
+ * Canonical race kits — production browser SSOT = GLB on assets CDN.
+ * FBX remains on CDN for convert/author only (not catalog inventory).
+ */
 export const RACE_ASSETS = {
   human: {
     id: 'human',
@@ -118,34 +121,100 @@ export function atlasUrlCandidates(raceId) {
   ];
 }
 
-export function kitUrl(raceId, source = 'fbx') {
+/** Production default source = GLB. Pass source:'fbx' only for convert tools. */
+export function kitUrl(raceId, source = 'glb') {
   const a = RACE_ASSETS[raceId];
   if (!a) return null;
-  if (source === 'glb' || source === 'raceGlb') return a.glb;
-  return a.fbx;
+  if (source === 'fbx' || source === 'author') return a.fbx;
+  return a.glb;
+}
+
+/**
+ * STONE ONLY — production grudge6 character inventory (meshes).
+ * GLB race kits on assets CDN. Everything else under grudge6/ is trash/index-noise.
+ *
+ *   models/grudge6/races/{WK|BRB|ELF|DWF|ORC|UD}_Characters.glb
+ *   textures/grudge6/{folder}/*.webp  (atlases)
+ *
+ * FBX remains on R2 for convert tooling only — not catalog inventory.
+ * Anims: anims/baked/** only (handled separately as baked-bip001).
+ */
+export const GRUDGE6_SSOT_KIT_RE =
+  /^models\/grudge6\/races\/(wk|brb|elf|dwf|orc|ud)_characters\.glb$/i;
+
+export const GRUDGE6_SSOT_ATLAS_RE = /^textures\/grudge6\//i;
+
+/** True if path is the only allowed production character kit GLB. */
+export function isGrudge6SsotKitPath(pathOrUrl) {
+  const key = normalizeAssetKey(pathOrUrl);
+  return GRUDGE6_SSOT_KIT_RE.test(key);
+}
+
+export function isGrudge6SsotAtlasPath(pathOrUrl) {
+  return GRUDGE6_SSOT_ATLAS_RE.test(normalizeAssetKey(pathOrUrl));
+}
+
+/** Any path that mentions grudge6 / race multipacks / arena characters. */
+export function isGrudge6RelatedPath(pathOrUrl) {
+  const key = normalizeAssetKey(pathOrUrl);
+  if (!key) return false;
+  return (
+    key.includes('grudge6') ||
+    /models\/characters\/grudge6\//i.test(key) ||
+    /cdn\/assets\/characters\//i.test(key) ||
+    /models\/grudge6\//i.test(key) ||
+    /models\/animations\/grudge6/i.test(key) ||
+    /_characters\.(glb|fbx)$/i.test(key)
+  );
 }
 
 /**
  * TRASH — never inventory, never load, never deep-link.
- * D1 still has these; pipeline must drop them and rewrite to races/ SSOT.
+ * Everything grudge6-related that is NOT the stone races GLB (or atlas).
  */
 export const GRUDGE6_TRASH_PATH_RE = [
   /^models\/grudge6\/(wk|brb|ud|orc|elf|dwf)\//i,
   /^models\/grudge6\/30characters/i,
   /^models\/characters\/grudge6\//i,
   /^models\/grudge6\/(?:race|metaverse)\//i,
+  /^models\/grudge6\/races\/library\//i,
+  /^models\/animations\/grudge6/i,
   /cdn\/assets\/characters\//i,
+  // Author FBX race kits — convert source only, not inventory
+  /^models\/grudge6\/races\/(wk|brb|elf|dwf|orc|ud)_characters\.fbx$/i,
+  // Any other models/grudge6/* that is not the 6 production GLBs
+  /^models\/grudge6\/(?!races\/(wk|brb|elf|dwf|orc|ud)_characters\.glb$)/i,
 ];
 
-/** True if path is a known-bad grudge6 index (legacy folder / soup pack). */
-export function isTrashGrudge6Path(pathOrUrl) {
-  const key = String(pathOrUrl || '')
-    .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
+function normalizeAssetKey(pathOrUrl) {
+  return String(pathOrUrl || '')
+    .replace(/^https?:\/\/[^/]+\//i, '')
     .replace(/\\/g, '/')
     .replace(/^\//, '')
     .toLowerCase();
+}
+
+/** True if path is a known-bad / non-SSOT grudge6 index row. */
+export function isTrashGrudge6Path(pathOrUrl) {
+  const key = normalizeAssetKey(pathOrUrl);
   if (!key) return false;
-  return GRUDGE6_TRASH_PATH_RE.some((re) => re.test(key));
+  // Explicit allowlist wins
+  if (isGrudge6SsotKitPath(key) || isGrudge6SsotAtlasPath(key)) return false;
+  if (GRUDGE6_TRASH_PATH_RE.some((re) => re.test(key))) return true;
+  // Related but not SSOT kit/atlas → trash
+  if (isGrudge6RelatedPath(key) && !isGrudge6SsotKitPath(key) && !isGrudge6SsotAtlasPath(key)) {
+    // baked anims under anims/baked are NOT trash
+    if (/^anims\/baked\//i.test(key)) return false;
+    return true;
+  }
+  return false;
+}
+
+/** Six production kit r2Keys (GLB only). */
+export function grudge6SsotKitKeys() {
+  return Object.values(RACE_ASSETS).map((a) =>
+    a.glb.replace(/^https?:\/\/assets\.grudge-studio\.com\//i, ''),
+  );
 }
 
 /**

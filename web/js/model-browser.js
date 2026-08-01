@@ -29,6 +29,9 @@ import {
   kitUrl as fleetKitUrl,
   resolveCanonicalAssetUrl,
   isTrashGrudge6Path,
+  isGrudge6SsotKitPath,
+  isGrudge6RelatedPath,
+  grudge6SsotKitKeys,
   detectFleetRaceId,
 } from './grudge6-kit.js';
 import {
@@ -210,7 +213,8 @@ const RACE_KITS = Object.fromEntries(
         fleetId,
         fbx: a.fbx,
         glb: a.glb,
-        r2: a.fbx,
+        // ONLY production inventory key = GLB race kit
+        r2: a.glb,
         // CANONICAL atlas: textures/grudge6/{folder}/* (stone SSOT)
         atlas: fleetAtlasUrl(fleetId),
       },
@@ -426,29 +430,25 @@ function normalizeEntry(raw, source) {
 
 function curatedGrudge6() {
   const out = [];
+  // ONLY system: 6 production race GLBs + stone atlases (no multipacks, no FBX inventory)
   for (const [id, kit] of Object.entries(RACE_KITS)) {
-    // FLEET SSOT only: races/*_Characters.fbx + assets/{folder}/textures atlas
-    // Do NOT advertise legacy models/grudge6/brb|ud|wk/* as inventory.
-    const fbxPath = String(kit.fbx || '')
-      .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
-      .replace(/^\//, '');
     const glbPath = String(kit.glb || '')
       .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
       .replace(/^\//, '');
+    if (!glbPath || !isGrudge6SsotKitPath(glbPath)) continue;
     out.push(
       normalizeEntry(
         {
           id: `grudge6-race-${id}`,
-          name: `${kit.label} — Characters (fleet SSOT)`,
-          // Catalog key = races GLB uuid people deep-link (e.g. BRB 3ab2b12a…)
-          // Load always rewrites to FBX+atlas via loadCharacterKit
-          path: glbPath || fbxPath,
+          name: `${kit.label} — Characters (ONLY SSOT)`,
+          path: glbPath,
           format: 'glb',
           category: 'grudge6-races',
           group: 'grudge6/races',
           kind: 'character',
-          cdnUrl: kit.fbx || kit.glb,
-          altUrls: [kit.fbx, kit.glb].filter(Boolean),
+          // Production load = GLB + textures/grudge6 atlas (not FBX multipack host)
+          cdnUrl: kit.glb,
+          altUrls: [kit.glb, kit.atlas].filter(Boolean),
           animations: 0,
           textures: 1,
           textureStatus: 'atlas',
@@ -460,6 +460,8 @@ function curatedGrudge6() {
           compressionType: 'draco',
           supportedSkeletons: ['bip001', 'rts_toon'],
           meshes: 12,
+          atlasUrl: kit.atlas,
+          onlySsot: true,
         },
         'grudge6-ssot',
       ),
@@ -548,16 +550,12 @@ async function fetchD1Catalog() {
             if (isRawKillPath({ path: key, name: a.name || '', cdnUrl: a.cdnUrl || '' })) {
               continue;
             }
-            // HARD: drop legacy grudge6 trash (models/grudge6/ud|wk|brb/…, 30characters, …)
-            // Race kits come from curated fleet SSOT only (races/* + grudge6-kit atlas).
-            if (isTrashGrudge6Path(key)) continue;
+            // HARD ONLY-SSOT: drop every non-stone grudge6 path (multipacks, anim dumps,
+            // legacy folders, FBX kits, library fragments). Kits come from curatedGrudge6 only.
+            if (isTrashGrudge6Path(key) || isGrudge6RelatedPath(key)) continue;
             // HARD: drop raw Mixamo/Kaykit anim dumps — only anims/baked JSON is inventory
             if (/models\/animations\//i.test(key)) continue;
             if (/kaykit\/rig_/i.test(key)) continue;
-            // Skip D1 races/*_Characters rows — curated grudge6-ssot owns those keys
-            if (/models\/grudge6\/races\/(wk|brb|ud|orc|elf|dwf)_characters\.(glb|fbx)$/i.test(key)) {
-              continue;
-            }
             // Pass-2: skip multipack fragment pseudo-keys and non-mesh sidecar rows
             if (/#mesh:/i.test(key)) continue;
             if (/\.(png|jpg|jpeg|webp|tga|mtl|bin)$/i.test(key)) continue;
@@ -640,23 +638,36 @@ async function loadCatalog() {
   }
 
   // Merge: curated base → ObjectStore → production → D1
-  // HARD: trash grudge6 paths never enter the map
+  // HARD ONLY-SSOT: only curated grudge6-ssot (+ baked-bip001) may carry grudge6 character keys.
+  // All other grudge6-related rows from D1/ObjectStore/production are purged from the browser.
   const map = new Map();
   let trashDropped = 0;
+  const allowedSsot = new Set(grudge6SsotKitKeys().map((k) => k.toLowerCase()));
   for (const m of [...curated, ...os, ...production, ...d1]) {
     const k = normalizeR2Key(m.path || m.r2Key || m.id);
     if (!k) continue;
-    if (isTrashGrudge6Path(k) || isTrashGrudge6Path(m.cdnUrl || '')) {
-      trashDropped++;
-      continue;
-    }
-    // Non-curated races/*_Characters: drop — curated grudge6-ssot is sole inventory row
-    if (
-      m.source !== 'grudge6-ssot' &&
-      /models\/grudge6\/races\/(wk|brb|ud|orc|elf|dwf)_characters\.(glb|fbx)$/i.test(k)
-    ) {
-      trashDropped++;
-      continue;
+    const cdn = m.cdnUrl || '';
+    const g6rel =
+      isGrudge6RelatedPath(k) ||
+      isGrudge6RelatedPath(cdn) ||
+      isTrashGrudge6Path(k) ||
+      isTrashGrudge6Path(cdn);
+    if (g6rel) {
+      // Keep only curated SSOT kit rows and baked anim JSON
+      const isSsotKit =
+        m.source === 'grudge6-ssot' ||
+        isGrudge6SsotKitPath(k) ||
+        allowedSsot.has(k.toLowerCase());
+      const isBaked = m.source === 'baked-bip001' || m.isBakedClip || /^anims\/baked\//i.test(k);
+      if (!isSsotKit && !isBaked) {
+        trashDropped++;
+        continue;
+      }
+      // Non-curated duplicate of SSOT kit key → drop (curated wins earlier in merge order)
+      if (isSsotKit && m.source !== 'grudge6-ssot' && m.source !== 'baked-bip001') {
+        trashDropped++;
+        continue;
+      }
     }
     if (!map.has(k)) map.set(k, m);
     else map.set(k, mergeTruthEntries(map.get(k), m));
@@ -672,11 +683,14 @@ async function loadCatalog() {
   allModels = catalogReady;
   activeProd = 'ready';
   activeFormat = null; // GLB + baked JSON clips
-  if (purged.removed > 0 || catalogRaw.length > 0 || trashDropped > 0) {
-    console.info(
-      `[catalog] game-ready ${catalogReady.length} · raw hidden ${catalogRaw.length} · −${purged.removed} dupes · −${trashDropped} grudge6-trash`,
-    );
-  }
+  console.info(
+    `[catalog] ONLY grudge6 SSOT kits=${[...map.keys()].filter((k) => isGrudge6SsotKitPath(k)).length}/6 · ` +
+      `game-ready ${catalogReady.length} · raw hidden ${catalogRaw.length} · −${purged.removed} dupes · −${trashDropped} purged non-SSOT grudge6`,
+  );
+  window.__g6OnlySsot = {
+    kits: grudge6SsotKitKeys(),
+    purgedNonSsot: trashDropped,
+  };
 
   void prefillDerivedUuids()
     .then(async () => {
@@ -2035,9 +2049,9 @@ async function resolveUrl(entry) {
 }
 
 /**
- * Load grudge6 race kit EXACTLY like fleet / Unity path:
- *   FBX (SSOT) + assets/{folder}/textures/{atlas}.webp via grudge6-kit.js
+ * Load grudge6 race kit — ONLY production GLB + textures/grudge6 atlas.
  * Do NOT run prepMaterials after atlas bind (destroys maps → orange sludge).
+ * No multipack hosts, no arena CDN characters.
  */
 async function loadCharacterKit(raceId) {
   const { clone } = await import('three/addons/utils/SkeletonUtils.js');
@@ -2054,7 +2068,7 @@ async function loadCharacterKit(raceId) {
       c.userData.grudgeRaceHeightM = raceHeightM(raceId);
       c.userData.grudge6SsotHost = true;
       c.userData.fleetRaceId = fid;
-      c.userData.importPipeline = 'fbx-atlas';
+      c.userData.importPipeline = 'production-glb';
       c.userData.artForwardSet = false;
       c.userData.grudgeHeightFit = false;
       c.userData.atlasUrl = cached.userData.atlasUrl;
@@ -2064,27 +2078,28 @@ async function loadCharacterKit(raceId) {
     characterTemplateCache.delete(raceId);
   }
 
-  // 1) Load FBX SSOT via resolveCanonicalAssetUrl (rewrites legacy D1 paths)
-  const fbxUrl = resolveCanonicalAssetUrl(fleetKitUrl(fid, 'fbx'));
-  if (isForbiddenCharacterHost(fbxUrl)) {
-    throw new Error(`Blocked character host: ${fbxUrl}`);
+  // 1) Production GLB ONLY (stone SSOT) — FBX is convert author only
+  const glbUrl = resolveCanonicalAssetUrl(fleetKitUrl(fid, 'glb'));
+  if (isForbiddenCharacterHost(glbUrl) || !isGrudge6SsotKitPath(glbUrl)) {
+    throw new Error(`Blocked / non-SSOT character host: ${glbUrl}`);
   }
   let root;
-  let loadedUrl = fbxUrl;
+  let loadedUrl = glbUrl;
   try {
-    const fbxLoader = new FBXLoader();
-    root = await fbxLoader.loadAsync(fbxUrl);
-  } catch (e) {
-    console.warn('[grudge6] FBX failed, races GLB fallback', fbxUrl, e?.message || e);
-    const glbUrl = resolveCanonicalAssetUrl(fleetKitUrl(fid, 'glb'));
     const gltf = await getGltfLoader().loadAsync(glbUrl);
     root = gltf.scene || gltf;
-    loadedUrl = glbUrl;
+  } catch (e) {
+    console.warn('[grudge6] GLB failed, last-resort FBX author kit', glbUrl, e?.message || e);
+    const fbxUrl = resolveCanonicalAssetUrl(fleetKitUrl(fid, 'fbx'));
+    const fbxLoader = new FBXLoader();
+    root = await fbxLoader.loadAsync(fbxUrl);
+    loadedUrl = fbxUrl;
   }
 
   root.userData.importPipeline = /\.fbx($|\?)/i.test(loadedUrl) ? 'fbx-atlas' : 'production-glb';
   root.userData.sourceUrl = loadedUrl;
   root.userData.grudge6SsotHost = true;
+  root.userData.onlySsot = true;
   root.userData.fleetRaceId = fid;
   root.userData.grudgeHeightFit = false;
   root.userData.artForwardSet = false;
@@ -2103,7 +2118,7 @@ async function loadCharacterKit(raceId) {
     }
   });
 
-  // 2) Fleet atlas ONLY — assets/{folder}/textures/{file}
+  // 2) Stone atlas — textures/grudge6/{folder}/*
   const atlasOk = await tryBindAtlas(root, raceId);
   if (!atlasOk) {
     throw new Error(
@@ -2388,7 +2403,7 @@ async function playBakedOnCharacter(entry, raceId) {
     kind: 'character',
     name: raceId,
     path: 'models/grudge6/races',
-    cdnUrl: RACE_KITS[raceId]?.fbx || RACE_KITS[raceId]?.r2,
+    cdnUrl: RACE_KITS[raceId]?.glb || RACE_KITS[raceId]?.r2,
   };
   const info = deployModel(model, { facePlusZ: true, entry: hostEntry });
   currentRoot = model;
@@ -2552,7 +2567,7 @@ async function loadMeshAsset(entry) {
       ...entry,
       kind: 'character',
       path: entry.path || `models/grudge6/races`,
-      cdnUrl: RACE_KITS[raceId]?.fbx || RACE_KITS[raceId]?.glb,
+      cdnUrl: RACE_KITS[raceId]?.glb || RACE_KITS[raceId]?.r2,
       source: 'grudge6-ssot',
       atlasUrl: model.userData.atlasUrl,
     };
@@ -2761,7 +2776,7 @@ async function openViewer(entry) {
         source: 'grudge6-ssot',
         kind: 'character',
         path: RACE_KITS[pipeId]?.glb?.replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '') || entry.path,
-        cdnUrl: RACE_KITS[pipeId]?.fbx,
+        cdnUrl: RACE_KITS[pipeId]?.glb,
       };
     }
   }

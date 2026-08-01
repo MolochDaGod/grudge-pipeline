@@ -52,7 +52,9 @@
           <h2>Fleet needs <span class="fleet-needs-sub">add everything along the way</span></h2>
           <p class="fleet-needs-desc">
             Fleet asset truth for <strong>all games</strong>: D1 index, grudgeUuid, production labels,
-            harvest, combat VFX, voxel, grudge6. This browser is the consolidated SSOT UI.
+            harvest, combat VFX, voxel. <strong>Grudge6 ONLY:</strong>
+            <code>models/grudge6/races/*_Characters.glb</code> +
+            <code>textures/grudge6/*</code> — all multipacks / anim dumps purged from catalog.
             <a href="docs/FLEET_ASSET_TRUTH.md" target="_blank" rel="noreferrer">Asset truth</a>
             · <a href="docs/HARVEST_PINATA.md" target="_blank" rel="noreferrer">Harvest</a>
             · <a href="docs/PROJECTILES_AND_VFX.md" target="_blank" rel="noreferrer">Projectiles/VFX</a>
@@ -163,13 +165,13 @@
 
     <div class="drop-zone" id="dropZone">
       <div class="drop-icon">📦</div>
-      <div class="drop-text">Drop production GLB (preferred) or FBX · anims play on grudge6 R2 host · prefer glb2glb bake</div>
+      <div class="drop-text">Drop production GLB · grudge6 = races/*_Characters.glb ONLY · textures/grudge6 atlas · anims/baked JSON</div>
       <input type="file" id="fileInput" accept=".glb,.gltf,.fbx" style="display:none">
     </div>
 
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
-      <p>Loading fleet truth catalog (D1 registry + production labels + grudge6)…</p>
+      <p>Loading fleet truth · grudge6 ONLY-SSOT (6 race GLBs) · purging non-SSOT…</p>
     </div>
 
     <div id="resultsArea" style="display:none">

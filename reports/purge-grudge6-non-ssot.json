@@ -1,0 +1,351 @@
+{
+  "version": 1,
+  "generated": "2026-08-01T07:09:58.641Z",
+  "d1Total": 6352,
+  "grudge6Related": 68,
+  "keepSsot": [],
+  "purgeCount": 68,
+  "purge": [
+    {
+      "r2Key": "models/animations/grudge6_brb/emotes/Bboy Hip Hop Move.glb",
+      "grudgeUuid": "86a8da40-98ad-576d-b2e7-195abcff29e3",
+      "name": "Bboy Hip Hop Move"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Climbing Ladder.glb",
+      "grudgeUuid": "ea79ddc5-583a-5aaa-b7ef-b6000c04bc0d",
+      "name": "Climbing Ladder"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Cover To Stand.glb",
+      "grudgeUuid": "82bc020c-1877-54fe-bcdf-1bb00e1853ec",
+      "name": "Cover To Stand"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Crouch Idle.glb",
+      "grudgeUuid": "755f6864-b331-55c9-b8cb-91376d665794",
+      "name": "Crouch Idle"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/emotes/Dancing Running Man.glb",
+      "grudgeUuid": "15a2c261-cc5f-5cc6-b9cc-258ccb9c163d",
+      "name": "Dancing Running Man"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Disarmed.glb",
+      "grudgeUuid": "3b669d6c-f8ab-590e-a25c-92d99abe6d5a",
+      "name": "Disarmed"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/onehanded/Dual Weapon Combo.glb",
+      "grudgeUuid": "a2b61107-ce0d-586c-ac4b-fc354763c440",
+      "name": "Dual Weapon Combo"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/greatsword/Great Sword Slash.glb",
+      "grudgeUuid": "de6bc872-2ff8-57f4-946c-a14665143455",
+      "name": "Great Sword Slash"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/greatsword/Great Sword Slash (1).glb",
+      "grudgeUuid": "0bd7c8c9-134f-5bf8-bbaf-e4ec75c18c53",
+      "name": "Great Sword Slash (1)"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/emotes/Hip Hop Dancing.glb",
+      "grudgeUuid": "281a6e56-b38f-5edb-b506-5085a1bc09c1",
+      "name": "Hip Hop Dancing"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Idle.glb",
+      "grudgeUuid": "bc869cdf-69b5-5990-88ea-dc2788aac90f",
+      "name": "Idle"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Kick.glb",
+      "grudgeUuid": "d8c3dc1f-7532-548f-928d-eab8d10b225b",
+      "name": "Kick"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Look Over Shoulder.glb",
+      "grudgeUuid": "f9711dba-04b6-56aa-9aac-a08dcfc5f1a2",
+      "name": "Look Over Shoulder"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Male Sitting Pose.glb",
+      "grudgeUuid": "ff196aa0-aee2-57fc-a232-f4218fb6f3f9",
+      "name": "Male Sitting Pose"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Northern Soul Spin Combo.glb",
+      "grudgeUuid": "edd8316f-f119-5c24-b92d-d7966617d477",
+      "name": "Northern Soul Spin Combo"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/onehanded/One Hand Club Combo.glb",
+      "grudgeUuid": "18f69993-eadd-5464-86d0-fffca280501d",
+      "name": "One Hand Club Combo"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/onehanded/One Hand Sword Combo.glb",
+      "grudgeUuid": "4b466595-79d4-57f9-8380-2f31d88ce5d2",
+      "name": "One Hand Sword Combo"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Patting.glb",
+      "grudgeUuid": "d8bffe58-622d-55a8-823b-c2d2e25af7eb",
+      "name": "Patting"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Pointing.glb",
+      "grudgeUuid": "80e3f7f1-2836-5b0f-ac7f-74df17c463d9",
+      "name": "Pointing"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Reacting.glb",
+      "grudgeUuid": "75490db5-d3c0-5d54-bdbd-a70292fceba6",
+      "name": "Reacting"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/emotes/Silly Dancing.glb",
+      "grudgeUuid": "aa28de2d-74f2-5d68-bb4d-5ffc15506d1e",
+      "name": "Silly Dancing"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/magic/Spell Casting.glb",
+      "grudgeUuid": "8a325ade-a979-57df-baa4-f1d7ab271bd1",
+      "name": "Spell Casting"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/magic/Standing 1H Cast Spell 01.glb",
+      "grudgeUuid": "7474cdf0-4e66-507c-b34d-a418786cc57b",
+      "name": "Standing 1H Cast Spell 01"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/magic/Standing 2H Cast Spell 01.glb",
+      "grudgeUuid": "41e3dd76-3fe5-5c85-8894-e49d7eaf37e2",
+      "name": "Standing 2H Cast Spell 01"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/magic/Standing 2H Magic Area Attack 01.glb",
+      "grudgeUuid": "87745da6-8f75-5301-a8e4-5b52572840b7",
+      "name": "Standing 2H Magic Area Attack 01"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/magic/Standing 2H Magic Area Attack 02.glb",
+      "grudgeUuid": "92ccc5f2-bf89-59ef-8fa5-3ae18b1acefb",
+      "name": "Standing 2H Magic Area Attack 02"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/magic/Standing 2H Magic Attack 01.glb",
+      "grudgeUuid": "691e26bd-d362-5b6b-a65c-d0eb860beba9",
+      "name": "Standing 2H Magic Attack 01"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/magic/Standing 2H Magic Attack 03.glb",
+      "grudgeUuid": "f7f3402f-83f9-55cb-ad1e-2f1ad17c3c01",
+      "name": "Standing 2H Magic Attack 03"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/magic/Standing 2H Magic Attack 04.glb",
+      "grudgeUuid": "b45eb570-6792-58c4-b35b-8ba29af5d1e8",
+      "name": "Standing 2H Magic Attack 04"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/emotes/Standing Taunt Battlecry.glb",
+      "grudgeUuid": "04edb20e-13d1-5af8-872f-859550587b31",
+      "name": "Standing Taunt Battlecry"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Standing To Crouch.glb",
+      "grudgeUuid": "2ffc2ebb-5a8a-5e54-8743-963e1fda9d00",
+      "name": "Standing To Crouch"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Swagger Walk.glb",
+      "grudgeUuid": "83a0fda4-4590-5d4e-b0cc-1fa2ff527a68",
+      "name": "Swagger Walk"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Sword And Shield Attack.glb",
+      "grudgeUuid": "4f113942-b272-59b4-afb4-005bbd35577e",
+      "name": "Sword And Shield Attack"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Sword And Shield Attack (1).glb",
+      "grudgeUuid": "b25a1cc8-98d2-5ade-9bc7-11ff330bf336",
+      "name": "Sword And Shield Attack (1)"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Sword And Shield Attack (2).glb",
+      "grudgeUuid": "0b085f86-3ac3-562d-bf96-e7a6b1d7f1ec",
+      "name": "Sword And Shield Attack (2)"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Sword And Shield Casting.glb",
+      "grudgeUuid": "5a6242f4-3bd8-5e39-98fc-39ac0caac9f7",
+      "name": "Sword And Shield Casting"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Sword And Shield Power Up.glb",
+      "grudgeUuid": "98c7a7ed-856b-5a48-b698-a3fd6cb33160",
+      "name": "Sword And Shield Power Up"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Sword And Shield Slash.glb",
+      "grudgeUuid": "d875d541-46b5-5473-aed9-a76b617bb3ae",
+      "name": "Sword And Shield Slash"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Sword And Shield Slash (1).glb",
+      "grudgeUuid": "a83cbf00-a0be-586f-9175-ec6df1418a0a",
+      "name": "Sword And Shield Slash (1)"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/sword_shield/Sword And Shield Slash 1.glb",
+      "grudgeUuid": "b4ed5c49-1207-5af5-b2a5-ec25523d4e02",
+      "name": "Sword And Shield Slash 1"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/base/Throw Object.glb",
+      "grudgeUuid": "21e06c95-a42a-5ff1-a729-fe6d06844bb4",
+      "name": "Throw Object"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/greatsword/Two Hand Club Combo.glb",
+      "grudgeUuid": "b498f333-52cc-56a2-86e5-7df8a314b6c8",
+      "name": "Two Hand Club Combo"
+    },
+    {
+      "r2Key": "models/animations/grudge6_brb/greatsword/Two Hand Sword Combo.glb",
+      "grudgeUuid": "2a4de425-29e9-556e-8cd4-e69aad3d4dc1",
+      "name": "Two Hand Sword Combo"
+    },
+    {
+      "r2Key": "models/grudge6/brb/BRB_Characters.glb",
+      "grudgeUuid": "64d4ffdc-1796-5783-91a0-431eb0f033f8",
+      "name": "BRB_Characters"
+    },
+    {
+      "r2Key": "models/grudge6/variants/BRB_bow.glb",
+      "grudgeUuid": "73121a5c-0d44-5d3d-a3da-e9835a3f0cfd",
+      "name": "BRB_bow"
+    },
+    {
+      "r2Key": "models/grudge6/variants/BRB_hammer_simple.glb",
+      "grudgeUuid": "ef0cf6a7-d548-53da-9901-d400998745c6",
+      "name": "BRB_hammer_simple"
+    },
+    {
+      "r2Key": "models/grudge6/variants/BRB_horse.glb",
+      "grudgeUuid": "01bb8019-9a85-5538-b7bf-813ad7a6dbfe",
+      "name": "BRB_horse"
+    },
+    {
+      "r2Key": "models/grudge6/variants/BRB_knight.glb",
+      "grudgeUuid": "3b938767-fafe-5544-ab38-9fa9a2f21e8e",
+      "name": "BRB_knight"
+    },
+    {
+      "r2Key": "models/grudge6/variants/BRB_wizard.glb",
+      "grudgeUuid": "05948c0c-01c5-5c5f-b703-f7d8f5160741",
+      "name": "BRB_wizard"
+    },
+    {
+      "r2Key": "models/grudge6/dwf/DWF_Characters.glb",
+      "grudgeUuid": "9b44b377-7c30-53f3-b061-f412d97b8a5d",
+      "name": "DWF_Characters"
+    },
+    {
+      "r2Key": "models/grudge6/elf/ELF_Characters.glb",
+      "grudgeUuid": "50cd0e36-4a1c-543f-933d-7679cad493e0",
+      "name": "ELF_Characters"
+    },
+    {
+      "r2Key": "models/grudge6/orc/ORC_Characters.glb",
+      "grudgeUuid": "ddc12bb3-4638-52d9-9937-e8735e1a2a0e",
+      "name": "ORC_Characters"
+    },
+    {
+      "r2Key": "models/grudge6/ud/UD_Characters.glb",
+      "grudgeUuid": "d762b5b8-8e2b-517d-a6ef-08ac2cef0bcb",
+      "name": "UD_Characters"
+    },
+    {
+      "r2Key": "models/grudge6/wk/WK_Characters.glb",
+      "grudgeUuid": "ffec6a00-30d8-5190-89c0-0d5164f96924",
+      "name": "WK_Characters"
+    },
+    {
+      "r2Key": "models/grudge6/variants/WK_bow.glb",
+      "grudgeUuid": "0c0c031e-dcd8-55e6-b301-9e612ea81a6a",
+      "name": "WK_bow"
+    },
+    {
+      "r2Key": "models/grudge6/variants/WK_hammer_simple.glb",
+      "grudgeUuid": "66b65edb-f092-588c-ae5c-7c9201e3eaf3",
+      "name": "WK_hammer_simple"
+    },
+    {
+      "r2Key": "models/grudge6/variants/WK_horse.glb",
+      "grudgeUuid": "fd348f52-1d81-5dee-bbb1-27b8d01b1dbe",
+      "name": "WK_horse"
+    },
+    {
+      "r2Key": "models/grudge6/variants/WK_knight.glb",
+      "grudgeUuid": "81c5e92d-2903-576b-8f44-7ac8190d1914",
+      "name": "WK_knight"
+    },
+    {
+      "r2Key": "models/grudge6/variants/WK_wizard.glb",
+      "grudgeUuid": "6a596e57-d7b4-5871-9856-4a1ecfbafaf3",
+      "name": "WK_wizard"
+    },
+    {
+      "r2Key": "models/characters/brb_characters.glb",
+      "grudgeUuid": "dcb418bb-cf2b-53e8-a58f-8b2207de92af",
+      "name": "brb_characters"
+    },
+    {
+      "r2Key": "models/characters/dwf_characters.glb",
+      "grudgeUuid": "e11d80ba-3e9e-53ea-8c66-bf97534f3f81",
+      "name": "dwf_characters"
+    },
+    {
+      "r2Key": "models/characters/elf_characters.glb",
+      "grudgeUuid": "963d4fb5-7a36-5e0e-9e65-4f45e9f4e797",
+      "name": "elf_characters"
+    },
+    {
+      "r2Key": "models/characters/orc_characters.glb",
+      "grudgeUuid": "d000500a-1760-5835-bb7e-aa9055ad123e",
+      "name": "orc_characters"
+    },
+    {
+      "r2Key": "models/characters/ud_characters.glb",
+      "grudgeUuid": "6a15ecd1-ddf9-55e7-8025-acc53ef051cc",
+      "name": "ud_characters"
+    },
+    {
+      "r2Key": "models/characters/wk_characters.glb",
+      "grudgeUuid": "a9a85abc-2e26-5d7d-8c3c-63cf7278e04c",
+      "name": "wk_characters"
+    },
+    {
+      "r2Key": "models/grudge6/30characters.glb",
+      "grudgeUuid": "1a0fbc28-2733-53c0-b434-0d4035b6297c",
+      "name": "30characters.glb"
+    },
+    {
+      "r2Key": "models/grudge6/brb/BRB_Cavalry.glb",
+      "grudgeUuid": "c635ed1a-4bc1-52c3-a167-d769a6ad761c",
+      "name": "BRB_Cavalry"
+    },
+    {
+      "r2Key": "models/grudge6/wk/WK_Cavalry.glb",
+      "grudgeUuid": "971977a8-ff96-57ca-b195-e10672539f70",
+      "name": "WK_Cavalry"
+    }
+  ],
+  "rule": "ONLY keep models/grudge6/races/{PREFIX}_Characters.glb + textures/grudge6/** + anims/baked/**"
+}
