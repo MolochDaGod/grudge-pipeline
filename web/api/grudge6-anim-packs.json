@@ -1,0 +1,258 @@
+{
+  "version": "2026-08-01.1",
+  "description": "Fleet grudge6 animation pack SSOT. Source FBX is Mixamo (mixamorig). Production runtime uses Bip001 baked JSON under open.grudge-studio.com/anims/baked/{pack}/… after retarget. Pipeline catalog lists baked ids; author FBX lives on disk under D:/Games/Models/_anim_packs/{pack}/.",
+  "skeletonAuthor": "mixamorig",
+  "skeletonRuntime": "Bip001",
+  "bakedHost": "https://open.grudge-studio.com/anims/baked",
+  "authorRoot": "D:/Games/Models/_anim_packs",
+  "incomingReview": "D:/Games/Models/_anim_packs/grudge6_incoming_2026-08-01",
+  "rule": "Play clips on grudge6 race kits only after stripPositionTracks + Bip001 rematch. Never play Mixamo mannequin mesh (Heavy_mixamo.fbx).",
+  "packs": {
+    "sword_shield": {
+      "label": "Sword & Shield",
+      "weaponClasses": ["warrior", "knight"],
+      "authorDir": "sword_shield",
+      "roles": {
+        "idle": ["sword_shield/sword and shield idle"],
+        "walk": ["locomotion/walking", "sword_shield/standing walk forward"],
+        "run": ["sword_shield/sword and shield run"],
+        "attack": ["sword_shield/sword and shield attack", "sword_shield/sword and shield slash"],
+        "block": ["sword_shield/sword and shield block"]
+      }
+    },
+    "longbow": {
+      "label": "Longbow",
+      "weaponClasses": ["ranger", "archer"],
+      "authorDir": "longbow",
+      "roles": {
+        "idle": ["longbow/standing idle 01", "longbow/idle"],
+        "walk": ["longbow/standing walk forward"],
+        "run": ["longbow/standing run forward"],
+        "attack": ["longbow/standing aim recoil", "longbow/draw"]
+      }
+    },
+    "magic": {
+      "label": "Magic / Staff",
+      "weaponClasses": ["mage", "wizard"],
+      "authorDir": "magic_loco",
+      "authorDirs": ["magic_loco", "magic_spell"],
+      "roles": {
+        "idle": ["magic/standing idle"],
+        "walk": ["magic/Standing Walk Forward"],
+        "run": ["magic/Standing Run Forward", "magic/Standing Sprint Forward"],
+        "jump": ["magic/Standing Jump"],
+        "attack": ["magic/staffattack", "unarmed/punching"]
+      },
+      "authorClips": {
+        "idle": "standing idle.fbx",
+        "walk": "Standing Walk Forward.fbx",
+        "run": "Standing Run Forward.fbx",
+        "sprint": "Standing Sprint Forward.fbx",
+        "walkBack": "Standing Walk Back.fbx",
+        "runBack": "Standing Run Back.fbx",
+        "walkLeft": "Standing Walk Left.fbx",
+        "walkRight": "Standing Walk Right.fbx",
+        "runLeft": "Standing Run Left.fbx",
+        "runRight": "Standing Run Right.fbx"
+      }
+    },
+    "pistol": {
+      "label": "Pistol / Handgun",
+      "weaponClasses": ["pistol", "handgun"],
+      "authorDir": "pistol",
+      "sourceZips": [
+        "grudgepistol.zio.zip",
+        "grudge6wandandpistols.zip",
+        "25bonePistol_Handgun Locomotion Pack.zip"
+      ],
+      "roles": {
+        "idle": ["pistol/pistol idle"],
+        "walk": ["pistol/pistol walk"],
+        "run": ["pistol/pistol run"],
+        "jump": ["pistol/pistol jump"],
+        "walkBack": ["pistol/pistol walk backward"],
+        "runBack": ["pistol/pistol run backward"],
+        "strafeL": ["pistol/pistol strafe"],
+        "strafeR": ["pistol/pistol strafe (2)"],
+        "kneel": ["pistol/pistol kneeling idle"],
+        "attack": ["pistol/pistol idle"]
+      },
+      "authorClips": {
+        "idle": "pistol idle.fbx",
+        "walk": "pistol walk.fbx",
+        "run": "pistol run.fbx",
+        "jump": "pistol jump.fbx",
+        "walkBack": "pistol walk backward.fbx",
+        "runBack": "pistol run backward.fbx",
+        "strafe": "pistol strafe.fbx",
+        "kneelIdle": "pistol kneeling idle.fbx",
+        "standToKneel": "pistol stand to kneel.fbx",
+        "kneelToStand": "pistol kneel to stand.fbx"
+      }
+    },
+    "rifle": {
+      "label": "Rifle / Shooter",
+      "weaponClasses": ["rifle", "gun"],
+      "authorDir": "rifle",
+      "sourceZips": [
+        "grudge6gun.zip",
+        "25boneShooter Pack.zip",
+        "25boneSlim Shooter Pack.zip"
+      ],
+      "roles": {
+        "idle": ["rifle/idle", "rifle/rifle aiming idle"],
+        "walk": ["rifle/walking", "locomotion/walking"],
+        "run": ["rifle/rifle run", "rifle/run forward"],
+        "aim": ["rifle/rifle aiming idle"],
+        "attack": ["rifle/firing rifle"],
+        "reload": ["rifle/reloading"],
+        "jump": ["rifle/rifle jump"]
+      },
+      "authorClips": {
+        "aimIdle": "rifle aiming idle.fbx",
+        "run": "rifle run.fbx",
+        "walk": "walking.fbx",
+        "fire": "firing rifle.fbx",
+        "reload": "reloading.fbx",
+        "strafeL": "strafe left.fbx",
+        "strafeR": "strafe right.fbx",
+        "runBack": "run backwards.fbx",
+        "walkBack": "walking backwards.fbx",
+        "grenade": "toss grenade.fbx"
+      }
+    },
+    "farming": {
+      "label": "Farming / Harvest",
+      "weaponClasses": ["farming", "harvest"],
+      "authorDir": "farming",
+      "sourceZips": ["grudgeFarming Pack.zip"],
+      "roles": {
+        "idle": ["farming/holding idle", "farming/box idle", "farming/kneeling idle"],
+        "walk": ["farming/holding walk", "farming/box walk arc"],
+        "attack": ["farming/dig and plant seeds", "farming/pull plant", "farming/watering"],
+        "harvest": ["farming/pick fruit", "farming/pull plant"],
+        "plant": ["farming/plant a plant", "farming/plant tree", "farming/dig and plant seeds"]
+      },
+      "authorClips": {
+        "holdingIdle": "holding idle.fbx",
+        "holdingWalk": "holding walk.fbx",
+        "dig": "dig and plant seeds.fbx",
+        "pullPlant": "pull plant.fbx",
+        "water": "watering.fbx",
+        "pickFruit": "pick fruit.fbx",
+        "plantTree": "plant tree.fbx",
+        "wheelbarrowWalk": "wheelbarrow walk.fbx",
+        "cowMilking": "cow milking.fbx"
+      }
+    },
+    "locomotion": {
+      "label": "Base / 8-Way Locomotion",
+      "weaponClasses": ["unarmed", "generic"],
+      "authorDir": "locomotion",
+      "sourceZips": [
+        "grudge6Locomotion Pack.zip",
+        "grudge  8-Way Locomotion Pack.zip"
+      ],
+      "roles": {
+        "idle": ["locomotion/idle", "unarmed/fight_idle"],
+        "walk": ["locomotion/walking", "locomotion/walk forward"],
+        "run": ["locomotion/running", "locomotion/run forward"],
+        "sprint": ["locomotion/sprint forward"],
+        "jump": ["locomotion/jump"]
+      },
+      "authorClips": {
+        "idle": "idle.fbx",
+        "walk": "walking.fbx",
+        "run": "running.fbx",
+        "jump": "jump.fbx",
+        "sprint": "sprint forward.fbx",
+        "runBack": "run backward.fbx",
+        "runLeft": "run left.fbx",
+        "runRight": "run right.fbx",
+        "walkForward": "walk forward.fbx",
+        "idleCrouch": "idle crouching.fbx"
+      }
+    },
+    "action_adventure": {
+      "label": "Action Adventure / Cover",
+      "weaponClasses": ["traversal", "cover"],
+      "authorDir": "action_adventure",
+      "sourceZips": ["grudgeAction Adventure Pack.zip"],
+      "roles": {
+        "idle": ["action_adventure/idle"],
+        "walk": ["action_adventure/walking"],
+        "run": ["action_adventure/running"],
+        "jump": ["action_adventure/jumping up"],
+        "cover": ["action_adventure/stand to cover", "action_adventure/cover to stand"],
+        "land": ["action_adventure/hard landing", "action_adventure/falling to roll"]
+      }
+    },
+    "unarmed": {
+      "label": "Unarmed",
+      "weaponClasses": ["unarmed", "brawler"],
+      "roles": {
+        "idle": ["unarmed/fight_idle"],
+        "walk": ["locomotion/walking"],
+        "run": ["locomotion/running"],
+        "attack": ["unarmed/punching"]
+      }
+    },
+    "twohand": {
+      "label": "Two-Hand Melee",
+      "weaponClasses": ["worge", "twohand"],
+      "roles": {
+        "idle": ["dual_wield/idle", "sword_shield/sword and shield idle"],
+        "walk": ["dual_wield/walk", "locomotion/walking"],
+        "run": ["dual_wield/run", "locomotion/running"],
+        "attack": ["dual_wield/attack", "dual_wield/combo"]
+      }
+    }
+  },
+  "weaponToPack": {
+    "sword": "sword_shield",
+    "shield": "sword_shield",
+    "bow": "longbow",
+    "staff": "magic",
+    "wand": "magic",
+    "pistol": "pistol",
+    "handgun": "pistol",
+    "rifle": "rifle",
+    "gun": "rifle",
+    "axe": "twohand",
+    "hammer": "twohand",
+    "farming": "farming",
+    "unarmed": "unarmed"
+  },
+  "classToPack": {
+    "warrior": "sword_shield",
+    "knight": "sword_shield",
+    "ranger": "longbow",
+    "mage": "magic",
+    "worge": "twohand",
+    "pistol": "pistol",
+    "rifle": "rifle",
+    "farmer": "farming"
+  },
+  "bakeChecklist": [
+    "1. Author FBX is Mixamo (mixamorig) — never load Heavy_mixamo.fbx as character",
+    "2. Retarget to grudge6 Bip001 race kit (rotation-only tracks)",
+    "3. Export JSON under anims/baked/{pack}/{clip-name}.json",
+    "4. Upload to open.grudge-studio.com + assets CDN mirror",
+    "5. Register role in packs.*.roles and multiverse animPackLoader PACK_CLIPS",
+    "6. Pipeline BAKED_PACKS lists clip for browser inventory"
+  ],
+  "incomingReviewed": {
+    "grudgepistol.zio.zip": "pistol",
+    "grudgeFarming Pack.zip": "farming",
+    "grudgeAction Adventure Pack.zip": "action_adventure",
+    "grudge6wandandpistols.zip": "pistol (+ wand uses magic pack)",
+    "grudge6Magic Locomotion Pack.zip": "magic_loco → magic",
+    "grudge6Locomotion Pack.zip": "locomotion",
+    "grudge6gun.zip": "rifle",
+    "grudge6-creator.zip": "app shell + few glb anims — not Mixamo pack bulk",
+    "grudge  8-Way Locomotion Pack.zip": "locomotion",
+    "25bonePistol_Handgun Locomotion Pack.zip": "pistol (same clips as grudgepistol)",
+    "25boneSlim Shooter Pack.zip": "rifle",
+    "25boneShooter Pack.zip": "rifle"
+  }
+}

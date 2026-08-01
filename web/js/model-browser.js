@@ -227,13 +227,22 @@ const RACE_KITS = Object.fromEntries(
  * Gap sources (Mixamo FBX <1000KB, armature/no mesh): D:/Games/Models/_anim_packs
  * Staged fill: _anim_packs/_gap_fill_stage · api/anim-gap-fill.json
  */
+/**
+ * Baked Bip001 packs (JSON) — play on grudge6 race kits ONLY.
+ * Author Mixamo FBX: D:/Games/Models/_anim_packs/{pack}/ (reviewed 2026-08-01).
+ * Full SSOT: /api/grudge6-anim-packs.json
+ */
 const BAKED_PACKS = [
-  // magic
+  // magic (CDN + grudge6Magic Locomotion author)
   { id: 'magic/standing idle', name: 'Magic Idle', pack: 'magic' },
-  { id: 'magic/Standing Walk Forward', name: 'Standing Walk Forward', pack: 'magic' },
-  { id: 'magic/Standing Run Forward', name: 'Standing Run Forward', pack: 'magic' },
+  { id: 'magic/Standing Walk Forward', name: 'Magic Walk', pack: 'magic' },
+  { id: 'magic/Standing Run Forward', name: 'Magic Run', pack: 'magic' },
+  { id: 'magic/Standing Sprint Forward', name: 'Magic Sprint', pack: 'magic' },
+  { id: 'magic/Standing Walk Back', name: 'Magic Walk Back', pack: 'magic' },
+  { id: 'magic/Standing Run Back', name: 'Magic Run Back', pack: 'magic' },
+  { id: 'magic/Standing Jump', name: 'Magic Jump', pack: 'magic' },
   { id: 'magic/staffattack', name: 'Staff Attack', pack: 'magic' },
-  // sword_shield (live CDN + local gap stage for walk/death/strafe)
+  // sword_shield
   { id: 'sword_shield/sword and shield idle', name: 'Sword Shield Idle', pack: 'sword_shield' },
   { id: 'sword_shield/sword and shield run', name: 'Sword Shield Run', pack: 'sword_shield' },
   { id: 'sword_shield/sword and shield attack', name: 'Sword Shield Attack', pack: 'sword_shield' },
@@ -247,20 +256,52 @@ const BAKED_PACKS = [
   { id: 'longbow/standing walk forward', name: 'Longbow Walk', pack: 'longbow' },
   { id: 'longbow/standing run forward', name: 'Longbow Run', pack: 'longbow' },
   { id: 'longbow/standing aim recoil', name: 'Longbow Aim Recoil', pack: 'longbow' },
-  // rifle / pistol (gun family)
+  // rifle (grudge6gun + 25bone shooter packs → bake)
   { id: 'rifle/idle', name: 'Rifle Idle', pack: 'rifle' },
+  { id: 'rifle/rifle aiming idle', name: 'Rifle Aim Idle', pack: 'rifle' },
   { id: 'rifle/run forward', name: 'Rifle Run', pack: 'rifle' },
+  { id: 'rifle/rifle run', name: 'Rifle Run (gun pack)', pack: 'rifle' },
+  { id: 'rifle/walking', name: 'Rifle Walk', pack: 'rifle' },
+  { id: 'rifle/firing rifle', name: 'Rifle Fire', pack: 'rifle' },
+  { id: 'rifle/reloading', name: 'Rifle Reload', pack: 'rifle' },
+  { id: 'rifle/rifle jump', name: 'Rifle Jump', pack: 'rifle' },
+  // pistol (grudgepistol + 25bone handgun → bake)
   { id: 'pistol/pistol idle', name: 'Pistol Idle', pack: 'pistol' },
-  // 2H / polearm / hammer (CDN + greatsword local stage → 2h_melee)
+  { id: 'pistol/pistol walk', name: 'Pistol Walk', pack: 'pistol' },
+  { id: 'pistol/pistol run', name: 'Pistol Run', pack: 'pistol' },
+  { id: 'pistol/pistol jump', name: 'Pistol Jump', pack: 'pistol' },
+  { id: 'pistol/pistol walk backward', name: 'Pistol Walk Back', pack: 'pistol' },
+  { id: 'pistol/pistol run backward', name: 'Pistol Run Back', pack: 'pistol' },
+  { id: 'pistol/pistol strafe', name: 'Pistol Strafe', pack: 'pistol' },
+  { id: 'pistol/pistol kneeling idle', name: 'Pistol Kneel Idle', pack: 'pistol' },
+  // farming (grudgeFarming Pack → bake)
+  { id: 'farming/holding idle', name: 'Farm Hold Idle', pack: 'farming' },
+  { id: 'farming/holding walk', name: 'Farm Hold Walk', pack: 'farming' },
+  { id: 'farming/dig and plant seeds', name: 'Farm Dig Plant', pack: 'farming' },
+  { id: 'farming/pull plant', name: 'Farm Pull Plant', pack: 'farming' },
+  { id: 'farming/watering', name: 'Farm Water', pack: 'farming' },
+  { id: 'farming/pick fruit', name: 'Farm Pick Fruit', pack: 'farming' },
+  { id: 'farming/plant tree', name: 'Farm Plant Tree', pack: 'farming' },
+  { id: 'farming/box idle', name: 'Farm Box Idle', pack: 'farming' },
+  // 2H / polearm / hammer
   { id: 'greatsword_samurai/gs_samurai_idle', name: 'Samurai Idle', pack: 'greatsword_samurai' },
   { id: 'greatsword_samurai/gs_samurai_combo_a', name: 'Samurai Combo A', pack: 'greatsword_samurai' },
   { id: 'polearm/attack', name: 'Polearm Attack', pack: 'polearm' },
-  { id: 'twohand_hammer/idle', name: 'Hammer Idle (scarecrow)', pack: 'twohand_hammer' },
-  // unarmed + loco
+  { id: 'twohand_hammer/idle', name: 'Hammer Idle', pack: 'twohand_hammer' },
+  // unarmed + base loco (grudge6Locomotion + 8-way)
   { id: 'unarmed/fight_idle', name: 'Unarmed Idle', pack: 'unarmed' },
-  { id: 'uploads_2026_06/locomotion/torch run forward', name: 'Torch Run Forward', pack: 'locomotion' },
+  { id: 'locomotion/walking', name: 'Walk', pack: 'locomotion' },
+  { id: 'locomotion/running', name: 'Run', pack: 'locomotion' },
+  { id: 'locomotion/idle', name: 'Loco Idle', pack: 'locomotion' },
   { id: 'locomotion/jump', name: 'Jump', pack: 'locomotion' },
+  { id: 'locomotion/sprint forward', name: 'Sprint', pack: 'locomotion' },
   { id: 'locomotion/dodging', name: 'Dodging', pack: 'locomotion' },
+  { id: 'uploads_2026_06/locomotion/torch run forward', name: 'Torch Run Forward', pack: 'locomotion' },
+  // action adventure / cover
+  { id: 'action_adventure/idle', name: 'AA Idle', pack: 'action_adventure' },
+  { id: 'action_adventure/walking', name: 'AA Walk', pack: 'action_adventure' },
+  { id: 'action_adventure/running', name: 'AA Run', pack: 'action_adventure' },
+  { id: 'action_adventure/stand to cover', name: 'AA To Cover', pack: 'action_adventure' },
 ];
 
 /** Preferred first clip per pack when auto-playing on grudge6 host. */
@@ -271,8 +312,8 @@ const PACK_IDLE_RELS = {
   ],
   longbow: ['longbow/idle', 'longbow/draw', 'longbow/standing idle 01'],
   magic: ['magic/standing idle', 'magic/staffattack'],
-  rifle: ['rifle/idle', 'rifle/run forward'],
-  pistol: ['pistol/pistol idle'],
+  rifle: ['rifle/rifle aiming idle', 'rifle/idle', 'rifle/run forward'],
+  pistol: ['pistol/pistol idle', 'pistol/pistol walk'],
   unarmed: ['unarmed/fight_idle'],
   greatsword_samurai: [
     'greatsword_samurai/gs_samurai_idle',
@@ -286,7 +327,9 @@ const PACK_IDLE_RELS = {
   twohand_hammer: ['twohand_hammer/idle'],
   polearm: ['polearm/attack'],
   cavalry: ['longbow/idle'],
-  farming: ['farming/holding idle', 'farming/watering'],
+  farming: ['farming/holding idle', 'farming/watering', 'farming/dig and plant seeds'],
+  locomotion: ['locomotion/idle', 'locomotion/walking', 'unarmed/fight_idle'],
+  action_adventure: ['action_adventure/idle', 'action_adventure/walking'],
   traversal: ['traversal/Climbing', 'traversal/Swimming (1)'],
 };
 
