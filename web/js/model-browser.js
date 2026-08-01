@@ -2779,75 +2779,183 @@ function wireUi() {
     filterToCombatAssets();
   });
   document.getElementById('btnNeedsToggle')?.addEventListener('click', () => {
-    document.getElementById('fleetNeedsPanel')?.classList.toggle('collapsed');
+    /* no-op: coverage is its own view now */
   });
+
+  /* App shell: sidebar views + mobile drawer */
+  document.querySelectorAll('.nav-item[data-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setAppView(btn.getAttribute('data-view') || 'catalog');
+      document.body.classList.remove('sidebar-open');
+    });
+  });
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.body.classList.toggle('sidebar-open');
+  });
+  document.getElementById('needsTrack')?.addEventListener('change', () => renderFleetNeedsPanel());
+  document.getElementById('needsStatus')?.addEventListener('change', () => renderFleetNeedsPanel());
+  document.getElementById('needsSearch')?.addEventListener('input', () => renderFleetNeedsPanel());
+
+  // Deep-link ?view=coverage
+  try {
+    const v = new URLSearchParams(location.search).get('view');
+    if (v === 'coverage' || v === 'tools' || v === 'catalog') setAppView(v);
+  } catch { /* ignore */ }
 }
 
-/** Fleet needs panel — harvest + combat projectile/VFX tracks. */
+const VIEW_META = {
+  catalog: { title: 'Catalog', sub: 'Production GLB · textured · SI · R2 CDN' },
+  coverage: { title: 'Coverage', sub: 'Harvest, combat projectiles, and runtime systems' },
+  tools: { title: 'Tools', sub: 'UUID verify · dedupe · Forge scene cart' },
+};
+
+function setAppView(name) {
+  const id = VIEW_META[name] ? name : 'catalog';
+  document.querySelectorAll('.view[data-view]').forEach((el) => {
+    const on = el.getAttribute('data-view') === id;
+    el.hidden = !on;
+    el.classList.toggle('active', on);
+  });
+  document.querySelectorAll('.nav-item[data-view]').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-view') === id);
+  });
+  const meta = VIEW_META[id];
+  const t = document.getElementById('viewTitle');
+  const s = document.getElementById('viewSubtitle');
+  if (t) t.textContent = meta.title;
+  if (s) s.textContent = meta.sub;
+  try {
+    const u = new URL(location.href);
+    if (id === 'catalog') u.searchParams.delete('view');
+    else u.searchParams.set('view', id);
+    history.replaceState(null, '', u);
+  } catch { /* ignore */ }
+}
+
+/** Coverage view — harvest + combat tracks (never dumped above catalog). */
 function renderFleetNeedsPanel() {
   const listEl = document.getElementById('fleetNeedsList');
   const metaEl = document.getElementById('fleetNeedsMeta');
   const covEl = document.getElementById('harvestCoverage');
+  const pill = document.getElementById('navCoveragePill');
   if (!listEl || !metaEl) return;
 
   const harvest = scoreHarvestCoverage(allModels);
   const combat = scoreCombatCoverage(allModels);
-  if (covEl) covEl.textContent = `H${harvest.pct}% · C${combat.pct}%`;
-  metaEl.innerHTML = `Harvest <strong>${harvest.covered}/${harvest.total}</strong> · Combat projectiles/VFX <strong>${combat.covered}/${combat.total}</strong>
-    · ${harvest.runtime + combat.runtime} runtime packages
-    · pinata + arrows/bullets/cannon/explosives
-    · <a href="api/fleet-needs.json" target="_blank" rel="noreferrer">fleet-needs.json</a>
-    · <a href="docs/PROJECTILES_AND_VFX.md" target="_blank" rel="noreferrer">PROJECTILES_AND_VFX</a>`;
+  const avg = Math.round((harvest.pct + combat.pct) / 2);
+  if (covEl) covEl.textContent = `${avg}%`;
+  if (pill) pill.textContent = `${avg}%`;
 
-  const section = (title, score) => {
-    const head = `<div class="need-section-title">${esc(title)} · ${score.pct}% catalog</div>`;
-    const cards = score.rows
-      .map((row) => {
-        const statusCls = row.status || 'partial';
-        const coverCls =
-          row.status === 'runtime' || row.status === 'planned'
-            ? row.status
-            : row.covered
-              ? 'covered'
-              : 'gap';
-        const coverLabel =
-          row.status === 'runtime'
-            ? 'runtime'
-            : row.status === 'planned'
-              ? 'planned'
-              : row.covered
-                ? `catalog×${row.catalogHits || 0}`
-                : 'gap';
-        const tool = row.tool ? ` · tool ${esc(row.tool)}` : '';
-        const pinata = row.pinata ? ' · pinata' : '';
-        const subtype = row.subtype ? ` · ${esc(row.subtype)}` : '';
-        const sample = row.sample ? `<div class="need-meta">hit: ${esc(row.sample)}</div>` : '';
-        return `<article class="need-card" data-need-search="${esc(row.search || '')}" data-need-id="${esc(row.id)}" title="${esc(row.notes || '')}">
-        <div class="need-title">${esc(row.label)}</div>
-        <div class="need-meta">
-          <span class="need-badge ${statusCls}">${esc(statusCls)}</span>
-          <span class="need-badge ${coverCls}">${esc(coverLabel)}</span>
-          ${esc(row.role || '')}${tool}${pinata}${subtype}
-        </div>
-        ${sample}
-      </article>`;
-      })
-      .join('');
-    return head + cards;
+  metaEl.innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Harvest / pinata</div>
+      <div class="kpi-value">${harvest.pct}%</div>
+      <div class="kpi-detail">${harvest.covered} of ${harvest.total} catalog-ready</div>
+      <div class="kpi-bar"><i style="width:${harvest.pct}%"></i></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Combat projectiles</div>
+      <div class="kpi-value">${combat.pct}%</div>
+      <div class="kpi-detail">${combat.covered} of ${combat.total} catalog-ready</div>
+      <div class="kpi-bar"><i style="width:${combat.pct}%"></i></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Runtime systems</div>
+      <div class="kpi-value">${harvest.runtime + combat.runtime}</div>
+      <div class="kpi-detail">Packages wired in game code</div>
+      <div class="kpi-bar"><i style="width:100%;opacity:.45"></i></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Overall</div>
+      <div class="kpi-value">${avg}%</div>
+      <div class="kpi-detail">Mean of harvest + combat tracks</div>
+      <div class="kpi-bar"><i style="width:${avg}%"></i></div>
+    </div>`;
+
+  const track = document.getElementById('needsTrack')?.value || 'all';
+  const status = document.getElementById('needsStatus')?.value || 'all';
+  const q = (document.getElementById('needsSearch')?.value || '').trim().toLowerCase();
+
+  const passRow = (row, trackName) => {
+    if (track === 'harvest' && trackName !== 'harvest') return false;
+    if (track === 'combat' && trackName !== 'combat') return false;
+    if (track === 'runtime' && row.status !== 'runtime') return false;
+    if (status !== 'all') {
+      const st = row.status || (row.covered ? 'ready' : 'missing');
+      if (status === 'missing') {
+        if (!(st === 'missing' || (!row.covered && st !== 'runtime' && st !== 'planned'))) return false;
+      } else if (st !== status && !(status === 'ready' && row.covered && st !== 'runtime')) {
+        return false;
+      }
+    }
+    if (q) {
+      const hay = `${row.label} ${row.role || ''} ${row.tool || ''} ${row.sample || ''} ${row.notes || ''} ${row.id || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
   };
 
-  listEl.innerHTML = section('Harvest / pinata', harvest) + section('Combat projectiles + VFX', combat);
+  const cardHtml = (row) => {
+    const statusCls = row.status || (row.covered ? 'partial' : 'missing');
+    const coverCls =
+      row.status === 'runtime' || row.status === 'planned'
+        ? row.status
+        : row.covered
+          ? 'covered'
+          : 'gap';
+    const coverLabel =
+      row.status === 'runtime'
+        ? 'runtime'
+        : row.status === 'planned'
+          ? 'planned'
+          : row.covered
+            ? `${row.catalogHits || 0} hits`
+            : 'gap';
+    const bits = [];
+    if (row.role) bits.push(esc(row.role));
+    if (row.tool) bits.push(`tool: ${esc(row.tool)}`);
+    if (row.pinata) bits.push('pinata');
+    if (row.subtype) bits.push(esc(row.subtype));
+    const sample = row.sample
+      ? `<div class="need-sample" title="${esc(row.sample)}">${esc(row.sample)}</div>`
+      : '';
+    return `<article class="need-card" data-need-search="${esc(row.search || '')}" data-need-id="${esc(row.id)}" title="${esc(row.notes || '')}">
+      <div class="need-title">${esc(row.label)}</div>
+      <div class="need-meta">
+        <span class="need-badge ${statusCls}">${esc(statusCls)}</span>
+        <span class="need-badge ${coverCls}">${esc(coverLabel)}</span>
+        ${bits.length ? `<span>${bits.join(' · ')}</span>` : ''}
+      </div>
+      ${sample}
+    </article>`;
+  };
+
+  const section = (title, score, trackName) => {
+    const rows = score.rows.filter((r) => passRow(r, trackName));
+    if (!rows.length) return '';
+    return `<div class="need-section-title">${esc(title)} · ${rows.length} shown</div>${rows.map(cardHtml).join('')}`;
+  };
+
+  let html = '';
+  if (track === 'all' || track === 'harvest' || track === 'runtime') {
+    html += section('Harvest / pinata', harvest, 'harvest');
+  }
+  if (track === 'all' || track === 'combat' || track === 'runtime') {
+    html += section('Combat projectiles + VFX', combat, 'combat');
+  }
+  listEl.innerHTML = html || `<p class="dim" style="grid-column:1/-1;padding:24px 8px">No items match these filters.</p>`;
 
   listEl.querySelectorAll('.need-card').forEach((card) => {
     card.addEventListener('click', () => {
-      const q = card.getAttribute('data-need-search') || '';
+      const qSearch = card.getAttribute('data-need-search') || '';
       const box = document.getElementById('searchBox');
-      if (box && q) {
-        box.value = q;
+      if (box && qSearch) {
+        box.value = qSearch;
         activeKind = null;
         activeGroup = null;
         page = 0;
         applyFilters();
+        setAppView('catalog');
         document.getElementById('resultsArea')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     });
@@ -2867,6 +2975,7 @@ function filterToHarvestAssets() {
     activeKind = null;
     applyFilters();
   }
+  setAppView('catalog');
   document.getElementById('resultsArea')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -2885,6 +2994,7 @@ function filterToCombatAssets() {
     activeKind = null;
     applyFilters();
   }
+  setAppView('catalog');
   document.getElementById('resultsArea')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
