@@ -50,6 +50,10 @@ export const RAW_PATH_KILL = [
   /\/exports?\//i,
   /\/_trash/i,
   /\/deleted\//i,
+  /models\/grudge6\/variants\//i,
+  /models\/grudge6\/(wk|brb|ud|orc|elf|dwf)\//i,
+  /_(horse|wizard|knight|hammer_simple|bow)\.glb$/i,
+  /models\/grudge6\/races\/\w+_Characters\.glb$/i,
   // Raw Mixamo / Kaykit / author anim GLBs — NOT Bip001 baked JSON
   /models\/animations\//i,
   /\/animations\/(grudge6|mixamo|kaykit|rig_)/i,
@@ -100,7 +104,7 @@ function isCdnSsot(m) {
  * Metadata is often sparse in D1; path + glb is enough to treat as surface candidates.
  */
 const PROD_PATH_PREFIXES = [
-  /^models\/grudge6\//i,
+  /^asset-packs\/toon-rts-characters\/glb\/characters\//i,
   /^models\/projectiles\//i,
   /^models\/weapons\//i,
   /^models\/codex\//i,
@@ -242,12 +246,23 @@ export function isProductionDeployReady(m) {
   }
   if (/cdn\/assets\/characters/i.test(path)) return false;
 
-  // KILL: legacy grudge6 trash folders (models/grudge6/ud|wk|brb/… — not races/)
-  // These are D1 ghosts that open as empty/no-mesh; fleet SSOT is races/* only.
+  // KILL: fused races bake, variant extras (horse/wizard/knight/hammer), folder ghosts.
+  // Play heroes are Toon RTS {race}.glb only (loadRaceKit).
   if (
     /models\/grudge6\/(wk|brb|ud|orc|elf|dwf)\//i.test(path) ||
+    /models\/grudge6\/variants\//i.test(path) ||
+    /models\/grudge6\/races\/\w+_Characters\.(glb|fbx)$/i.test(path) ||
     /models\/grudge6\/30characters/i.test(path) ||
-    /models\/characters\/grudge6\//i.test(path)
+    /models\/characters\/grudge6\//i.test(path) ||
+    /_(horse|wizard|knight|hammer_simple)\.glb$/i.test(path)
+  ) {
+    return false;
+  }
+  if (
+    String(m.kind || '').toLowerCase() === 'character' &&
+    !/asset-packs\/toon-rts-characters\/glb\/characters\/(human|barbarian|elf|dwarf|orc|undead)\.glb$/i.test(
+      path,
+    )
   ) {
     return false;
   }
@@ -505,18 +520,16 @@ export function productionBadge(m) {
  * GLB is fallback only when FBX fails.
  */
 export function raceKitDeployUrls(kit, isForbidden = () => false) {
-  // FBX first (author + atlas rebind), then GLB deploy attempts
-  const ordered = [kit?.fbx, kit?.glb, kit?.r2].filter(Boolean);
+  const ordered = [kit?.glb, kit?.r2, kit?.fbx].filter(Boolean);
   const uniq = [];
   for (const u of ordered) {
     if (isForbidden(u)) continue;
     if (!uniq.includes(u)) uniq.push(u);
   }
   return uniq.sort((a, b) => {
-    // Prefer FBX over GLB for grudge6 race multipacks
-    const af = /\.fbx($|\?)/i.test(a) ? 0 : 1;
-    const bf = /\.fbx($|\?)/i.test(b) ? 0 : 1;
-    return af - bf;
+    const toon = (u) => (/toon-rts-characters\/glb\/characters\/.+\.glb/i.test(u) ? 0 : 1);
+    const fbx = (u) => (/\.fbx($|\?)/i.test(u) ? 2 : 0);
+    return toon(a) + fbx(a) - (toon(b) + fbx(b));
   });
 }
 
