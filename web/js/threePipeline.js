@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export const DRACO_CDN = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 
@@ -24,6 +25,7 @@ export function getGltfLoader() {
     sharedDraco.setDecoderPath(DRACO_CDN);
     sharedGltf = new GLTFLoader();
     sharedGltf.setDRACOLoader(sharedDraco);
+    if (MeshoptDecoder) sharedGltf.setMeshoptDecoder(MeshoptDecoder);
   }
   return sharedGltf;
 }
@@ -129,6 +131,18 @@ export function prepareLoadedRoot(root) {
 export async function loadGltfOrFbxShared(url) {
   const lower = url.split('?')[0].toLowerCase();
   if (lower.endsWith('.fbx')) {
+    const glbUrl = url.replace(/\.fbx(\?|#|$)/i, '.glb$1');
+    if (glbUrl !== url) {
+      try {
+        if (await isLikelyBinaryAsset(glbUrl)) {
+          const gltf = await getGltfLoader().loadAsync(glbUrl);
+          prepareLoadedRoot(gltf.scene);
+          return { scene: gltf.scene, animations: gltf.animations || [] };
+        }
+      } catch {
+        /* fall through to FBX author */
+      }
+    }
     const loader = new FBXLoader();
     try {
       const u = new URL(url);

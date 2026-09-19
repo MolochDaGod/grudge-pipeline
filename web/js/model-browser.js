@@ -2485,9 +2485,9 @@ async function runDedupeScan() {
 }
 
 async function runDeployPlan() {
-  setActionStatus('Deploy plan…');
+  setActionStatus('Deliver / stamp…');
   try {
-    const assets = (filtered.length ? filtered : allModels).slice(0, 800).map((m) => ({
+    const assets = (filtered.length ? filtered : allModels).slice(0, 200).map((m) => ({
       r2Key: m.path || m.r2Key,
       grudgeUuid: m.grudgeUuid,
       format: m.format,
@@ -2500,41 +2500,54 @@ async function runDeployPlan() {
     }));
     let plan;
     try {
-      plan = await callDeployAi('/v1/deploy/plan', { assets });
+      plan = await callDeployAi('/v1/deploy/execute', { assets });
     } catch (e) {
-      // offline: local production filter
-      const ready = [];
-      const blocked = [];
-      for (const m of filtered.length ? filtered : allModels) {
-        const row = { r2Key: m.path || m.r2Key, name: m.name };
-        if (isProductionDeployReady(m)) ready.push(row);
-        else blocked.push(row);
+      try {
+        plan = await callDeployAi('/v1/deploy/plan', { assets });
+        plan.error = plan.error || e.message;
+      } catch (e2) {
+        const ready = [];
+        const blocked = [];
+        for (const m of filtered.length ? filtered : allModels) {
+          const row = { r2Key: m.path || m.r2Key, name: m.name };
+          if (isProductionDeployReady(m)) ready.push(row);
+          else blocked.push(row);
+        }
+        plan = {
+          readyCount: ready.length,
+          blockedCount: blocked.length,
+          ready: ready.slice(0, 40),
+          blocked: blocked.slice(0, 40),
+          policy: 'local isProductionDeployReady (deploy AI offline)',
+          error: e2.message,
+        };
       }
-      plan = {
-        readyCount: ready.length,
-        blockedCount: blocked.length,
-        ready: ready.slice(0, 40),
-        blocked: blocked.slice(0, 40),
-        policy: 'local isProductionDeployReady (deploy AI offline)',
-        error: e.message,
-      };
     }
+    const executed = plan.executed || [];
     const lines = [
-      '=== PRODUCTION DEPLOY PLAN ===',
+      '=== PRODUCTION DELIVER (execute, not flags) ===',
       plan.policy || '',
-      `ready=${plan.readyCount} blocked=${plan.blockedCount}`,
+      executed.length
+        ? `executed=${plan.executedCount} playOk=${plan.playOk}`
+        : `ready=${plan.readyCount} blocked=${plan.blockedCount}`,
       plan.error ? `(AI: ${plan.error})` : '',
       '',
-      'Ready (sample):',
-      ...(plan.ready || []).slice(0, 25).map((r) => `  ✓ ${r.r2Key || r.name}`),
+      ...(plan.scripts || []).map((s) => `  script ${s.id} — ${s.role}`),
       '',
-      'Blocked (sample):',
-      ...(plan.blocked || []).slice(0, 25).map((r) => `  ✗ ${r.r2Key || r.name} — ${r.reason || 'not production'}`),
-      '',
-      'Fix blocked: glb2glb --height 1.8 --texture-size 1024 → R2 → registry seed',
+      'Stamped:',
+      ...executed.slice(0, 30).map(
+        (r) =>
+          `  ${r.production ? '✓' : '·'} ${r.r2Key} · ${r.probe} · ${r.purpose || '—'} · ${r.bodyStatus || '—'}`,
+      ),
+      ...(plan.ready || []).slice(0, 15).map((r) => `  ✓ ${r.r2Key || r.name}`),
+      ...(plan.blocked || []).slice(0, 10).map((r) => `  ✗ ${r.r2Key || r.name}`),
     ];
     showDedupePanel(lines.join('\n'));
-    setActionStatus(`Deploy plan · ready ${plan.readyCount} · blocked ${plan.blockedCount}`);
+    setActionStatus(
+      executed.length
+        ? `Delivered · ${plan.executedCount} stamped · play ${plan.playOk}`
+        : `Deploy plan · ready ${plan.readyCount} · blocked ${plan.blockedCount}`,
+    );
   } catch (e) {
     console.error(e);
     setActionStatus(`Deploy plan failed: ${e.message}`);

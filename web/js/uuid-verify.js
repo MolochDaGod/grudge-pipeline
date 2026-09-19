@@ -235,23 +235,39 @@ export function findCatalogDuplicates(models) {
   };
 }
 
+/** Custom zone first, workers.dev fallback (DNS for asset-deploy.* is CF-only). */
+export const DEPLOY_AI_SLOTS = [
+  'https://asset-deploy.grudge-studio.com',
+  'https://grudge-asset-deploy-ai.grudge.workers.dev',
+];
+
 /** Deploy AI worker base (override via window.GRUDGE_ASSET_DEPLOY_AI). */
 export function deployAiBase() {
   if (typeof window !== 'undefined' && window.GRUDGE_ASSET_DEPLOY_AI) {
     return String(window.GRUDGE_ASSET_DEPLOY_AI).replace(/\/$/, '');
   }
-  // workers.dev is always live; custom host needs DNS orange-cloud
-  return 'https://grudge-asset-deploy-ai.grudge.workers.dev';
+  return DEPLOY_AI_SLOTS[0];
 }
 
 export async function callDeployAi(path, body) {
-  const base = deployAiBase();
-  const r = await fetch(`${base}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body || {}),
-  });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || `deploy-ai ${r.status}`);
-  return j;
+  const override =
+    typeof window !== 'undefined' && window.GRUDGE_ASSET_DEPLOY_AI
+      ? [String(window.GRUDGE_ASSET_DEPLOY_AI).replace(/\/$/, '')]
+      : DEPLOY_AI_SLOTS;
+  let lastErr;
+  for (const base of override) {
+    try {
+      const r = await fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {}),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || `deploy-ai ${r.status}`);
+      return j;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('deploy-ai unreachable');
 }

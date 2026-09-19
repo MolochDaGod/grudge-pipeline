@@ -14,8 +14,8 @@ export const FLEET_HOSTS = {
   assets: 'https://assets.grudge-studio.com',
   id: 'https://id.grudge-studio.com',
   api: 'https://api.grudge-studio.com',
-  /** Cloudflare AI worker for deploy plan / asset AI */
-  aiWorker: 'https://grudge-asset-deploy-ai.grudge-studio.workers.dev',
+  /** Cloudflare Worker slot: asset-deploy.grudge-studio.com */
+  aiWorker: 'https://asset-deploy.grudge-studio.com',
 };
 
 /**
@@ -200,7 +200,7 @@ export function openInForge(opts = {}) {
  * Returns URL for fetch POST { assets: [...] }.
  */
 export function aiDeployPlanUrl() {
-  return `${FLEET_HOSTS.aiWorker}/plan`;
+  return `${FLEET_HOSTS.aiWorker}/v1/deploy/execute`;
 }
 
 /**

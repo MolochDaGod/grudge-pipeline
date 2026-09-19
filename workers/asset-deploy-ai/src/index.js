@@ -104,9 +104,11 @@ function keepScore(a) {
   const p = String(a.r2Key || a.path || '').toLowerCase();
   const fmt = String(a.format || p.split('.').pop() || '').toLowerCase();
   if (fmt === 'glb') s += 50;
+  if (fmt === 'gltf') s += 40;
   if (fmt === 'fbx') s += 5;
+  if (p.includes('/asset-packs/toon-rts-characters/glb/characters/')) s += 40;
   if (p.includes('/models/codex/')) s += 20;
-  if (p.includes('/models/grudge6/')) s += 25;
+  if (p.includes('/models/grudge6/variants/') || /_characters\.(glb|fbx)$/.test(p)) s -= 25;
   if (a.productionBaked || a.bakePipeline === 'glb2glb') s += 20;
   if ((a.textures || 0) > 0 || a.textureStatus === 'atlas') s += 15;
   if (/\scopy| \(1\)|\.raw\.|\/raw\//i.test(p)) s -= 30;
@@ -167,20 +169,91 @@ function findDuplicateGroups(assets) {
   };
 }
 
+const TOON_PLAY =
+  /asset-packs\/toon-rts-characters\/glb\/characters\/(human|barbarian|elf|dwarf|orc|undead)\.glb$/i;
+
+const NAMED_PIPELINES = [
+  { id: 'loadRaceKit', role: 'play load Toon {race}.glb' },
+  { id: 'glb2glb', role: 'production bake (SI + textures + colliders)' },
+  { id: 'fbx2gltf', role: 'author FBX → raw GLB' },
+  { id: 'optimize', role: 'Draco/Meshopt + WebP pack' },
+  { id: 'ingest.convert', role: 'Dev Tool Blender convert FileVersion 6100' },
+];
+
+function isAuthorJunkPath(p) {
+  const s = String(p || '').toLowerCase();
+  return (
+    /models\/grudge6\/variants\//.test(s) ||
+    /models\/grudge6\/(wk|brb|ud|orc|elf|dwf)\//.test(s) ||
+    /models\/grudge6\/races\/\w+_characters\.(glb|fbx)$/.test(s) ||
+    /_(horse|wizard|knight|hammer_simple)\.glb$/.test(s)
+  );
+}
+
 function isProductionish(a) {
   const p = String(a.r2Key || a.path || '').toLowerCase();
   const fmt = String(a.format || p.split('.').pop() || '').toLowerCase();
-  if (fmt !== 'glb') return false;
-  if (!p.startsWith('models/') && !String(a.cdnUrl || '').includes('assets.grudge-studio.com')) {
+  if (isAuthorJunkPath(p)) return false;
+  if (TOON_PLAY.test(p)) return true;
+  if (fmt !== 'glb' && fmt !== 'gltf') return false;
+  if (!p.startsWith('models/') && !p.startsWith('asset-packs/') && !p.startsWith('prod/gltf/')) {
     return false;
   }
   if (a.productionBaked || a.bakePipeline === 'glb2glb' || a.deployReady) return true;
   if ((a.textures || 0) > 0 || a.textureStatus === 'atlas' || a.textureStatus === 'embedded') {
     return true;
   }
-  // codex production glbs assumed textured after glb2glb
-  if (p.includes('/models/codex/') && fmt === 'glb') return true;
+  if (p.includes('/models/codex/') && (fmt === 'glb' || fmt === 'gltf')) return true;
   return false;
+}
+
+function magicKind(buf) {
+  if (!buf || buf.length < 4) return 'empty';
+  if (buf[0] === 0x67 && buf[1] === 0x6c && buf[2] === 0x54 && buf[3] === 0x46) return 'glb';
+  const head = new TextDecoder().decode(buf.slice(0, 16));
+  if (head.includes('<!DOC') || head.includes('<html') || head.includes('<HTML')) return 'html';
+  if (head.includes('Kaydara') || head.startsWith('; FBX')) return 'fbx';
+  if (buf[0] === 0x7b) return 'json';
+  return 'other';
+}
+
+async function probeR2(env, r2Key) {
+  try {
+    if (env.ASSETS) {
+      const obj = await env.ASSETS.get(r2Key, { range: { offset: 0, length: 24 } });
+      if (obj) {
+        const buf = new Uint8Array(await obj.arrayBuffer());
+        return { kind: magicKind(buf), via: 'r2', bytes: buf.length };
+      }
+    }
+  } catch {
+    /* CDN fallback */
+  }
+  try {
+    const r = await fetch(`https://assets.grudge-studio.com/${r2Key}`, {
+      headers: { Range: 'bytes=0-23' },
+    });
+    if (!r.ok && r.status !== 206) return { kind: r.status === 404 ? 'missing' : 'other', via: 'cdn', status: r.status };
+    const buf = new Uint8Array(await r.arrayBuffer());
+    return { kind: magicKind(buf), via: 'cdn', bytes: buf.length, status: r.status };
+  } catch (e) {
+    return { kind: 'error', via: 'cdn', error: String(e.message || e) };
+  }
+}
+
+async function stampRegistry(env, r2Key, purpose, bodyStatus, layer) {
+  if (!env.DB) return { ok: false, error: 'no D1' };
+  try {
+    const now = Date.now();
+    await env.DB.prepare(
+      `UPDATE asset_registry SET purpose = COALESCE(?, purpose), layer = COALESCE(?, layer), body_status = COALESCE(?, body_status), updated_at = ? WHERE r2_key = ?`,
+    )
+      .bind(purpose || null, layer || null, bodyStatus || null, now, r2Key)
+      .run();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: String(e.message || e) };
+  }
 }
 
 export default {
@@ -199,20 +272,28 @@ export default {
             ok: true,
             service: 'grudge-asset-deploy-ai',
             endpoints: [
+              'GET  /v1/pipeline/scripts',
               'POST /v1/uuid/derive',
               'POST /v1/uuid/verify',
               'POST /v1/uuid/seed-sql',
               'POST /v1/dedupe/scan',
               'POST /v1/dedupe/purge',
               'POST /v1/deploy/plan',
+              'POST /v1/deploy/execute',
               'POST /v1/ai/chat',
               'POST /v1/game/verify',
             ],
+            slot: 'https://asset-deploy.grudge-studio.com',
+            scripts: NAMED_PIPELINES,
           },
           200,
           env,
           request,
         );
+      }
+
+      if (request.method === 'GET' && url.pathname === '/v1/pipeline/scripts') {
+        return json({ ok: true, scripts: NAMED_PIPELINES, convert: 'ObjectStore grudge-convert' }, 200, env, request);
       }
 
       if (request.method !== 'POST') {
@@ -352,7 +433,80 @@ export default {
             ready: ready.slice(0, 500),
             blocked: blocked.slice(0, 500),
             policy:
-              'Only fully colored/textured production GLBs after glb2glb; FBX/raw blocked from deploy plan',
+              'Play characters = Toon RTS {race}.glb. Optimized GLB/glTF on R2. Variants/fused races bake are author.',
+          },
+          200,
+          env,
+          request,
+        );
+      }
+
+      // ── Deploy execute (stamp D1 + magic-byte; not flag-only) ─
+      if (url.pathname === '/v1/deploy/execute') {
+        let assets = body.assets || [];
+        if (!assets.length && env.DB) {
+          try {
+            const { results } = await env.DB.prepare(
+              `SELECT r2_key, name, category, purpose, layer FROM asset_registry WHERE purpose = 'play' AND layer = 'hero' LIMIT 50`,
+            ).all();
+            assets = (results || []).map((r) => ({ r2Key: r.r2_key, name: r.name }));
+          } catch {
+            assets = [
+              'human',
+              'barbarian',
+              'elf',
+              'dwarf',
+              'orc',
+              'undead',
+            ].map((race) => ({
+              r2Key: `asset-packs/toon-rts-characters/glb/characters/${race}.glb`,
+              name: race,
+            }));
+          }
+        }
+        const executed = [];
+        for (const a of assets.slice(0, 200)) {
+          const r2Key = normalizeR2Key(a.r2Key || a.path || '');
+          if (!r2Key) continue;
+          const probe = await probeR2(env, r2Key);
+          const junk = isAuthorJunkPath(r2Key);
+          const play = TOON_PLAY.test(r2Key);
+          let purpose = null;
+          let layer = null;
+          let bodyStatus = null;
+          if (probe.kind === 'glb' || probe.kind === 'json') bodyStatus = 'real';
+          else if (probe.kind === 'html') bodyStatus = 'html_fake';
+          else if (probe.kind === 'missing') bodyStatus = 'missing';
+          else if (probe.kind === 'fbx') bodyStatus = 'real';
+          if (play && (probe.kind === 'glb' || probe.kind === 'json')) {
+            purpose = 'play';
+            layer = 'hero';
+          } else if (junk) {
+            purpose = 'author';
+            layer = /horse/.test(r2Key) ? 'creature' : 'hero';
+          }
+          const stamp = await stampRegistry(env, r2Key, purpose, bodyStatus, layer);
+          const uuid = a.grudgeUuid || (await grudgeUuidFromR2Key(r2Key));
+          executed.push({
+            r2Key,
+            grudgeUuid: uuid,
+            probe: probe.kind,
+            via: probe.via,
+            purpose,
+            bodyStatus,
+            stamped: stamp.ok,
+            stampError: stamp.error || undefined,
+            production: play && bodyStatus === 'real' && !junk,
+          });
+        }
+        return json(
+          {
+            ok: true,
+            executedCount: executed.length,
+            playOk: executed.filter((e) => e.production).length,
+            executed,
+            scripts: NAMED_PIPELINES,
+            policy: 'Stamped D1 from R2/CDN magic bytes. Did not invent a second baker.',
           },
           200,
           env,
@@ -417,15 +571,15 @@ export default {
         const message = String(body.message || '').slice(0, 4000);
         if (!message) return json({ error: 'message required' }, 400, env, request);
 
-        const system = `You are Grudge Studio asset deploy AI.
+        const system = `You are Grudge Studio asset deploy AI on asset-deploy.grudge-studio.com.
 Rules:
-- grudgeUuid is deterministic: sha1("grudge-asset:"+r2Key) as UUID v5-style.
-- Production assets must be GLB after glb2glb with textures/colors, SI scale, on R2 assets.grudge-studio.com.
-- Prefer models/codex/** and models/grudge6/**.
-- Deduplicate by content hash and basename; keep highest production score; purge copies.
-- Never recommend arena secondary character CDNs for grudge6 hosts.
-- Equipment multipacks: isolate meshName + equip slot (body/arms/legs/head/weapon).
-Answer concisely with actionable CLI (wrangler r2, grudge-convert glb2glb, D1 seed).`;
+- Execute: POST /v1/deploy/execute stamps D1 from R2 magic bytes. Do not only flag.
+- Play heroes: asset-packs/toon-rts-characters/glb/characters/{human|barbarian|elf|dwarf|orc|undead}.glb via loadRaceKit. Never fused *_Characters.glb or variants horse/wizard/knight/hammer.
+- Delivery: optimized GLB/glTF (Draco/Meshopt) on assets.grudge-studio.com. FBX is author; load sibling .glb when present.
+- Convert SSOT: ObjectStore grudge-convert (fbx2gltf, glb2glb). Named scripts: loadRaceKit, glb2glb, fbx2gltf, optimize, ingest.convert.
+- grudgeUuid = sha1("grudge-asset:"+r2Key) UUID v5-style.
+- Never arena secondary character CDNs. Equip = mesh_ids on the kit.
+Answer with the execute endpoint or existing CLI — do not invent a second pipeline.`;
 
         if (!env.AI) {
           return json(
