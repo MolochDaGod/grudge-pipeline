@@ -10,3 +10,8 @@ Thumbs.db
 
 # This device only; public installers collect their own drive choices.
 .storage/device.json
+
+# Retained local ignore rules
+/Builds/
+/Working/
+/Releases/
