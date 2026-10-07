@@ -9,9 +9,7 @@
     "build:backend": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\" -PackageRelative \".\" -Script \"build:backend\" -NoLaunchPrompt",
     "db:push": "pnpm --filter @workspace/db push",
     "workspace:build": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\"",
-    "workspace:menu": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Project-Console.ps1\"",
-    "storage:build": "powershell -NoProfile -File .storage/Build-Local.ps1",
-    "storage:release": "node .storage/sync-release.cjs package"
+    "workspace:menu": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Project-Console.ps1\""
   },
   "engines": {
     "node": ">=20"
