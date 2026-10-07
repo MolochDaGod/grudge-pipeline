@@ -1,0 +1,83 @@
+{
+  "id": "grudgegit/grudge-pipeline",
+  "repository": "MolochDaGod/grudge-pipeline",
+  "group": "grudgegit",
+  "name": "grudge-pipeline",
+  "source": "C:\\grudgegit\\grudge-pipeline",
+  "buildRoot": "D:\\grudgegit\\grudge-pipeline",
+  "outputRoot": "E:\\grudgegit\\grudge-pipeline",
+  "components": [
+    {
+      "id": "artifacts-api-server",
+      "label": "artifacts/api-server",
+      "relative": "artifacts/api-server",
+      "output": "artifacts/api-server",
+      "kind": "node",
+      "buildScript": "build",
+      "launchScript": "start",
+      "installer": false,
+      "requires": [
+        "Node.js and project package manager"
+      ],
+      "notes": [],
+      "launchOptionOnBuildCompletion": true
+    },
+    {
+      "id": "artifacts-grudge-pipeline",
+      "label": "artifacts/grudge-pipeline",
+      "relative": "artifacts/grudge-pipeline",
+      "output": "artifacts/grudge-pipeline",
+      "kind": "web",
+      "buildScript": "build",
+      "launchScript": null,
+      "installer": false,
+      "requires": [
+        "Node.js and project package manager"
+      ],
+      "notes": [],
+      "launchOptionOnBuildCompletion": true
+    }
+  ],
+  "packages": {
+    ".": {
+      "scripts": {
+        "dev:frontend": "pnpm --filter @workspace/grudge-pipeline run dev",
+        "dev:backend": "pnpm --filter @workspace/api-server run dev",
+        "build:frontend": "pnpm --filter @workspace/grudge-pipeline run build",
+        "build:backend": "pnpm --filter @workspace/api-server run build",
+        "db:push": "pnpm --filter @workspace/db push"
+      },
+      "packageManager": null,
+      "name": "grudge-pipeline-workspace"
+    },
+    "artifacts/api-server": {
+      "scripts": {
+        "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
+        "build": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\" -PackageRelative \"artifacts/api-server\" -Script \"build\" -NoLaunchPrompt",
+        "start": "node --enable-source-maps ./dist/index.mjs",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "workspace:build": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\"",
+        "workspace:menu": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Project-Console.ps1\""
+      },
+      "packageManager": null,
+      "name": "@workspace/api-server"
+    },
+    "artifacts/grudge-pipeline": {
+      "scripts": {
+        "dev": "vite --config vite.config.ts --host 0.0.0.0",
+        "build": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\" -PackageRelative \"artifacts/grudge-pipeline\" -Script \"build\" -NoLaunchPrompt",
+        "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "workspace:build": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\"",
+        "workspace:menu": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Project-Console.ps1\""
+      },
+      "packageManager": null,
+      "name": "@workspace/grudge-pipeline"
+    }
+  },
+  "nativeEntries": [],
+  "preexistingTrackedChanges": [],
+  "releaseOnly": false,
+  "storageProfile": ".storage/profile.json",
+  "storageDevice": ".storage/device.json"
+}

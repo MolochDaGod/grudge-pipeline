@@ -5,9 +5,11 @@
   "scripts": {
     "dev:frontend": "pnpm --filter @workspace/grudge-pipeline run dev",
     "dev:backend": "pnpm --filter @workspace/api-server run dev",
-    "build:frontend": "pnpm --filter @workspace/grudge-pipeline run build",
-    "build:backend": "pnpm --filter @workspace/api-server run build",
-    "db:push": "pnpm --filter @workspace/db push"
+    "build:frontend": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\" -PackageRelative \".\" -Script \"build:frontend\" -NoLaunchPrompt",
+    "build:backend": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\" -PackageRelative \".\" -Script \"build:backend\" -NoLaunchPrompt",
+    "db:push": "pnpm --filter @workspace/db push",
+    "workspace:build": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Build-Workspace.ps1\"",
+    "workspace:menu": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\grudgegit\\grudge-pipeline/Project-Console.ps1\""
   },
   "engines": {
     "node": ">=20"

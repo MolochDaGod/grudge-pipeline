@@ -7,3 +7,6 @@ dist/
 Thumbs.db
 .vercel
 .turbo
+
+# This device only; public installers collect their own drive choices.
+.storage/device.json
