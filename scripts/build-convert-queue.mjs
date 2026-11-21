@@ -4,6 +4,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { grudgeUuidFromR2Key } from './lib/grudgeUuid.mjs';
 
 const repo = path.resolve(import.meta.dirname, '..');
 const outPath = path.join(repo, 'web', 'api', 'convert-queue.json');
@@ -25,6 +26,42 @@ function slug(name) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 64);
+}
+
+function loadCodexByStem() {
+  const byStem = new Map();
+  const catalogPath = 'D:/Games/Models/_codex_prod/catalog.json';
+  if (!fs.existsSync(catalogPath)) return byStem;
+  const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+  for (const mesh of catalog.meshes || []) {
+    const base = path.basename(mesh.r2Key || '').toLowerCase();
+    if (base) byStem.set(base, mesh);
+  }
+  return byStem;
+}
+
+const codexByStem = loadCodexByStem();
+
+function stampMesh(fileName, packName) {
+  const ext = path.extname(fileName).toLowerCase();
+  if (!MODEL_EXT.has(ext)) return null;
+  const base = path.basename(fileName, ext);
+  const known = codexByStem.get(`${base}.glb`.toLowerCase());
+  if (known?.r2Key) {
+    return {
+      file: fileName,
+      r2Key: known.r2Key,
+      grudgeUuid: known.grudgeUuid || grudgeUuidFromR2Key(known.r2Key),
+      uuidState: 'catalog',
+    };
+  }
+  const r2Key = `models/local/${slug(packName)}/${slug(base)}.glb`;
+  return {
+    file: fileName,
+    r2Key,
+    grudgeUuid: grudgeUuidFromR2Key(r2Key),
+    uuidState: 'intended',
+  };
 }
 
 function countDir(dir, depth) {
@@ -54,12 +91,9 @@ function countDir(dir, depth) {
       else if (ext === '.obj') counts.obj++;
       else if (TEX_EXT.has(ext)) counts.png++;
       else if (ext === '.zip' || ext === '.7z' || ext === '.rar') counts.zip++;
-      if (samples.length < 6 && (MODEL_EXT.has(ext) || ext === '.zip')) {
-        const base = path.basename(ent.name, ext);
-        samples.push({
-          file: ent.name,
-          intendedR2Key: `models/ingest/${slug(path.basename(dir))}/${slug(base)}.glb`,
-        });
+      if (samples.length < 6 && MODEL_EXT.has(ext)) {
+        const stamped = stampMesh(ent.name, path.basename(dir));
+        if (stamped) samples.push(stamped);
       }
     }
   }
@@ -89,12 +123,8 @@ for (const root of roots) {
         source: full,
         kind: textureName ? 'texture-pack' : 'purchased-zip',
         counts: { zip: 1 },
-        samples: [
-          {
-            file: ent.name,
-            intendedR2Key: `models/ingest/${slug(ent.name)}/pack.glb`,
-          },
-        ],
+        samples: [],
+        uuidState: 'none',
       });
       continue;
     }
@@ -109,9 +139,7 @@ for (const root of roots) {
       source: full,
       kind: convertible ? 'local-folder' : 'texture-pack',
       counts,
-      samples: samples.length
-        ? samples
-        : [{ file: ent.name, intendedR2Key: `models/ingest/${slug(ent.name)}/pack.glb` }],
+      samples,
     });
   }
 }
@@ -120,7 +148,7 @@ packs.sort((a, b) => a.name.localeCompare(b.name));
 const doc = {
   version: 1,
   generated: new Date().toISOString(),
-  note: 'Local /model and purchased packs. intendedR2Key is the key a future GLB would use. UUID is derived in the browser from that key and is not a D1 row until upload.',
+  note: 'Catalog meshes reuse models/codex keys and their grudgeUuid. Other meshes use models/local and a derived UUID. Texture packs and zip archives have no asset UUID.',
   roots: roots.map((r) => r.dir).filter((d) => fs.existsSync(d)),
   packs,
 };

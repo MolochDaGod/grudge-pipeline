@@ -111,6 +111,7 @@ import {
   mergeTruthEntries,
   enrichFleetTruth,
   fetchProductionCatalog,
+  fetchUuidIndex,
   d1Offsets,
   truthSummary,
   normalizeR2Key,
@@ -516,10 +517,11 @@ async function loadCatalog() {
     status.className = 'status-pill checking r2-status checking';
     status.innerHTML = `<span class="status-dot r2-dot"></span><span class="status-text">Loading…</span>`;
   }
-  const [d1, os, production, curated] = await Promise.all([
+  const [d1, os, production, codex, curated] = await Promise.all([
     fetchD1Catalog(),
     fetchObjectStoreModels(),
     fetchProductionCatalog().then((rows) => rows.map((r) => normalizeEntry(r, 'production'))),
+    fetchUuidIndex().then((rows) => rows.map((r) => normalizeEntry(r, 'codex'))),
     // curatedGrudge6 includes race kits + BAKED_PACKS anim clips
     Promise.resolve(curatedGrudge6()),
   ]);
@@ -530,9 +532,9 @@ async function loadCatalog() {
     if (m.path) d1Index.byPath.set(m.path.replace(/\\/g, '/').toLowerCase(), m);
   }
 
-  // Merge: curated base → ObjectStore → production ship list → D1 (wins identity)
+  // Merge: curated → ObjectStore → production → codex UUID index → D1 (wins identity)
   const map = new Map();
-  for (const m of [...curated, ...os, ...production, ...d1]) {
+  for (const m of [...curated, ...os, ...production, ...codex, ...d1]) {
     const k = normalizeR2Key(m.path || m.r2Key || m.id);
     if (!k) continue;
     if (!map.has(k)) map.set(k, m);
@@ -592,21 +594,25 @@ async function loadCatalog() {
 async function prefillDerivedUuids() {
   let n = 0;
   for (const m of allModels) {
-    if (m.grudgeUuid && isValidUuid(m.grudgeUuid)) continue;
     if (!m.path || m.isBakedClip || m.format === 'json') continue;
     try {
-      const u = await grudgeUuidFromR2Key(m.path);
-      if (u) {
-        if (!m.grudgeUuid) {
-          m.grudgeUuid = u;
-          m.uuidStatus = 'derived';
-          m.uuidMessage = 'Derived from grudge-asset:r2Key';
-        }
-        m.uuidExpected = u;
-        if (!m.thumbKey) m.thumbKey = u;
-        if (m.path) d1Index.byPath.set(m.path.toLowerCase(), m);
-        d1Index.byUuid.set(u.toLowerCase(), m);
+      const expected = await grudgeUuidFromR2Key(m.path);
+      if (!expected) continue;
+      m.uuidExpected = expected;
+      const declared = m.grudgeUuid && isValidUuid(m.grudgeUuid) ? m.grudgeUuid : null;
+      if (!declared) {
+        m.grudgeUuid = expected;
+        m.uuidStatus = 'derived';
+        m.uuidMessage = 'Derived from grudge-asset:r2Key';
+      } else if (declared.toLowerCase() !== expected.toLowerCase()) {
+        m.uuidDeclared = declared;
+        m.grudgeUuid = expected;
+        m.uuidStatus = 'repaired';
+        m.uuidMessage = 'Replaced a UUID that did not match the R2 key';
       }
+      if (!m.thumbKey) m.thumbKey = m.grudgeUuid;
+      if (m.path) d1Index.byPath.set(m.path.toLowerCase(), m);
+      d1Index.byUuid.set(expected.toLowerCase(), m);
     } catch {
       /* ignore */
     }
@@ -625,7 +631,7 @@ async function updateThumbStat() {
 function updateUuidStat() {
   const el = document.getElementById('uuidOkCount');
   if (!el) return;
-  const ok = allModels.filter((m) => m.uuidStatus === 'ok' || m.uuidStatus === 'derived').length;
+  const ok = allModels.filter((m) => m.uuidStatus === 'ok' || m.uuidStatus === 'derived' || m.uuidStatus === 'repaired').length;
   const done = allModels.filter((m) => m.uuidStatus && m.uuidStatus !== 'pending').length;
   el.textContent = done ? `${ok}/${done}` : '—';
 }

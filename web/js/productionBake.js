@@ -127,7 +127,7 @@ export function hasProductionSurface(m) {
   if (m.isBakedClip) return true; // clips are not mesh-shaded
   // Convert left a bare mesh. A bake flag does not invent a texture.
   if (m.textureStatus === 'none' && !(m.textures > 0)) return false;
-  if (m.textureStatus === 'atlas' || m.textureStatus === 'embedded') return true;
+  if (m.textureStatus === 'atlas' || m.textureStatus === 'embedded' || m.textureStatus === 'map') return true;
   if (m.textureStatus === 'vertex-color') return true;
   if ((m.textures || 0) > 0) return true;
   // Explicit glb2glb / production bake implies textures were processed (atlas-bound OK)
@@ -185,7 +185,7 @@ export function productionScore(m) {
   else if (fmt === 'obj' || fmt === 'dae') score += 1;
 
   // Surface (color / texture) — required for mesh gameplay
-  if (m.textureStatus === 'atlas' || m.textureStatus === 'embedded') score += 22;
+  if (m.textureStatus === 'atlas' || m.textureStatus === 'embedded' || m.textureStatus === 'map') score += 22;
   else if ((m.textures || 0) > 0) score += 16;
   else if (m.textureStatus === 'vertex-color') score += 12;
   else if (m.isBakedClip) score += 10;

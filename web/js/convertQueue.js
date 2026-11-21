@@ -2,8 +2,6 @@
  * Local /model + purchased packs that can become GLB.
  * The queue JSON is a scan of disk. UUIDs are derived only for an intended R2 key.
  */
-import { grudgeUuidFromR2Key } from './uuid-verify.js';
-
 function esc(s) {
   return String(s || '')
     .replace(/&/g, '&amp;')
@@ -51,18 +49,10 @@ async function paint() {
         .filter((k) => counts[k])
         .map((k) => `${counts[k]} ${k}`)
         .join(' · ');
-      const sample = (p.samples || [])[0];
-      let uuid = '';
-      if (sample?.intendedR2Key) {
-        try {
-          uuid = (await grudgeUuidFromR2Key(sample.intendedR2Key)) || '';
-        } catch {
-          uuid = '';
-        }
-      }
-      const uuidHtml = uuid
-        ? `<button type="button" class="ghost-btn copy-uuid" data-uuid="${esc(uuid)}">Copy UUID</button> <code>${esc(uuid)}</code><div class="need-sample">${esc(sample.intendedR2Key)}</div>`
-        : '<span class="muted">UUID waits for a GLB r2Key. This pack is not on the CDN yet.</span>';
+      const sample = (p.samples || []).find((s) => s.grudgeUuid) || null;
+      const uuidHtml = sample
+        ? `<button type="button" class="ghost-btn copy-uuid" data-uuid="${esc(sample.grudgeUuid)}">Copy UUID</button> <code>${esc(sample.grudgeUuid)}</code><div class="need-sample">${esc(sample.uuidState || '')} · ${esc(sample.r2Key || '')}</div>`
+        : '<span class="muted">No mesh key. Texture packs and zip archives do not get an asset UUID.</span>';
       return `<article class="need-card">
         <div class="need-title">${esc(p.name)}</div>
         <div class="need-meta"><span class="need-badge ${p.kind === 'texture-pack' ? 'partial' : 'planned'}">${esc(p.kind)}</span><span>${esc(countLine || 'archive')}</span></div>

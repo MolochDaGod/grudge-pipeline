@@ -29,9 +29,12 @@ if (!list) {
 const report = { file, total: list.length, ok: 0, fixed: 0, derived: 0, mismatch: 0, invalid: 0, rows: [] };
 
 for (const item of list) {
-  const r2Key = normalizeR2Key(item.r2Key || item.path || (item.id ? `models/codex/${item.id}.glb` : ''));
-  if (!r2Key && !item.id) continue;
-  const key = r2Key || `models/codex/${item.id}.glb`;
+  const r2Key = normalizeR2Key(item.r2Key || item.path || '');
+  if (!r2Key) {
+    report.rows.push({ id: item.id, status: 'skipped', message: 'No r2Key — definition ids are not asset UUIDs' });
+    continue;
+  }
+  const key = r2Key;
   const expected = grudgeUuidFromR2Key(key);
   const before = item.grudgeUuid || null;
   const v = verifyPair(key, before);

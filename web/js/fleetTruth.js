@@ -40,6 +40,7 @@ export const SOURCE_PRIORITY = {
   production: 90,
   'grudge6-ssot': 80,
   'baked-bip001': 75,
+  codex: 85,
   curated: 70,
   objectstore: 40,
   local: 10,
@@ -316,9 +317,38 @@ export function d1Offsets(total, pageSize = 200, maxPages = 80) {
 }
 
 /**
- * Fetch production-catalog.json (pipeline-shipped labels).
+ * Organized codex mesh UUIDs baked by scripts/build-uuid-index.mjs.
  * @returns {Promise<object[]>}
  */
+export async function fetchUuidIndex() {
+  try {
+    const r = await fetch('api/uuid-index.json', { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const rows = [];
+    for (const pack of j.packs || []) {
+      for (const mesh of pack.meshes || []) {
+        rows.push({
+          ...mesh,
+          path: mesh.r2Key,
+          format: 'glb',
+          category: 'codex',
+          group: `codex/${pack.id}`,
+          textures: mesh.textureStatus === 'none' ? 0 : 1,
+          productionBaked: true,
+          deployReady: mesh.textureStatus !== 'none',
+          bakePipeline: 'glb2glb',
+          scaleBaked: true,
+          source: 'codex',
+        });
+      }
+    }
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchProductionCatalog() {
   try {
     const r = await fetch('api/production-catalog.json', {
