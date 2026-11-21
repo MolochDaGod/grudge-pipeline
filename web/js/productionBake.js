@@ -125,6 +125,8 @@ export function isKnownProductionPath(m) {
 export function hasProductionSurface(m) {
   if (!m) return false;
   if (m.isBakedClip) return true; // clips are not mesh-shaded
+  // Convert left a bare mesh. A bake flag does not invent a texture.
+  if (m.textureStatus === 'none' && !(m.textures > 0)) return false;
   if (m.textureStatus === 'atlas' || m.textureStatus === 'embedded') return true;
   if (m.textureStatus === 'vertex-color') return true;
   if ((m.textures || 0) > 0) return true;

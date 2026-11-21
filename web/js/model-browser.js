@@ -115,6 +115,8 @@ import {
   truthSummary,
   normalizeR2Key,
 } from './fleetTruth.js';
+import { mountCodexView, showCodex } from './codexShelves.js';
+import { mountConvertView, showConvert } from './convertQueue.js';
 
 // ── Fleet hosts — production deploy first ──
 // Prefer: textured · meshed · SI-scaled · converted · glb2glb · R2 GLB
@@ -978,7 +980,10 @@ function renderPage() {
           ? `${(m.sizeKB / 1024).toFixed(1)} MB`
           : `${m.sizeKB} KB`
         : '';
-      const meta = [m.kind, size, m.group].filter(Boolean).join(' · ');
+      const uuidShort = m.grudgeUuid ? String(m.grudgeUuid).slice(0, 8) : '';
+      const meta = [m.kind, size, m.group, uuidShort ? `uuid ${uuidShort}` : 'uuid pending']
+        .filter(Boolean)
+        .join(' · ');
       const thumbHtml = mem
         ? `<img class="thumb" alt="" src="${mem}">`
         : `<span class="glyph">${glyphFor(m)}</span>`;
@@ -2877,12 +2882,13 @@ function wireUi() {
   // Deep-link ?view=coverage
   try {
     const v = new URLSearchParams(location.search).get('view');
-    if (v === 'coverage' || v === 'tools' || v === 'catalog') setAppView(v);
+    if (v === 'coverage' || v === 'tools' || v === 'catalog' || v === 'codex' || v === 'convert') setAppView(v);
   } catch { /* ignore */ }
 }
 
 function setAppView(name) {
-  const id = name === 'coverage' || name === 'tools' ? name : 'catalog';
+  const allowed = new Set(['catalog', 'coverage', 'tools', 'codex', 'convert']);
+  const id = allowed.has(name) ? name : 'catalog';
   document.querySelectorAll('.panel[data-view], .view[data-view]').forEach((el) => {
     const on = el.getAttribute('data-view') === id;
     el.hidden = !on;
@@ -2897,6 +2903,8 @@ function setAppView(name) {
     else u.searchParams.set('view', id);
     history.replaceState(null, '', u);
   } catch { /* ignore */ }
+  if (id === 'codex') showCodex();
+  if (id === 'convert') showConvert();
 }
 
 /** Coverage view — harvest + combat tracks (never dumped above catalog). */
@@ -3067,6 +3075,8 @@ function filterToCombatAssets() {
 
 async function init() {
   wireUi();
+  mountCodexView();
+  mountConvertView();
   setupDrop();
   try {
     await loadCatalog();

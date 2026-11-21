@@ -14,6 +14,29 @@
 import * as THREE from 'three';
 
 const R2 = 'https://assets.grudge-studio.com';
+
+/** Converted status-magic GLBs ship with no albedo. Tint by element so they are not yellow. */
+const STATUS_MAGIC_COLORS = {
+  arcane: 0x7c5cff,
+  atomic: 0x39d98a,
+  binding: 0x6ea8ff,
+  blood: 0xe23b3b,
+  chemical: 0xb6e34a,
+  command: 0xe6b84d,
+  dark: 0x6b4c9a,
+  kinetic: 0xf2f2f2,
+  magnetic: 0x3ec6cf,
+  primordial: 0xff7a3c,
+};
+
+function statusMagicHex(pathHint) {
+  const s = String(pathHint || '').toLowerCase();
+  if (!s.includes('status-magic')) return null;
+  for (const [name, hex] of Object.entries(STATUS_MAGIC_COLORS)) {
+    if (s.includes(name)) return hex;
+  }
+  return 0x9aa3b5;
+}
 const GH = 'https://molochdagod.github.io/ObjectStore';
 
 /** Material-name / path → candidate atlas URLs (first HEAD that works wins). */
@@ -22,7 +45,7 @@ export const ATLAS_BINDINGS = [
     id: 'bow-arrow',
     // Material name from FBX2glTF arrows/bows
     matName: /bow[_\s-]?texture|texture[_\s-]?map[_\s-]?bow|Texture_MAp_bow/i,
-    path: /weapons\/bow|_arrow_[bc]_|\/arrows\/|bow_full/i,
+    path: /weapons\/bow|_arrow_[bc]_|shell_arrow|projectiles\/shell|\/arrows\/|bow_full/i,
     urls: [
       `${R2}/models/weapons/bow/Texture_MAp_bow.png`,
       `${R2}/models/weapons/bow/Texture_Map_bow.png`,
@@ -287,15 +310,36 @@ export async function prepAndRebindMaterials(root, entry = {}) {
     }
   }
 
-  // Recount after rebind
-  const after = prepMaterials(root);
+  const magicHex = statusMagicHex(pathHint);
+  if (magicHex != null) {
+    for (const { mat } of pairs) {
+      if (mat.map && !isBrokenMap(mat.map)) continue;
+      if (mat.color) mat.color.setHex(magicHex);
+      if ('emissive' in mat && mat.emissive) {
+        mat.emissive.setHex(magicHex);
+        if ('emissiveIntensity' in mat) mat.emissiveIntensity = 0.65;
+      }
+      if ('metalness' in mat) mat.metalness = 0.05;
+      if ('roughness' in mat) mat.roughness = 0.4;
+      mat.needsUpdate = true;
+      rebound++;
+    }
+    atlasUrl = atlasUrl || 'vertex-color:status-magic';
+  }
+
+  let withMap = 0;
+  let brokenMaps = 0;
+  for (const { mat } of pairs) {
+    if (mat.map && !isBrokenMap(mat.map)) withMap++;
+    else if (!mat.map || isBrokenMap(mat.map)) brokenMaps++;
+  }
   return {
     rebound,
     atlasUrl,
     prep: {
-      mats: after.mats,
-      withMap: after.withMap,
-      brokenMaps: after.brokenMaps,
+      mats: pairs.length,
+      withMap,
+      brokenMaps,
       rebound,
     },
   };

@@ -26,6 +26,8 @@
         Gaps
         <span class="nav-badge" id="navCoveragePill">—</span>
       </button>
+      <button type="button" class="nav-btn" data-view="codex">Codex</button>
+      <button type="button" class="nav-btn" data-view="convert">Local /model</button>
       <button type="button" class="nav-btn" data-view="tools">Tools</button>
     </nav>
 
@@ -206,6 +208,55 @@
         <button type="button" class="ghost-btn" id="btnNeedsToggle" hidden>Toggle</button>
       </div>
       <div class="gap-grid" id="fleetNeedsList"></div>
+    </section>
+
+    <!-- ERA CODEXES (separate shelves, existing hosts) -->
+    <section class="panel" id="viewCodex" data-view="codex" hidden>
+      <div class="page-intro">
+        <h2>Era codexes</h2>
+        <p class="muted">Warlords definitions stay on info. Voxel blocks stay on Mine-Loader. Nexus is listed only when that catalog is already published. Asset UUID is the hash of an R2 mesh key.</p>
+      </div>
+      <div class="toolbar tight">
+        <label class="sel">
+          <span>Shelf</span>
+          <select id="codexShelf">
+            <option value="warlords">Warlords</option>
+            <option value="voxel">Voxel</option>
+            <option value="nexus">Nexus</option>
+          </select>
+        </label>
+        <label class="sel grow">
+          <span>Filter</span>
+          <input type="search" id="codexSearch" placeholder="Name or definition id">
+        </label>
+      </div>
+      <div class="kpi-row" id="codexMeta"></div>
+      <div id="codexList"></div>
+    </section>
+
+    <!-- LOCAL /MODEL + PURCHASED -->
+    <section class="panel" id="viewConvert" data-view="convert" hidden>
+      <div class="page-intro">
+        <h2>Local /model</h2>
+        <p class="muted">Purchased archives and local model folders that can convert to GLB. Copy UUID uses the intended R2 key. Nothing here is uploaded until a GLB bake lands on the CDN.</p>
+      </div>
+      <div class="toolbar tight">
+        <label class="sel">
+          <span>Kind</span>
+          <select id="convertKind">
+            <option value="">All</option>
+            <option value="local-folder">Local folder</option>
+            <option value="purchased-zip">Purchased zip</option>
+            <option value="texture-pack">Texture pack</option>
+          </select>
+        </label>
+        <label class="sel grow">
+          <span>Filter</span>
+          <input type="search" id="convertSearch" placeholder="Pack name">
+        </label>
+      </div>
+      <p class="muted" id="convertMeta"></p>
+      <div id="convertList"></div>
     </section>
 
     <!-- TOOLS -->

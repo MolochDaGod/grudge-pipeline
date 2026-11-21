@@ -428,6 +428,12 @@ body.app {
 .need-badge.missing, .need-badge.gap { background: rgba(240,113,120,0.12); color: var(--bad); }
 .need-badge.runtime { background: var(--accent-soft); color: var(--accent); }
 .need-badge.planned { background: var(--elev); color: var(--muted); }
+.codex-list, #codexList, #convertList { margin-top: 12px; }
+#codexList code, #convertList code {
+  font-size: 0.72rem;
+  color: var(--muted);
+  word-break: break-all;
+}
 
 /* ── Tools ───────────────────────────────────────────────── */
 .tool-card {
