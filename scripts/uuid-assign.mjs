@@ -26,11 +26,12 @@ if (!list) {
   process.exit(1);
 }
 
-const report = { file, total: list.length, ok: 0, fixed: 0, derived: 0, mismatch: 0, invalid: 0, rows: [] };
+const report = { file, total: list.length, ok: 0, fixed: 0, derived: 0, mismatch: 0, invalid: 0, skipped: 0, rows: [] };
 
 for (const item of list) {
   const r2Key = normalizeR2Key(item.r2Key || item.path || '');
   if (!r2Key) {
+    report.skipped++;
     report.rows.push({ id: item.id, status: 'skipped', message: 'No r2Key — definition ids are not asset UUIDs' });
     continue;
   }
@@ -73,7 +74,7 @@ if (write) {
 }
 
 console.log(
-  `[uuid-assign] total=${report.total} ok=${report.ok} derived=${report.derived} mismatch=${report.mismatch} invalid=${report.invalid} fixed=${report.fixed}`,
+  `[uuid-assign] total=${report.total} ok=${report.ok} derived=${report.derived} mismatch=${report.mismatch} invalid=${report.invalid} skipped=${report.skipped} fixed=${report.fixed}`,
 );
 
 if (reportPath) {

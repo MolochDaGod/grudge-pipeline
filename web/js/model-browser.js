@@ -605,6 +605,7 @@ async function prefillDerivedUuids() {
         m.uuidStatus = 'derived';
         m.uuidMessage = 'Derived from grudge-asset:r2Key';
       } else if (declared.toLowerCase() !== expected.toLowerCase()) {
+        d1Index.byUuid.delete(declared.toLowerCase());
         m.uuidDeclared = declared;
         m.grudgeUuid = expected;
         m.uuidStatus = 'repaired';
@@ -2422,10 +2423,11 @@ async function runUuidVerify() {
     updateUuidStat();
     const ok = allModels.filter((m) => m.uuidStatus === 'ok').length;
     const der = allModels.filter((m) => m.uuidStatus === 'derived').length;
+    const repaired = allModels.filter((m) => m.uuidStatus === 'repaired').length;
     const bad = allModels.filter((m) =>
       ['invalid', 'mismatch', 'missing'].includes(m.uuidStatus),
     ).length;
-    setActionStatus(`UUID done · ok ${ok} · derived ${der} · issues ${bad}`);
+    setActionStatus(`UUID done · ok ${ok} · derived ${der} · repaired ${repaired} · issues ${bad}`);
     applyFilters();
   } catch (e) {
     console.error(e);

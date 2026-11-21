@@ -40,6 +40,7 @@ export async function grudgeUuidFromR2Key(r2Key) {
 export async function verifyAssetUuid(m, index = { byUuid: new Map(), byPath: new Map() }) {
   const path = (m.path || '').replace(/\\/g, '/').replace(/^\//, '');
   const declared = m.grudgeUuid || null;
+  const prior = m.uuidDeclared && isValidUuid(m.uuidDeclared) ? m.uuidDeclared : null;
   let expected = null;
   if (path && !m.isBakedClip && m.format !== 'json') {
     try {
@@ -60,6 +61,38 @@ export async function verifyAssetUuid(m, index = { byUuid: new Map(), byPath: ne
 
   const declKey = declared ? declared.toLowerCase() : null;
   const expKey = expected ? expected.toLowerCase() : null;
+  const offHash =
+    prior ||
+    (declared && expected && declKey !== expKey && isValidUuid(declared) ? declared : null);
+
+  if (expected && offHash && offHash.toLowerCase() !== expKey) {
+    const owner = index.byUuid.get(offHash.toLowerCase());
+    const ownerPath = owner
+      ? String(owner.path || owner.r2Key || '').replace(/\\/g, '/').replace(/^\//, '')
+      : '';
+    if (
+      owner &&
+      owner !== m &&
+      ownerPath &&
+      path &&
+      ownerPath !== path &&
+      !ownerPath.endsWith(path) &&
+      !path.endsWith(ownerPath)
+    ) {
+      return {
+        status: 'mismatch',
+        uuid: offHash,
+        expected,
+        message: `UUID maps to different path: ${ownerPath}`,
+      };
+    }
+    return {
+      status: 'repaired',
+      uuid: expected,
+      expected,
+      message: 'Replaced a UUID that did not match the R2 key',
+    };
+  }
 
   if (declared && declKey && index.byUuid.has(declKey)) {
     const row = index.byUuid.get(declKey);
@@ -74,10 +107,10 @@ export async function verifyAssetUuid(m, index = { byUuid: new Map(), byPath: ne
     }
     if (expected && declKey !== expKey) {
       return {
-        status: 'mismatch',
-        uuid: declared,
+        status: 'repaired',
+        uuid: expected,
         expected,
-        message: 'Declared UUID ≠ hash(grudge-asset:r2Key)',
+        message: 'Replaced a UUID that did not match the R2 key',
       };
     }
     return {
@@ -146,8 +179,18 @@ export async function verifyAll(models, index, onProgress) {
   let i = 0;
   for (const m of models) {
     const r = await verifyAssetUuid(m, index);
+    if (r.status === 'repaired' && r.expected) {
+      const current = m.grudgeUuid && isValidUuid(m.grudgeUuid) ? m.grudgeUuid : null;
+      if (current && current.toLowerCase() !== r.expected.toLowerCase()) {
+        m.uuidDeclared = current;
+        index.byUuid?.delete(current.toLowerCase());
+      }
+      m.grudgeUuid = r.expected;
+      index.byUuid?.set(r.expected.toLowerCase(), m);
+    } else {
+      m.grudgeUuid = m.grudgeUuid || r.uuid;
+    }
     m.uuidStatus = r.status;
-    m.grudgeUuid = m.grudgeUuid || r.uuid;
     m.uuidMessage = r.message;
     m.uuidExpected = r.expected;
     results.set(m.id, r);
@@ -164,6 +207,8 @@ export function uuidStatusClass(status) {
       return 'uuid-ok';
     case 'derived':
       return 'uuid-derived';
+    case 'repaired':
+      return 'uuid-repaired';
     case 'orphan':
       return 'uuid-orphan';
     case 'mismatch':
@@ -235,10 +280,10 @@ export function findCatalogDuplicates(models) {
   };
 }
 
-/** Custom zone first, workers.dev fallback (DNS for asset-deploy.* is CF-only). */
+/** workers.dev is live. The custom host is not in DNS; try it second. */
 export const DEPLOY_AI_SLOTS = [
-  'https://asset-deploy.grudge-studio.com',
   'https://grudge-asset-deploy-ai.grudge.workers.dev',
+  'https://asset-deploy.grudge-studio.com',
 ];
 
 /** Deploy AI worker base (override via window.GRUDGE_ASSET_DEPLOY_AI). */

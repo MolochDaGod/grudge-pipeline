@@ -2,10 +2,12 @@
  * Fleet Asset Truth — SSOT labels, merge rules, game-use tags for pipeline browser.
  *
  * Truth layers (priority when merging):
- *   1. D1 asset_registry (path + grudgeUuid + fileSize)
- *   2. production-catalog.json (pipeline-shipped, labeled)
- *   3. Curated grudge6 / baked clips
- *   4. ObjectStore models3d.json (definitions supplement)
+ *   1. D1 asset_registry (100) — api.grudge-studio.com/assets
+ *   2. production-catalog.json (90)
+ *   3. uuid-index.json codex meshes (85)
+ *   4. grudge6-ssot (80) / baked-bip001 (75) / curated (70)
+ *   5. ObjectStore models3d.json (40) — definitions, not the D1 registry
+ *   6. local (10)
  *
  * Canonical IDs:
  *   r2Key     = relative path under assets.grudge-studio.com

@@ -14,8 +14,8 @@ export const FLEET_HOSTS = {
   assets: 'https://assets.grudge-studio.com',
   id: 'https://id.grudge-studio.com',
   api: 'https://api.grudge-studio.com',
-  /** Cloudflare Worker slot: asset-deploy.grudge-studio.com */
-  aiWorker: 'https://asset-deploy.grudge-studio.com',
+  /** Live Asset Deploy AI. asset-deploy.grudge-studio.com is not in DNS. */
+  aiWorker: 'https://grudge-asset-deploy-ai.grudge.workers.dev',
 };
 
 /**

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-07-29",
+  "updated": "2026-11-21",
   "pipeline": "https://grudge-pipeline.vercel.app/",
   "role": "Canonical browser for fleet asset truth — D1 index, grudgeUuid, production labels, game-use contracts",
   "layers": {
@@ -8,7 +8,8 @@
     "playerState": "grudge-api-production-0d46 Railway Postgres",
     "definitions": "objectstore.grudge-studio.com / info.grudge-studio.com",
     "binaries": "assets.grudge-studio.com (R2 grudge-assets)",
-    "assetIndex": "D1 grudge-assets-db via api.grudge-studio.com/assets",
+    "assetIndex": "D1 grudge-assets-db.asset_registry via https://api.grudge-studio.com/assets",
+    "deployAi": "https://grudge-asset-deploy-ai.grudge.workers.dev",
     "pipelineUi": "grudge-pipeline.vercel.app",
     "voxelWorlds": "mine-loader-api Railway Postgres"
   },
@@ -17,7 +18,7 @@
     "grudgeUuid": "Deterministic UUID from sha1(\"grudge-asset:\" + r2Key)",
     "d1Id": "Usually equals r2Key in asset_registry.id"
   },
-  "mergePriority": ["d1", "production", "grudge6-ssot", "baked-bip001", "objectstore"],
+  "mergePriority": ["d1", "production", "codex", "grudge6-ssot", "baked-bip001", "curated", "objectstore", "local"],
   "gameUses": [
     "warlords",
     "open",
@@ -30,10 +31,13 @@
   ],
   "endpoints": {
     "d1Assets": "https://api.grudge-studio.com/assets?limit=200&offset=0",
+    "deployAi": "https://grudge-asset-deploy-ai.grudge.workers.dev/health",
     "cdn": "https://assets.grudge-studio.com/{r2Key}",
     "productionCatalog": "/api/production-catalog.json",
+    "uuidIndex": "/api/uuid-index.json",
+    "convertQueue": "/api/convert-queue.json",
     "fleetNeeds": "/api/fleet-needs.json",
-    "objectStoreModels": "https://molochdagod.github.io/ObjectStore/api/v1/models3d.json"
+    "objectStoreModels": "https://objectstore.grudge-studio.com/api/v1/models3d.json"
   },
   "browserModules": [
     "web/js/model-browser.js",
@@ -48,6 +52,8 @@
   "docs": [
     "docs/FLEET_ASSET_TRUTH.md",
     "docs/UUID_DEDUPE_DEPLOY.md",
+    "web/docs/FLEET_ASSET_TRUTH.md",
+    "web/docs/UUID_DEDUPE_DEPLOY.md",
     "docs/PRODUCTION_CLOUD_STORAGE.md",
     "docs/BEST-PRACTICES.md",
     "docs/PROJECTILES_AND_VFX.md"

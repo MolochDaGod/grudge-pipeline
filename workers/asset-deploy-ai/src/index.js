@@ -5,7 +5,7 @@
  *   GET  /health
  *   POST /v1/uuid/derive      { r2Key }
  *   POST /v1/uuid/verify      { assets: [{ r2Key, grudgeUuid? }] }
- *   POST /v1/uuid/seed-sql    { assets: [{ r2Key, name?, category?, bytes? }] }
+ *   POST /v1/uuid/seed-sql    { assets: [{ r2Key }] }  → UPDATE grudge_uuid (no INSERT)
  *   POST /v1/dedupe/scan      { assets: [...] }
  *   POST /v1/dedupe/purge     { remove: string[], dryRun?: true, adminToken? }
  *   POST /v1/deploy/plan      { assets: [...] }  production bake filter advice
@@ -283,7 +283,9 @@ export default {
               'POST /v1/ai/chat',
               'POST /v1/game/verify',
             ],
-            slot: 'https://asset-deploy.grudge-studio.com',
+            slot: 'https://grudge-asset-deploy-ai.grudge.workers.dev',
+            intendedHost: 'https://asset-deploy.grudge-studio.com',
+            intendedHostDns: false,
             scripts: NAMED_PIPELINES,
           },
           200,
@@ -336,21 +338,33 @@ export default {
       // ── Seed SQL for D1 asset_registry ──────────────
       if (url.pathname === '/v1/uuid/seed-sql') {
         const assets = body.assets || [];
-        const lines = ['BEGIN TRANSACTION;'];
+        const lines = [
+          '-- UPDATE asset_registry.grudge_uuid to sha1("grudge-asset:" + r2_key).',
+          '-- Does not INSERT. Skips empty r2 keys. Ignores a caller UUID that does not match the hash.',
+        ];
+        let count = 0;
         for (const a of assets.slice(0, 5000)) {
           const r2Key = normalizeR2Key(a.r2Key || a.path || '');
           if (!r2Key) continue;
-          const uuid = a.grudgeUuid || (await grudgeUuidFromR2Key(r2Key));
-          const name = (a.name || r2Key.split('/').pop() || 'asset').replace(/'/g, "''");
-          const cat = (a.category || a.kind || 'mesh').replace(/'/g, "''");
-          const bytes = Number(a.bytes) || 0;
-          const tags = (a.tags || ['production', 'codex']).join(',').replace(/'/g, "''");
+          const uuid = await grudgeUuidFromR2Key(r2Key);
+          if (!uuid) continue;
+          const keySql = r2Key.replace(/'/g, "''");
           lines.push(
-            `INSERT OR REPLACE INTO asset_registry (grudge_uuid, r2_key, category, name, content_type, bytes, tags, updated_at) VALUES ('${uuid}', '${r2Key.replace(/'/g, "''")}', '${cat}', '${name}', 'model/gltf-binary', ${bytes}, '${tags}', datetime('now'));`,
+            `UPDATE asset_registry SET grudge_uuid = '${uuid}', updated_at = unixepoch() * 1000 WHERE r2_key = '${keySql}' AND (grudge_uuid IS NULL OR lower(grudge_uuid) != lower('${uuid}'));`,
           );
+          count++;
         }
-        lines.push('COMMIT;');
-        return json({ sql: lines.join('\n'), count: lines.length - 2 }, 200, env, request);
+        return json(
+          {
+            sql: lines.join('\n'),
+            count,
+            rule: 'sha1("grudge-asset:" + r2Key)',
+            note: 'UPDATE only on grudge-assets-db.asset_registry. Definition ids are not asset UUIDs.',
+          },
+          200,
+          env,
+          request,
+        );
       }
 
       // ── Dedupe scan ─────────────────────────────────
