@@ -89,26 +89,17 @@ async function loadFile(base, file, era) {
 }
 
 async function loadVoxel() {
-  let offset = 0;
-  const page = 200;
-  let total = Infinity;
-  while (offset < total && shelves.voxel.length < 2500) {
-    const json = await fetchJson(`${MINE}/api/blocks?limit=${page}&offset=${offset}`);
-    total = Number(json.total) || shelves.voxel.length;
-    const blocks = json.blocks || [];
-    if (!blocks.length) break;
-    for (const b of blocks) {
-      shelves.voxel.push({
-        id: String(b.slug || b.id),
-        name: String(b.name || b.slug || b.id),
-        catalog: 'blocks',
-        category: b.category || '',
-        meshKey: '',
-        icon: b.imageUrl || '',
-      });
-    }
-    offset += blocks.length;
-    if (blocks.length < page) break;
+  // Mine-Loader ignores offset/page. One limit covers the catalog (250 today).
+  const json = await fetchJson(`${MINE}/api/blocks?limit=500`);
+  for (const b of json.blocks || []) {
+    shelves.voxel.push({
+      id: String(b.slug || b.id),
+      name: String(b.name || b.slug || b.id),
+      catalog: 'blocks',
+      category: b.category || '',
+      meshKey: '',
+      icon: b.imageUrl || '',
+    });
   }
 }
 
