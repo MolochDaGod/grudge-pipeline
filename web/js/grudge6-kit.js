@@ -1,68 +1,229 @@
 /**
  * @grudge-studio/grudge6-kit (ObjectStore js/)
  *
- * Shared modular race kit loader + equipment for Grudge games / browse.
- * SSOT mesh: race FBX on assets CDN. Equip = child-mesh visibility + D1 mesh_ids.
+ * HARDENED Warlords / grudge6 PLAY system — only this module for heroes.
+ * Doc: docs/GRUDGE6_PLAY_PATH_PURGE.md · api/v1/grudge6-warlords-play-contract.json
  *
- * Usage (browser module):
- *   import { RACE_ASSETS, loadRaceKit, EquipmentManager, bindRaceAtlas } from './grudge6-kit.js';
- *   const { root, equip, race } = await loadRaceKit(THREE, { FBXLoader, GLTFLoader }, 'human', { source: 'fbx' });
- *   equip.applyMeshIds(['WK_Units_Body_A', 'WK_weapon_sword_A']);
+ * Usage:
+ *   import { RACE_ASSETS, loadRaceKit, EquipmentManager, assertPlayKitUrl } from './grudge6-kit.js';
+ *   const { root, equip } = await loadRaceKit(THREE, loaders, 'human'); // Toon RTS ★ default
+ *
+ * HARD: uniform root SI only — never non-uniform mesh/bone stretch.
+ * HARD: never pose() every SkinnedMesh; never forceAtlas on good Toon embeds.
  */
 export const CDN = 'https://assets.grudge-studio.com';
 
+/** Contract version — stamp on every play kit root.userData */
+export const WARLORDS_PLAY_CONTRACT_VERSION = '2026-08-21.feet-terrain.2';
+
+/** PLAY mesh path fragment (Toon RTS ★). */
+export const WARLORDS_PLAY_KIT_PATH =
+  'asset-packs/toon-rts-characters/glb/characters/';
+
+/** Race ids accepted by loadRaceKit play path. */
+export const WARLORDS_PLAY_RACE_IDS = Object.freeze([
+  'human',
+  'barbarian',
+  'elf',
+  'dwarf',
+  'orc',
+  'undead',
+]);
+
 /**
- * Canonical race kits — production browser SSOT = GLB on assets CDN.
- * FBX remains on CDN for convert/author only (not catalog inventory).
+ * Anti-patterns for PLAY (agents + loaders). Do not reintroduce.
+ * Lab/author may use non-play sources only with explicit opts.source.
  */
+export const WARLORDS_PLAY_BANNED = Object.freeze([
+  'skeleton.pose_on_every_skinned_mesh',
+  'unifySkeletons_multi_pose_play',
+  'setFromObject_skinned_si_fit',
+  'facePlusZ_default_true_toon_play',
+  'forceAtlas_on_good_toon_embeds',
+  'play_default_races_bake',
+  'play_default_metaverse',
+  'play_default_fbx',
+  'silent_fallback_toon_to_races_metaverse_fbx',
+  'anim_rematch_to_units_head_meshes',
+  'whole_body_glb_swap_for_equip',
+]);
+
+/** Fleet catalog of editable Toon RTS tree (regenerate via customizer script) */
+export const TOON_RTS_SSOT_URL = '/api/v1/grudge6-toon-rts-ssot.json';
+export const TOON_RTS_INDEX_URL = '/api/v1/grudge6-toon-rts-index.json';
+
+/**
+ * Local / customizer base for split glTF+bin packs.
+ * When hosting the Asset-Rig-Editor customizer: `/assets/{diskFolder}/...`
+ * When promoting to CDN, map diskFolder → R2 under models/grudge6/toon-rts/{diskFolder}/
+ */
+export const TOON_RTS_DISK = {
+  human: 'human',
+  orc: 'orc',
+  elf: 'elf',
+  dwarf: 'dwarf',
+  undead: 'undead',
+  barbarian: 'barbarian',
+};
+
+/**
+ * Faction allies share siege / range engines (Toon RTS SSOT):
+ *   dwarf → elf boltthrower · undead → orc catapult · barbarian → human catapult
+ * Infantry + cavalry stay per-race (own glTF on disk).
+ */
+export const TOON_RTS_SIEGE_ALLY = {
+  dwarf: 'elf',
+  undead: 'orc',
+  barbarian: 'human',
+};
+
+/** SI heights (m) — infantry from race manifests; cavalry/siege from customizer SSOT.
+ *  Ally races use the provider race's siege height. */
+export const TOON_RTS_HEIGHT_M = {
+  human: { infantry: 1.83, cavalry: 2.55, siege: 3.5 },
+  orc: { infantry: 2.13, cavalry: 2.9, siege: 4.2 },
+  elf: { infantry: 1.95, cavalry: 2.65, siege: 3.6 },
+  dwarf: { infantry: 1.52, cavalry: 2.1, siege: 3.6 }, // shares elf boltthrower
+  undead: { infantry: 1.83, cavalry: 2.55, siege: 4.2 }, // shares orc catapult
+  barbarian: { infantry: 1.98, cavalry: 2.7, siege: 3.5 }, // shares human catapult
+};
+
+/** Siege / range engines — relative path on the *provider* race folder */
+export const TOON_RTS_SIEGE = {
+  human: 'character/siege_wk_catapult.gltf',
+  orc: 'character/siege_orc_catapult.gltf',
+  elf: 'character/siege_elf_boltthrower.gltf',
+  // allies resolve via TOON_RTS_SIEGE_ALLY → provider entry
+  dwarf: 'character/siege_elf_boltthrower.gltf',
+  undead: 'character/siege_orc_catapult.gltf',
+  barbarian: 'character/siege_wk_catapult.gltf',
+};
+
+/** Resolve which race folder owns siege mesh + clips for this fleet race */
+export function toonRtsSiegeProvider(raceId) {
+  return TOON_RTS_SIEGE_ALLY[raceId] || raceId;
+}
+
+/**
+ * Resolve a Toon RTS unit glTF URL.
+ * @param {string} raceId fleet id (human|orc|…)
+ * @param {'infantry'|'cavalry'|'siege'} kind
+ * @param {{ base?: string }} opts base defaults to `/assets/{disk}/`
+ *   For siege, base is the *provider* race folder when ally share applies.
+ */
+export function toonRtsUnitUrl(raceId, kind = 'infantry', opts = {}) {
+  if (kind === 'siege') {
+    // Always load from provider race folder (ally share)
+    const provider = toonRtsSiegeProvider(raceId);
+    const disk = TOON_RTS_DISK[provider];
+    if (!disk) return null;
+    const rel = TOON_RTS_SIEGE[provider];
+    if (!rel) return null;
+    const base = (opts.base || `/assets/${disk}/`).replace(/\/?$/, '/');
+    return `${base}${rel}`;
+  }
+  const disk = TOON_RTS_DISK[raceId];
+  if (!disk) return null;
+  const base = (opts.base || `/assets/${disk}/`).replace(/\/?$/, '/');
+  if (kind === 'infantry') return `${base}character/infantry.gltf`;
+  if (kind === 'cavalry') return `${base}character/cavalry.gltf`;
+  return null;
+}
+
+/** Siege animation clip URLs live on the provider race folder */
+export function toonRtsSiegeAnimBase(raceId) {
+  const provider = toonRtsSiegeProvider(raceId);
+  const disk = TOON_RTS_DISK[provider];
+  return disk ? `/assets/${disk}/animations/` : null;
+}
+
+/**
+ * Canonical race kits — ONE golden play mesh for fleet / heroes / Warlords / lab.
+ *
+ * GOLDEN (Toon RTS ★, embedded-kept): asset-packs/toon-rts-characters/glb/characters/{id}.glb
+ *   → fields: toonRts, glb (alias), kitUrl() default
+ * Compare-only bake: models/grudge6/races/{PREFIX}_Characters.glb → racesBake
+ * Metaverse / FBX: diagnostics only — never play default
+ */
+const TOON = (id) => `${CDN}/asset-packs/toon-rts-characters/glb/characters/${id}.glb`;
+const RACES = (pfx) => `${CDN}/models/grudge6/races/${pfx}_Characters.glb`;
+const FBX = (pfx) => `${CDN}/models/grudge6/races/${pfx}_Characters.fbx`;
+const META = (id) => `${CDN}/models/grudge6/metaverse/${id}.glb`;
+
 export const RACE_ASSETS = {
   human: {
     id: 'human',
     prefix: 'WK_',
     folder: 'western-kingdoms',
     texture: 'WK_Standard_Units.webp',
-    fbx: `${CDN}/models/grudge6/races/WK_Characters.fbx`,
-    glb: `${CDN}/models/grudge6/races/WK_Characters.glb`,
+    toonRts: TOON('human'),
+    glb: TOON('human'),
+    racesBake: RACES('WK'),
+    fbx: FBX('WK'),
+    metaverse: META('human'),
+    toonDisk: 'human',
+    mountTexture: 'WK_Horse_A.png',
   },
   barbarian: {
     id: 'barbarian',
     prefix: 'BRB_',
     folder: 'barbarians',
     texture: 'BRB_StandardUnits_texture.webp',
-    fbx: `${CDN}/models/grudge6/races/BRB_Characters.fbx`,
-    glb: `${CDN}/models/grudge6/races/BRB_Characters.glb`,
+    toonRts: TOON('barbarian'),
+    glb: TOON('barbarian'),
+    racesBake: RACES('BRB'),
+    fbx: FBX('BRB'),
+    metaverse: META('barbarian'),
+    toonDisk: 'barbarian',
   },
   orc: {
     id: 'orc',
     prefix: 'ORC_',
     folder: 'orcs',
     texture: 'ORC_StandardUnits.webp',
-    fbx: `${CDN}/models/grudge6/races/ORC_Characters.fbx`,
-    glb: `${CDN}/models/grudge6/races/ORC_Characters.glb`,
+    toonRts: TOON('orc'),
+    glb: TOON('orc'),
+    racesBake: RACES('ORC'),
+    fbx: FBX('ORC'),
+    metaverse: META('orc'),
+    toonDisk: 'orc',
+    mountTexture: 'ORC_Wolf_texture_A.png',
   },
   elf: {
     id: 'elf',
     prefix: 'ELF_',
     folder: 'elves',
     texture: 'ELF_HighElves_Texture.webp',
-    fbx: `${CDN}/models/grudge6/races/ELF_Characters.fbx`,
-    glb: `${CDN}/models/grudge6/races/ELF_Characters.glb`,
+    toonRts: TOON('elf'),
+    glb: TOON('elf'),
+    racesBake: RACES('ELF'),
+    fbx: FBX('ELF'),
+    metaverse: META('elf'),
+    toonDisk: 'elf',
   },
   undead: {
     id: 'undead',
     prefix: 'UD_',
     folder: 'undead',
     texture: 'UD_Standard_Units.webp',
-    fbx: `${CDN}/models/grudge6/races/UD_Characters.fbx`,
-    glb: `${CDN}/models/grudge6/races/UD_Characters.glb`,
+    toonRts: TOON('undead'),
+    glb: TOON('undead'),
+    racesBake: RACES('UD'),
+    fbx: FBX('UD'),
+    metaverse: META('undead'),
+    toonDisk: 'undead',
   },
   dwarf: {
     id: 'dwarf',
     prefix: 'DWF_',
     folder: 'dwarves',
     texture: 'DWF_Standard_Units.webp',
-    fbx: `${CDN}/models/grudge6/races/DWF_Characters.fbx`,
-    glb: `${CDN}/models/grudge6/races/DWF_Characters.glb`,
+    toonRts: TOON('dwarf'),
+    glb: TOON('dwarf'),
+    racesBake: RACES('DWF'),
+    fbx: FBX('DWF'),
+    metaverse: META('dwarf'),
+    toonDisk: 'dwarf',
   },
 };
 
@@ -75,11 +236,15 @@ export const BLOCKED_ASSET_PREFIXES = [
 
 export const STUB_MAX_BYTES = 50_000; // known bad placeholder ~44089
 
+/**
+ * Match after race prefix strip (WK_/BRB_/UD_/…).
+ * Most races: Units_Body_A · Barbarian BRB pack: body_A (no Units_ token).
+ */
 export const SLOT_DEFS = [
   { slot: 'body', re: /^(?:Units_)?Body_([A-Z])$/i, group: 'armor' },
   { slot: 'arms', re: /^(?:Units_)?Arms_([A-Z])$/i, group: 'armor' },
   { slot: 'legs', re: /^(?:Units_)?Legs_([A-Z])$/i, group: 'armor' },
-  { slot: 'head', re: /^(?:Units_)?Head_([A-Z])$/i, group: 'armor' },
+  { slot: 'head', re: /^(?:Units_)?(?:Head|Haed)_([A-Z])$/i, group: 'armor' },
   { slot: 'shoulders', re: /^(?:Units_)?Shoulderpads_([A-Z])$/i, group: 'armor' },
   { slot: 'axe', re: /^(?:Units_|weapon_|Weapon_)?[Aa]xe(?:_([A-Z]))?$/i, group: 'weapon_r' },
   { slot: 'hammer', re: /^(?:Units_|weapon_|Weapon_)?[Hh]ammer(?:_([A-Z]))?$/i, group: 'weapon_r' },
@@ -98,184 +263,239 @@ export const SLOT_DEFS = [
 
 export const WEAPON_R = new Set(['axe', 'hammer', 'mace', 'sword', 'dagger', 'pick', 'spear']);
 export const WEAPON_L = new Set(['bow', 'staff']);
-
 /**
- * STONE atlas path (verified 200 on assets CDN):
- *   /textures/grudge6/{folder}/{texture}.webp
- * Legacy invent path /assets/{folder}/textures/* is 404 — never use it.
+ * 1H weapons that use the same kit mesh on main OR off hand.
+ * Off-hand clones the R mesh onto L_hand_container (same variant letter).
+ * 2H (spear, pick, greataxe/greatsword as kinds) stay main-only.
  */
-export function atlasUrl(raceId) {
-  const a = RACE_ASSETS[raceId];
-  if (!a) return null;
-  return `${CDN}/textures/grudge6/${a.folder}/${a.texture}`;
-}
+export const WEAPON_1H = new Set(['sword', 'dagger', 'mace', 'hammer', 'axe']);
 
-/** All candidate atlas URLs (primary first) for load fallback. */
-export function atlasUrlCandidates(raceId) {
-  const a = RACE_ASSETS[raceId];
-  if (!a) return [];
-  return [
-    `${CDN}/textures/grudge6/${a.folder}/${a.texture}`,
-    // legacy invent (usually 404 — last resort only)
-    `${CDN}/assets/${a.folder}/textures/${a.texture}`,
-  ];
-}
-
-/** Production default source = GLB. Pass source:'fbx' only for convert tools. */
-export function kitUrl(raceId, source = 'glb') {
-  const a = RACE_ASSETS[raceId];
-  if (!a) return null;
-  if (source === 'fbx' || source === 'author') return a.fbx;
-  return a.glb;
-}
-
-/**
- * STONE ONLY — production grudge6 character inventory (meshes).
- * GLB race kits on assets CDN. Everything else under grudge6/ is trash/index-noise.
- *
- *   models/grudge6/races/{WK|BRB|ELF|DWF|ORC|UD}_Characters.glb
- *   textures/grudge6/{folder}/*.webp  (atlases)
- *
- * FBX remains on R2 for convert tooling only — not catalog inventory.
- * Anims: anims/baked/** only (handled separately as baked-bip001).
- */
-export const GRUDGE6_SSOT_KIT_RE =
-  /^models\/grudge6\/races\/(wk|brb|elf|dwf|orc|ud)_characters\.glb$/i;
-
-export const GRUDGE6_SSOT_ATLAS_RE = /^textures\/grudge6\//i;
-
-/** True if path is the only allowed production character kit GLB. */
-export function isGrudge6SsotKitPath(pathOrUrl) {
-  const key = normalizeAssetKey(pathOrUrl);
-  return GRUDGE6_SSOT_KIT_RE.test(key);
-}
-
-export function isGrudge6SsotAtlasPath(pathOrUrl) {
-  return GRUDGE6_SSOT_ATLAS_RE.test(normalizeAssetKey(pathOrUrl));
-}
-
-/** Any path that mentions grudge6 / race multipacks / arena characters. */
-export function isGrudge6RelatedPath(pathOrUrl) {
-  const key = normalizeAssetKey(pathOrUrl);
-  if (!key) return false;
-  return (
-    key.includes('grudge6') ||
-    /models\/characters\/grudge6\//i.test(key) ||
-    /cdn\/assets\/characters\//i.test(key) ||
-    /models\/grudge6\//i.test(key) ||
-    /models\/animations\/grudge6/i.test(key) ||
-    /_characters\.(glb|fbx)$/i.test(key)
-  );
-}
-
-/**
- * TRASH — never inventory, never load, never deep-link.
- * Everything grudge6-related that is NOT the stone races GLB (or atlas).
- */
-export const GRUDGE6_TRASH_PATH_RE = [
-  /^models\/grudge6\/(wk|brb|ud|orc|elf|dwf)\//i,
-  /^models\/grudge6\/30characters/i,
-  /^models\/characters\/grudge6\//i,
-  /^models\/grudge6\/(?:race|metaverse)\//i,
-  /^models\/grudge6\/races\/library\//i,
-  /^models\/animations\/grudge6/i,
-  /cdn\/assets\/characters\//i,
-  // Author FBX race kits — convert source only, not inventory
-  /^models\/grudge6\/races\/(wk|brb|elf|dwf|orc|ud)_characters\.fbx$/i,
-  // Any other models/grudge6/* that is not the 6 production GLBs
-  /^models\/grudge6\/(?!races\/(wk|brb|elf|dwf|orc|ud)_characters\.glb$)/i,
+/** Left-hand socket candidates for dual-wield / off-hand 1H (Toon RTS). */
+export const L_HAND_SOCKETS = [
+  'L_hand_container',
+  'Bip001 L Hand',
+  'Bip001_L_Hand',
+  'mixamorig:LeftHand',
+  'mixamorigLeftHand',
 ];
 
-function normalizeAssetKey(pathOrUrl) {
-  return String(pathOrUrl || '')
-    .replace(/^https?:\/\/[^/]+\//i, '')
-    .replace(/\\/g, '/')
-    .replace(/^\//, '')
-    .toLowerCase();
-}
+export const R_HAND_SOCKETS = [
+  'R_hand_container',
+  'Bip001 R Hand',
+  'Bip001_R_Hand',
+  'mixamorig:RightHand',
+  'mixamorigRightHand',
+];
 
-/** True if path is a known-bad / non-SSOT grudge6 index row. */
-export function isTrashGrudge6Path(pathOrUrl) {
-  const key = normalizeAssetKey(pathOrUrl);
-  if (!key) return false;
-  // Explicit allowlist wins
-  if (isGrudge6SsotKitPath(key) || isGrudge6SsotAtlasPath(key)) return false;
-  if (GRUDGE6_TRASH_PATH_RE.some((re) => re.test(key))) return true;
-  // Related but not SSOT kit/atlas → trash
-  if (isGrudge6RelatedPath(key) && !isGrudge6SsotKitPath(key) && !isGrudge6SsotAtlasPath(key)) {
-    // baked anims under anims/baked are NOT trash
-    if (/^anims\/baked\//i.test(key)) return false;
-    return true;
+export function findRHandSocket(root) {
+  if (!root) return null;
+  for (const n of R_HAND_SOCKETS) {
+    const o = root.getObjectByName(n);
+    if (o) return o;
   }
-  return false;
-}
-
-/** Six production kit r2Keys (GLB only). */
-export function grudge6SsotKitKeys() {
-  return Object.values(RACE_ASSETS).map((a) =>
-    a.glb.replace(/^https?:\/\/assets\.grudge-studio\.com\//i, ''),
-  );
+  let hit = null;
+  root.traverse((o) => {
+    if (hit) return;
+    const nm = String(o.name || '');
+    if (/R_hand_container|Bip001.?R.?Hand|RightHand/i.test(nm)) hit = o;
+  });
+  return hit;
 }
 
 /**
- * Detect race kit from any path/uuid blob → fleet race id (human|barbarian|…).
- * @returns {string|null}
+ * Reparent rigid (non-skinned) held meshes to hand containers so they
+ * follow idle without a second mixer. Skinned kit weapons stay on the rig.
  */
-export function detectFleetRaceId(pathOrUrl) {
-  const key = String(pathOrUrl || '')
-    .replace(/^https?:\/\/assets\.grudge-studio\.com\//i, '')
-    .replace(/\\/g, '/')
-    .toLowerCase();
-  if (!key) return null;
-  if (/brb_|\/brb\/|barbarian/.test(key)) return 'barbarian';
-  if (/elf_|\/elf\/|high-?elf|elves/.test(key)) return 'elf';
-  if (/dwf_|\/dwf\/|dwarf/.test(key)) return 'dwarf';
-  if (/orc_|\/orc\//.test(key)) return 'orc';
-  if (/ud_|\/ud\/|undead/.test(key)) return 'undead';
-  if (/wk_|\/wk\/|western|human/.test(key)) return 'human';
-  const races = key.match(/races\/(wk|brb|ud|orc|elf|dwf)_characters/i);
-  if (races) {
-    return (
-      {
-        wk: 'human',
-        brb: 'barbarian',
-        ud: 'undead',
-        orc: 'orc',
-        elf: 'elf',
-        dwf: 'dwarf',
-      }[races[1].toLowerCase()] || null
+export function bindRigidHeldToHands(root, equip) {
+  if (!root || !equip) return 0;
+  const rHand = findRHandSocket(root);
+  const lHand = findLHandSocket(root);
+  if (!rHand && !lHand) return 0;
+  let n = 0;
+  const tryBind = (mesh, socket) => {
+    if (!mesh || !socket || !mesh.visible) return;
+    let skinned = false;
+    mesh.traverse((o) => {
+      if (o.isSkinnedMesh) skinned = true;
+    });
+    if (skinned) return;
+    if (mesh.parent === socket) return;
+    socket.attach(mesh);
+    n++;
+  };
+  for (const [slot, variant] of Object.entries(equip.equipped || {})) {
+    const mesh = equip.slots[slot]?.[variant];
+    const group = mesh?.userData?.equipGroup;
+    if (group === 'weapon_r') tryBind(mesh, rHand);
+    else if (group === 'weapon_l' || group === 'shield') tryBind(mesh, lHand);
+  }
+  if (equip._offhandClone) tryBind(equip._offhandClone, lHand);
+  return n;
+}
+
+export function findLHandSocket(root) {
+  if (!root) return null;
+  for (const n of L_HAND_SOCKETS) {
+    const o = root.getObjectByName(n);
+    if (o) return o;
+  }
+  let hit = null;
+  root.traverse((o) => {
+    if (hit) return;
+    const nm = String(o.name || '');
+    if (/L_hand_container|Bip001.?L.?Hand|LeftHand/i.test(nm)) hit = o;
+  });
+  return hit;
+}
+
+/**
+ * Stone atlas paths (grudge6-cdn-ssot): textures/grudge6/{folder}/{file}
+ * Legacy assets/{folder}/textures kept as fallback in bind loaders.
+ */
+export const ATLAS_VARIANTS = {
+  human: {
+    default: 'WK_Standard_Units.webp',
+    black: 'WK_StandardUnits_black.webp',
+    blue: 'WK_StandardUnits_blue.webp',
+    brown: 'WK_StandardUnits_brown.webp',
+    green: 'WK_StandardUnits_green.webp',
+    red: 'WK_StandardUnits_red.webp',
+    white: 'WK_StandardUnits_white.webp',
+  },
+  barbarian: {
+    default: 'BRB_StandardUnits_texture.webp',
+    brown: 'BRB_Standard_Units_brown.webp',
+  },
+  elf: {
+    default: 'ELF_HighElves_Texture.webp',
+    high: 'ELF_HighElves_Texture.webp',
+    dark: 'ELF_DarkElves_Texture.webp',
+    dark_blue: 'ELF_DarkElves_Blue.webp',
+    dark_green: 'ELF_DarkElves_Green.webp',
+    dark_red: 'ELF_DarkElves_Red.webp',
+    wood: 'ELF_WoodElves_Texture.webp',
+    wood_brown: 'ELF_WoodElves_Brown.webp',
+  },
+  dwarf: {
+    default: 'DWF_Standard_Units.webp',
+    brown: 'DWF_Units_Brown.webp',
+  },
+  orc: {
+    default: 'ORC_StandardUnits.webp',
+    black: 'ORC_StandardUnits_black.webp',
+    blue: 'ORC_StandardUnits_blue.webp',
+    brown: 'ORC_StandardUnits_brown.webp',
+    green: 'ORC_StandardUnits_green.webp',
+    red: 'ORC_StandardUnits_red.webp',
+  },
+  undead: {
+    default: 'UD_Standard_Units.webp',
+    brown: 'UD_Standard_Units_brown.webp',
+  },
+};
+
+export function atlasUrl(raceId, variant = 'default') {
+  const a = RACE_ASSETS[raceId];
+  if (!a) return null;
+  const variants = ATLAS_VARIANTS[raceId] || {};
+  const file =
+    variants[variant] ||
+    variants.default ||
+    a.texture;
+  // Prefer stone path; callers may fall back to legacy if 404
+  return `${CDN}/textures/grudge6/${a.folder}/${file}`;
+}
+
+/** Legacy path some older deploys still use */
+export function atlasUrlLegacy(raceId, variant = 'default') {
+  const a = RACE_ASSETS[raceId];
+  if (!a) return null;
+  const variants = ATLAS_VARIANTS[raceId] || {};
+  const file = variants[variant] || variants.default || a.texture;
+  return `${CDN}/assets/${a.folder}/textures/${file}`;
+}
+
+/**
+ * Kit URL by source.
+ * Play / heroes / Warlords / default: Toon RTS ★ (glb === toonRts).
+ * Compare bake only: races | racesBake | compare | prodBake.
+ * metaverse / fbx: diagnostics only — never play default.
+ */
+export function kitUrl(raceId, source = 'toonRts') {
+  const a = RACE_ASSETS[raceId];
+  if (!a) return null;
+  if (source === 'fbx' || source === 'raceFbx') return a.fbx;
+  if (source === 'metaverse') return a.metaverse || a.toonRts || a.glb;
+  if (
+    source === 'races' ||
+    source === 'racesBake' ||
+    source === 'compare' ||
+    source === 'prodBake'
+  ) {
+    return a.racesBake || a.glb;
+  }
+  // toonRts | toon | glb | prod | default → GOLDEN
+  return a.toonRts || a.glb;
+}
+
+/** True if URL is Warlords PLAY Toon RTS kit. */
+export function isToonRtsPlayUrl(url) {
+  return new RegExp(
+    `${WARLORDS_PLAY_KIT_PATH.replace(/\//g, '\\/')}[a-z]+\\.glb`,
+    'i',
+  ).test(String(url || ''));
+}
+
+/**
+ * Fail closed: PLAY kits must be Toon RTS GLB on assets CDN.
+ * @param {string} url
+ * @param {{ allowNonPlay?: boolean }} [opts] — lab only when true
+ * @returns {string} url
+ */
+export function assertPlayKitUrl(url, opts = {}) {
+  const u = String(url || '');
+  if (!u) throw new Error('[grudge6-kit] empty kit URL');
+  if (opts.allowNonPlay === true) return u;
+  if (!isToonRtsPlayUrl(u)) {
+    throw new Error(
+      `[grudge6-kit] PLAY refuse non-Toon kit URL: ${u} ` +
+        `(need …/${WARLORDS_PLAY_KIT_PATH}{race}.glb)`,
     );
   }
-  return null;
+  if (/metaverse|meshy|capsule/i.test(u)) {
+    throw new Error(`[grudge6-kit] PLAY refuse banned host/path: ${u}`);
+  }
+  return u;
 }
 
 /**
- * Folder / prefix → fleet race id
- * D1 still indexes legacy keys like models/grudge6/ud/UD_Characters.glb
- * (uuid d762b5b8-…) — those must rewrite to models/grudge6/races/* SSOT.
+ * Safe skeleton update after load/clone.
+ * NEVER pose every SkinnedMesh (1-joint head skins → head-at-feet).
+ * Optional: pose widest body skeleton once only.
  */
-const LEGACY_RACE_MAP = {
-  human: 'human',
-  wk: 'human',
-  western: 'human',
-  'western-kingdoms': 'human',
-  elf: 'elf',
-  elves: 'elf',
-  'high-elves': 'elf',
-  dwarf: 'dwarf',
-  dwarves: 'dwarf',
-  dwf: 'dwarf',
-  orc: 'orc',
-  orcs: 'orc',
-  undead: 'undead',
-  ud: 'undead',
-  barbarian: 'barbarian',
-  barbarians: 'barbarian',
-  brb: 'barbarian',
-  goblin: 'orc',
-  troll: 'orc',
-  dark_elf: 'elf',
-};
+export function safeSkeletonUpdate(root, opts = {}) {
+  if (!root) return;
+  if (opts.poseWidestOnce === true) {
+    let widest = null;
+    root.traverse((o) => {
+      if (o.isSkinnedMesh && o.skeleton) {
+        if (!widest || o.skeleton.bones.length > widest.bones.length) widest = o.skeleton;
+      }
+    });
+    if (widest) {
+      widest.pose();
+      widest.update();
+    }
+  }
+  root.traverse((o) => {
+    if (o.isSkinnedMesh && o.skeleton) {
+      o.skeleton.update();
+      o.frustumCulled = false;
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
+}
 
 /** Rewrite known-bad legacy paths to canonical race kit or mesh library */
 export function resolveCanonicalAssetUrl(urlOrKey) {
@@ -286,25 +506,28 @@ export function resolveCanonicalAssetUrl(urlOrKey) {
   const m = key.match(/^models\/characters\/grudge6\/(?:race\/|metaverse\/)?([a-z_]+)\.glb$/i);
   if (m) {
     const id = m[1].toLowerCase();
-    const race = LEGACY_RACE_MAP[id];
-    if (race && RACE_ASSETS[race]) return RACE_ASSETS[race].fbx;
+    const map = {
+      human: 'human',
+      elf: 'elf',
+      dwarf: 'dwarf',
+      orc: 'orc',
+      undead: 'undead',
+      barbarian: 'barbarian',
+      goblin: 'orc',
+      troll: 'orc',
+      dark_elf: 'elf',
+    };
+    const race = map[id];
+    // Legacy stubs → GOLDEN Toon RTS pack (not races bake, not FBX)
+    if (race && RACE_ASSETS[race]) return RACE_ASSETS[race].toonRts || RACE_ASSETS[race].glb;
   }
-  // models/grudge6/{wk|brb|ud|orc|elf|dwf}/XXX_Characters.(glb|fbx) → races SSOT FBX
-  const leg = key.match(
-    /^models\/grudge6\/(wk|brb|ud|orc|elf|dwf|western-kingdoms|barbarians|undead|orcs|elves|dwarves)\/[A-Za-z0-9_]*Characters\.(glb|fbx)$/i,
-  );
-  if (leg) {
-    const race = LEGACY_RACE_MAP[leg[1].toLowerCase()];
-    if (race && RACE_ASSETS[race]) return RACE_ASSETS[race].fbx;
-  }
-  // models/grudge6/races/UD_Characters.glb → prefer FBX for atlas bind path
-  const races = key.match(
-    /^models\/grudge6\/races\/(WK|BRB|UD|ORC|ELF|DWF)_Characters\.(glb|fbx)$/i,
-  );
-  if (races) {
-    const map = { WK: 'human', BRB: 'barbarian', UD: 'undead', ORC: 'orc', ELF: 'elf', DWF: 'dwarf' };
-    const race = map[races[1].toUpperCase()];
-    if (race && RACE_ASSETS[race]) return RACE_ASSETS[race].fbx;
+  // Old “prod” races kit URL → GOLDEN toon pack when used as play mesh
+  const racesKit = key.match(/^models\/grudge6\/races\/(WK|BRB|ELF|DWF|ORC|UD)_Characters\.glb$/i);
+  if (racesKit) {
+    const pfx = racesKit[1].toUpperCase();
+    const byPfx = { WK: 'human', BRB: 'barbarian', ELF: 'elf', DWF: 'dwarf', ORC: 'orc', UD: 'undead' };
+    const race = byPfx[pfx];
+    if (race && RACE_ASSETS[race]) return RACE_ASSETS[race].toonRts || RACE_ASSETS[race].glb;
   }
   // toon-rts separate equipment → prefer mesh library path (best-effort naming)
   const eq = key.match(
@@ -350,6 +573,10 @@ export class EquipmentManager {
     this.prefix = prefix.endsWith('_') ? prefix : `${prefix}_`;
     this.slots = {};
     this.equipped = {};
+    /** @type {{ slot: string, variant: string }|null} */
+    this.equippedOffhand = null;
+    /** @type {import('three').Object3D|null} clone on L_hand */
+    this._offhandClone = null;
     this.allMeshes = [];
     this.root = null;
   }
@@ -359,6 +586,7 @@ export class EquipmentManager {
     this.slots = {};
     this.allMeshes = [];
     this.equipped = {};
+    this.clearOffhandClone();
     root.traverse((child) => {
       if (!child.isMesh && !child.isSkinnedMesh) return;
       child.visible = false;
@@ -413,6 +641,60 @@ export class EquipmentManager {
     return this.equip(slot, variant);
   }
 
+  /**
+   * Off-hand 1H: same kit weapon family as main, mirrored on L_hand_container.
+   * Clones the main-hand mesh so both can show at once (kit only has R variants).
+   */
+  equipWeaponOffhand(slot, variant = '_default') {
+    if (!WEAPON_1H.has(slot)) return false;
+    const src = this.slots[slot]?.[variant] || this.slots[slot]?._default;
+    if (!src || !this.root) return false;
+    this.clearOffhandClone();
+    const socket = findLHandSocket(this.root);
+    if (!socket) return false;
+
+    const clone = src.clone(true);
+    clone.name = (src.name || slot) + '_offhand';
+    clone.visible = true;
+    clone.userData.equipSlot = slot;
+    clone.userData.equipVariant = variant;
+    clone.userData.equipGroup = 'weapon_l_offhand';
+    clone.userData.isOffhandClone = true;
+    // Drop skinning issues: bind to same skeleton if skinned
+    clone.traverse((o) => {
+      if (o.isSkinnedMesh && src.isSkinnedMesh && src.skeleton) {
+        try {
+          o.bind(src.skeleton, o.bindMatrix || src.bindMatrix);
+        } catch {
+          /* keep unbound mesh under socket */
+        }
+      }
+      o.frustumCulled = false;
+      o.castShadow = true;
+    });
+    // Local identity in hand socket (same reception as main grip)
+    clone.position.set(0, 0, 0);
+    clone.rotation.set(0, 0, 0);
+    clone.scale.set(1, 1, 1);
+    socket.add(clone);
+    this._offhandClone = clone;
+    this.equippedOffhand = { slot, variant };
+    return true;
+  }
+
+  clearOffhandClone() {
+    if (this._offhandClone) {
+      if (this._offhandClone.parent) this._offhandClone.parent.remove(this._offhandClone);
+      this._offhandClone.traverse((o) => {
+        if (o.geometry && o.userData?.isOffhandClone) {
+          /* leave geometry shared with source — do not dispose */
+        }
+      });
+      this._offhandClone = null;
+    }
+    this.equippedOffhand = null;
+  }
+
   /** UI helper: all meshes with equip metadata */
   listAllMeshes() {
     return this.allMeshes
@@ -462,17 +744,6 @@ export class EquipmentManager {
         }
       }
     }
-    // HARD: never leave multipack fully invisible ("no mesh")
-    if (!this.allMeshes.some((m) => m.visible)) {
-      for (const m of this.allMeshes) {
-        if (/body|torso|arms?|legs?|head|helm/i.test(m.name || '')) m.visible = true;
-      }
-    }
-    if (!this.allMeshes.some((m) => m.visible)) {
-      for (const m of this.allMeshes) {
-        if (m.isSkinnedMesh) m.visible = true;
-      }
-    }
   }
 
   /** D1 gear_presets.mesh_ids → visibility */
@@ -494,41 +765,215 @@ export class EquipmentManager {
     }
     return { matched, missing, wanted };
   }
+
+  /**
+   * Hard exclusivity: ONLY meshes in `this.equipped` stay visible.
+   * Fixes ghost layers / stacked helmets when regex double-matched or
+   * bind-pose weapons leaked visibility.
+   */
+  hardenVisibility() {
+    const keep = new Set();
+    for (const [slot, variant] of Object.entries(this.equipped || {})) {
+      const mesh = this.slots[slot]?.[variant];
+      if (mesh) keep.add(mesh.uuid);
+    }
+    for (const m of this.allMeshes) {
+      m.visible = keep.has(m.uuid);
+    }
+    // Off-hand dual clone is not in allMeshes / equipped — keep visible
+    if (this._offhandClone) {
+      this._offhandClone.visible = true;
+      this._offhandClone.traverse((o) => {
+        if (o.isMesh || o.isSkinnedMesh) o.visible = true;
+      });
+    }
+    return keep.size;
+  }
 }
 
 /**
- * Bind race atlas onto every mesh (MeshStandardMaterial).
- * @param {typeof import('three')} THREE
+ * 1×1 / empty maps = failed embed stubs (must rebind atlas).
+ *
+ * IMPORTANT: a Texture that exists but has not finished decoding
+ * (`image` null, or width/height still 0) is NOT a stub — keep the embed.
+ * Treating pending decode as stub caused races/* GLBs (BIN webp) to force
+ * atlas-rebind while Toon RTS data-URI PNGs (often sync-decoded) stayed
+ * embedded-kept. That made Prod look “rebound” and Toon look correct.
  */
-export function bindRaceAtlas(THREE, root, texture) {
-  if (!texture || !root) return 0;
+export function isStubMap(map) {
+  if (!map) return true;
+
+  // Prefer resolved image; also check Texture.source (three r152+)
+  const img = map.image || map.source?.data || null;
+  if (!img) {
+    // Texture object is present but pixels not ready → keep embed
+    return false;
+  }
+
+  const w = img.naturalWidth || img.width || img.videoWidth || 0;
+  const h = img.naturalHeight || img.height || img.videoHeight || 0;
+  if (w > 0 && h > 0) return w <= 2 || h <= 2;
+
+  // Typed array image data (DataTexture / raw)
+  if (img.data && typeof img.data.length === 'number') {
+    return img.data.length <= 16;
+  }
+
+  // Incomplete HTMLImageElement / ImageBitmap still loading → keep embed
+  if (typeof img.complete === 'boolean' && !img.complete) return false;
+  return false;
+}
+
+/** Sample first usable embed atlas size for lab status (e.g. 512×512). */
+export function sampleEmbedAtlasSize(root) {
+  let out = null;
+  if (!root) return out;
+  root.traverse((obj) => {
+    if (out) return;
+    if (!obj.isMesh && !obj.isSkinnedMesh) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    for (const m of mats) {
+      const map = m?.map;
+      if (!map || isStubMap(map)) continue;
+      const img = map.image || map.source?.data;
+      const w = img?.naturalWidth || img?.width || 0;
+      const h = img?.naturalHeight || img?.height || 0;
+      if (w > 2 && h > 2) {
+        out = { w, h };
+        return;
+      }
+    }
+  });
+  return out;
+}
+
+/** True when kit already has a real color map (production GLB bake). */
+export function kitHasUsableMaps(root) {
+  let ok = false;
+  if (!root) return false;
+  root.traverse((obj) => {
+    if (ok) return;
+    if (!obj.isMesh && !obj.isSkinnedMesh) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    for (const m of mats) {
+      if (m?.map && !isStubMap(m.map)) {
+        ok = true;
+        return;
+      }
+    }
+  });
+  return ok;
+}
+
+/**
+ * Normalize embedded glTF/FBX maps in place — NO UV rewrite, NO atlas swap.
+ * Production race GLBs already ship the correct atlas + UVs (asset-convert).
+ */
+export function normalizeEmbeddedMaps(THREE, root) {
+  if (!root || !THREE) return 0;
   let n = 0;
   root.traverse((obj) => {
     if (!obj.isMesh && !obj.isSkinnedMesh) return;
-    const prev = obj.material;
-    obj.material = new THREE.MeshStandardMaterial({
-      map: texture,
-      color: 0xffffff,
-      metalness: 0,
-      roughness: 0.75,
-      side: THREE.DoubleSide,
-      alphaTest: 0.02,
-    });
     obj.castShadow = true;
     obj.receiveShadow = true;
-    n++;
-    try {
-      if (Array.isArray(prev)) prev.forEach((m) => m?.dispose?.());
-      else prev?.dispose?.();
-    } catch {
-      /* */
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    for (const m of mats) {
+      if (!m) continue;
+      if (m.map && !isStubMap(m.map)) {
+        m.map.colorSpace = THREE.SRGBColorSpace;
+        m.map.flipY = false;
+        m.map.wrapS = m.map.wrapT = THREE.ClampToEdgeWrapping;
+        m.map.needsUpdate = true;
+        if (m.color) m.color.setHex(0xffffff);
+        if ('metalness' in m) m.metalness = Math.min(m.metalness ?? 0, 0.15);
+        if ('roughness' in m && (m.roughness == null || m.roughness < 0.2)) m.roughness = 0.75;
+        m.needsUpdate = true;
+        n++;
+      } else if (m.map && isStubMap(m.map)) {
+        m.map = null;
+        m.needsUpdate = true;
+      }
     }
   });
+  root.userData.grudge6MaterialMode = 'embedded';
   return n;
 }
 
-/** Invert UV V (Blender glTF often differs from FBXLoader space for these kits) */
-export function invertGeometryUVV(root) {
+/**
+ * Bind race atlas onto every mesh.
+ * Soft path (default): swap `map` on existing materials (matches GRUDGE6_Characters).
+ * Hard path: only when mesh has no material.
+ * Never inverts UVs — that is a separate, opt-in step.
+ *
+ * @param {typeof import('three')} THREE
+ * @param {import('three').Object3D} root
+ * @param {import('three').Texture} texture
+ */
+export function bindRaceAtlas(THREE, root, texture) {
+  if (!texture || !root) return 0;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.flipY = false;
+  texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+
+  let n = 0;
+  root.traverse((obj) => {
+    if (!obj.isMesh && !obj.isSkinnedMesh) return;
+    obj.castShadow = true;
+    obj.receiveShadow = true;
+
+    const mats = Array.isArray(obj.material) ? obj.material : obj.material ? [obj.material] : [];
+    if (!mats.length) {
+      obj.material = new THREE.MeshStandardMaterial({
+        map: texture,
+        color: 0xffffff,
+        metalness: 0,
+        roughness: 0.75,
+        side: THREE.DoubleSide,
+      });
+      n++;
+      return;
+    }
+
+    const next = mats.map((mat) => {
+      if (!mat) {
+        return new THREE.MeshStandardMaterial({
+          map: texture,
+          color: 0xffffff,
+          metalness: 0,
+          roughness: 0.75,
+          side: THREE.DoubleSide,
+        });
+      }
+      // Clone so we do not mutate shared FBX/glTF material templates across kits
+      const m = typeof mat.clone === 'function' ? mat.clone() : mat;
+      m.map = texture;
+      if (m.color?.setHex) m.color.setHex(0xffffff);
+      if ('metalness' in m) m.metalness = 0;
+      if ('roughness' in m) m.roughness = 0.75;
+      if ('side' in m) m.side = THREE.DoubleSide;
+      // Avoid accidental cutouts from stale alphaTest on cloned mats
+      if ('alphaTest' in m && m.alphaTest > 0 && m.alphaTest < 0.5) m.alphaTest = 0;
+      m.needsUpdate = true;
+      return m;
+    });
+    obj.material = next.length === 1 ? next[0] : next;
+    n++;
+  });
+  root.userData.grudge6AtlasBound = true;
+  root.userData.grudge6MaterialMode = 'atlas-rebind';
+  return n;
+}
+
+/**
+ * Invert UV V once (idempotent).
+ * ONLY for Blender glTF exports that still disagree with FBX atlas space.
+ * Production CDN race GLBs from asset-convert must NOT use this (already correct).
+ * @returns {boolean} true if inverted this call
+ */
+export function invertGeometryUVV(root, { force = false } = {}) {
+  if (!root) return false;
+  if (root.userData.grudge6UvVInverted && !force) return false;
   const seen = new Set();
   root.traverse((obj) => {
     const g = obj.geometry;
@@ -539,34 +984,267 @@ export function invertGeometryUVV(root) {
     for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i));
     uv.needsUpdate = true;
   });
+  root.userData.grudge6UvVInverted = true;
+  return true;
 }
 
-export function groundYHip(root, THREE, targetH = 1.7) {
-  root.position.set(0, 0, 0);
-  root.scale.setScalar(1);
+/**
+ * HARD SCALE RULES (stretch / squash always comes from breaking these):
+ *
+ *  ✅ DO:  root.scale.setScalar(s) once — uniform XYZ on the whole kit
+ *  ✅ DO:  measure STRUCTURAL visible body only (one head/body/arms/legs, + mount/siege)
+ *  ✅ DO:  plant feet from structural box.min.y (not pelvis.y)
+ *
+ *  ❌ NEVER: mesh.scale.set / bone.scale / scaleHeadMeshes (non-uniform → stretch)
+ *  ❌ NEVER: setFromObject(whole kit) while ALL armor variants are visible
+ *            (stacked A–N plumes inflate height → wrong fit scale)
+ *  ❌ NEVER: hero-fit siege/weapons/projectiles to 1.8 m
+ *  ❌ NEVER: non-uniform root.scale.set(sx, sy, sz) with sx≠sy≠sz
+ */
+
+/** Structural silhouette only — matches customizer CharacterModel. */
+export function isStructuralMeshName(name, characterType = 'infantry') {
+  const n = String(name || '').toLowerCase();
+  if (/_weapon_|weapon_|_shield|shield_/.test(n)) return false;
+  if (/_xtra_|quiver|wood$|_bag$|bag$|lumber|log/.test(n)) return false;
+  if (/units_(body|head|arms?|legs?|shoulderpads?)_/.test(n)) return true;
+  if (/^[a-z]{2,4}_(body|head|arms?|legs?|shoulderpads?)_/.test(n)) return true;
+  if (characterType === 'cavalry' && /(horse|wolf|ram|mount|steed|boar)/.test(n)) return true;
+  if (
+    characterType === 'siege' &&
+    /(catapult|boltthrower|ballista|wheel|frame|arm_l|arm_r)/.test(n)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Find first named node (Bip001 space or underscore).
+ * @param {import('three').Object3D} root
+ * @param {string[]} names
+ */
+function findNamed(root, names) {
+  for (const n of names) {
+    const o = root.getObjectByName(n);
+    if (o) return o;
+  }
+  return null;
+}
+
+/**
+ * Bone-driven structural AABB for grudge6 skinned kits.
+ *
+ * CRITICAL: modular Units_* SkinnedMesh geometry is authored in *local bind*
+ * pieces near the origin. `geometry.boundingBox * matrixWorld` and
+ * `SkinnedMesh.computeBoundingBox()` are UNSKINNED — they measure a pile of
+ * parts at the root (~3–5 m) while the real skinned silhouette is ~20–25 m
+ * (Unity scale 2.54). SI fit then under-scales → paperdoll looks like
+ * exploded modular debris in frame.
+ *
+ * Bones follow the bind pose correctly; measure them (feet→head + hands).
+ *
+ * @param {typeof import('three')} THREE
+ * @param {import('three').Object3D} root
+ * @returns {import('three').Box3 | null}
+ */
+export function measureBoneStructuralBBox(THREE, root) {
+  if (!root || !THREE) return null;
   root.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(root);
-  const size = new THREE.Vector3();
-  box.getSize(size);
-  if (size.y > 0.01) {
-    root.scale.setScalar(targetH / size.y);
-    root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    if (o.isSkinnedMesh && o.skeleton) o.skeleton.update();
+  });
+
+  const groups = [
+    ['Bip001_Head', 'Bip001 Head', 'Head'],
+    ['Bip001_HeadNub', 'Bip001 HeadNub'],
+    ['Bip001_Pelvis', 'Bip001 Pelvis', 'Pelvis'],
+    ['Bip001_Spine', 'Bip001 Spine'],
+    ['Bip001_L_Foot', 'Bip001 L Foot'],
+    ['Bip001_R_Foot', 'Bip001 R Foot'],
+    ['Bip001_L_Toe0', 'Bip001 L Toe0'],
+    ['Bip001_R_Toe0', 'Bip001 R Toe0'],
+    ['Bip001_L_Hand', 'Bip001 L Hand'],
+    ['Bip001_R_Hand', 'Bip001 R Hand'],
+    ['Bip001_L_Calf', 'Bip001 L Calf'],
+    ['Bip001_R_Calf', 'Bip001 R Calf'],
+  ];
+
+  const box = new THREE.Box3();
+  let n = 0;
+  const p = new THREE.Vector3();
+  for (const names of groups) {
+    const bone = findNamed(root, names);
+    if (!bone) continue;
+    bone.getWorldPosition(p);
+    if (!Number.isFinite(p.x + p.y + p.z)) continue;
+    if (n === 0) box.min.copy(p), box.max.copy(p);
+    else box.expandByPoint(p);
+    n++;
+  }
+  if (n < 2) return null;
+
+  // Pad: ankles are not soles; skull bone is not crown. ~10% of bone height.
+  const h = Math.max(box.max.y - box.min.y, 1e-4);
+  const pad = Math.max(h * 0.1, h * 0.02);
+  box.min.y -= pad * 0.55;
+  box.max.y += pad * 0.45;
+  box.min.x -= pad * 0.35;
+  box.max.x += pad * 0.35;
+  box.min.z -= pad * 0.35;
+  box.max.z += pad * 0.35;
+  return box;
+}
+
+/**
+ * World AABB of structural body (skinned kits = bone measure first).
+ * If onlyVisible=true (default), mesh fallback skips hidden equip variants.
+ * @param {typeof import('three')} THREE
+ * @param {import('three').Object3D} root
+ * @param {'infantry'|'cavalry'|'siege'} characterType
+ * @param {{ onlyVisible?: boolean }} opts
+ */
+export function measureStructuralBBox(THREE, root, characterType = 'infantry', opts = {}) {
+  const onlyVisible = opts.onlyVisible !== false;
+  root.updateMatrixWorld(true);
+
+  // Infantry / cavalry heroes: bone chain is the only reliable structural meter
+  // for modular skinned grudge6 kits (see measureBoneStructuralBBox docs).
+  if (characterType === 'infantry' || characterType === 'cavalry') {
+    const boneBox = measureBoneStructuralBBox(THREE, root);
+    if (boneBox && Number.isFinite(boneBox.min.y) && Number.isFinite(boneBox.max.y)) {
+      const bh = boneBox.max.y - boneBox.min.y;
+      // Reject degenerate bone chains (missing feet)
+      if (bh > 0.05) return boneBox;
+    }
+  }
+
+  const box = new THREE.Box3();
+  let any = false;
+  root.traverse((o) => {
+    if (!o.isMesh && !o.isSkinnedMesh) return;
+    if (onlyVisible && o.visible === false) return;
+    if (!isStructuralMeshName(o.name, characterType)) return;
+    if (!o.geometry) return;
+    // Skinned modular geo is local-bind — do NOT use geometry.boundingBox * matrixWorld
+    // (that reintroduces the explode / under-scale paperdoll bug).
+    if (o.isSkinnedMesh && o.skeleton) {
+      try {
+        o.skeleton.update();
+      } catch {
+        /* ignore */
+      }
+    }
+    // setFromObject still uses unskinned geo for SkinnedMesh in three r185 —
+    // only useful for static siege/props. Prefer bone path above for heroes.
+    const mb = new THREE.Box3().setFromObject(o);
+    if (Number.isFinite(mb.min.y) && Number.isFinite(mb.max.y) && mb.max.y > mb.min.y) {
+      if (!any) {
+        box.copy(mb);
+        any = true;
+      } else {
+        box.union(mb);
+      }
+    }
+  });
+  if (!any) {
+    const fallback = measureBoneStructuralBBox(THREE, root);
+    if (fallback) return fallback;
     box.setFromObject(root);
   }
-  root.position.y = -box.min.y;
+  return box;
+}
+
+/**
+ * Uniform SI fit on ROOT only + plant feet.
+ * Replaces the old full-kit measure (which stacked every armor variant).
+ *
+ * @param {typeof import('three')} THREE
+ * @param {import('three').Object3D} root
+ * @param {number} targetH metres
+ * @param {{ characterType?: 'infantry'|'cavalry'|'siege', centerXZ?: boolean }} opts
+ */
+export function fitRootUniformSi(THREE, root, targetH = 1.8, opts = {}) {
+  const characterType = opts.characterType || 'infantry';
+  const centerXZ = opts.centerXZ !== false;
+
+  // Identity root; do not touch child mesh/bone scales
+  root.position.set(0, 0, 0);
+  root.rotation.set(0, 0, 0);
+  root.scale.setScalar(1);
   root.updateMatrixWorld(true);
-  box.setFromObject(root);
-  return { height: box.max.y - box.min.y };
+
+  let box = measureStructuralBBox(THREE, root, characterType);
+  let h = Math.max(box.max.y - box.min.y, 1e-4);
+
+  // Classic 100× (cm authored as m) — uniform decade on ROOT only
+  if (h > 40) {
+    root.scale.setScalar(0.01);
+    root.updateMatrixWorld(true);
+    box = measureStructuralBBox(THREE, root, characterType);
+    h = Math.max(box.max.y - box.min.y, 1e-4);
+  }
+
+  const s = targetH / h;
+  root.scale.setScalar(root.scale.x * s); // always uniform
+  root.updateMatrixWorld(true);
+  box = measureStructuralBBox(THREE, root, characterType);
+
+  // Feet = structural min.y (NOT pelvis / hip bone)
+  root.position.y -= box.min.y;
+  if (centerXZ) {
+    const cx = (box.min.x + box.max.x) * 0.5;
+    const cz = (box.min.z + box.max.z) * 0.5;
+    root.position.x -= cx;
+    root.position.z -= cz;
+  }
+  root.updateMatrixWorld(true);
+  box = measureStructuralBBox(THREE, root, characterType);
+  const finalH = box.max.y - box.min.y;
+  return { height: finalH, scale: root.scale.x, authoredH: h / (root.scale.x || 1), targetH };
+}
+
+/**
+ * @deprecated name was wrong (not hip). Prefer fitRootUniformSi.
+ * Kept as alias for older callers.
+ */
+export function groundYHip(root, THREE, targetH = 1.7) {
+  return fitRootUniformSi(THREE, root, targetH, {
+    characterType: 'infantry',
+    centerXZ: false,
+  });
+}
+
+/**
+ * Default view facing (Characters lab + Race Scenes + Warstrat lobby).
+ *
+ * Camera sits on **+Z** looking at the origin (typical OrbitControls start).
+ * Grudge6 / Toon RTS kits are **art-forward +Z** after SI plant → yaw **0**
+ * faces the user. **Never** use Math.PI here (that shows the back).
+ *
+ * Author FBX that still faces +X needs +π/2 once (see facePlusXArtToPlusZ).
+ */
+export const GRUDGE6_FACE_CAMERA_YAW = 0;
+/** FBX art often faces +X → play +Z with one yaw. */
+export const GRUDGE6_ART_PLUSX_TO_PLUSZ_YAW = Math.PI / 2;
+
+/**
+ * Face root toward the user camera (+Z).
+ * @param {import('three').Object3D} root
+ * @param {{ artFacesPlusX?: boolean }} [opts]
+ */
+export function faceRootTowardCamera(root, opts = {}) {
+  const yaw = opts.artFacesPlusX ? GRUDGE6_ART_PLUSX_TO_PLUSZ_YAW : GRUDGE6_FACE_CAMERA_YAW;
+  root.rotation.set(0, yaw, 0);
 }
 
 const texCache = new Map();
 
-export async function loadRaceTexture(THREE, raceId) {
-  const candidates = atlasUrlCandidates(raceId);
-  if (!candidates.length) return null;
-  for (const url of candidates) {
+export async function loadRaceTexture(THREE, raceId, variant = 'default') {
+  const urls = [atlasUrl(raceId, variant), atlasUrlLegacy(raceId, variant)].filter(Boolean);
+  const loader = new THREE.TextureLoader();
+  for (const url of urls) {
     if (texCache.has(url)) return texCache.get(url);
-    const loader = new THREE.TextureLoader();
     const tex = await new Promise((resolve) => {
       loader.load(
         url,
@@ -589,43 +1267,157 @@ export async function loadRaceTexture(THREE, raceId) {
 }
 
 /**
- * Load race kit + catalog equipment + bind atlas.
+ * Load race kit + catalog equipment + materials (HARDENED Warlords play).
+ *
+ * Default source = **toonRts** (PLAY). Non-play sources require explicit opts.source
+ * and set root.userData.grudge6Play = false.
+ *
+ * Texture SSOT:
+ *  - Toon play GLB: keep embeds (normalize only). forceAtlas on play needs allowForceAtlas.
+ *  - FBX / stub maps / team atlas variant: rebind CDN atlas, flipY=false.
+ *  - invert UV V: OPT-IN only (`opts.invertUvV === true`).
+ *
  * @param {object} loaders { FBXLoader, GLTFLoader } classes
  * @param {string} raceId
- * @param {{ source?: 'fbx'|'glb', meshIds?: string[], ground?: boolean }} opts
+ * @param {{ source?: string, url?: string, meshIds?: string[], ground?: boolean,
+ *           atlasVariant?: string, forceAtlas?: boolean, allowForceAtlas?: boolean,
+ *           invertUvV?: boolean, skipDefaultLoadout?: boolean, targetHeight?: number,
+ *           characterType?: string, centerXZ?: boolean, play?: boolean }} opts
  */
 export async function loadRaceKit(THREE, loaders, raceId, opts = {}) {
   const race = RACE_ASSETS[raceId];
   if (!race) throw new Error(`Unknown race: ${raceId}`);
-  const source = opts.source || 'fbx';
-  let url = kitUrl(raceId, source);
-  url = resolveCanonicalAssetUrl(url);
+
+  // GOLDEN default = toonRts. Never races bake / metaverse as implicit default.
+  const source = opts.source || 'toonRts';
+  const nonPlaySources = new Set([
+    'fbx',
+    'raceFbx',
+    'races',
+    'racesBake',
+    'compare',
+    'prodBake',
+    'metaverse',
+  ]);
+  const isPlay =
+    opts.play !== false && !nonPlaySources.has(source) && source !== 'fbx';
+
+  let url = opts.url || kitUrl(raceId, source);
+  // Only rewrite legacy play paths to golden; leave explicit racesBake / fbx alone
+  if (!nonPlaySources.has(source)) {
+    url = resolveCanonicalAssetUrl(url);
+  }
+
+  if (isPlay) {
+    assertPlayKitUrl(url, { allowNonPlay: false });
+  }
 
   let root;
   let animations = [];
-  if (/\.fbx($|\?)/i.test(url)) {
+  const isFbxUrl = /\.fbx($|\?)/i.test(url);
+  if (isFbxUrl) {
+    if (isPlay) {
+      throw new Error('[grudge6-kit] PLAY refuse FBX — use Toon RTS GLB');
+    }
+    if (!loaders.FBXLoader) throw new Error('[grudge6-kit] FBXLoader required for fbx source');
     const loader = new loaders.FBXLoader();
     root = await loader.loadAsync(url);
     animations = root.animations || [];
   } else {
+    if (!loaders.GLTFLoader) throw new Error('[grudge6-kit] GLTFLoader required');
     const loader = new loaders.GLTFLoader();
     const gltf = await loader.loadAsync(url);
     root = gltf.scene || gltf;
     animations = gltf.animations || [];
-    if (source !== 'fbx') invertGeometryUVV(root);
   }
 
-  const tex = await loadRaceTexture(THREE, raceId);
-  const matCount = tex ? bindRaceAtlas(THREE, root, tex) : 0;
+  // Bind pose as loaded — do not multi-pose (head-at-feet)
+  safeSkeletonUpdate(root, { poseWidestOnce: false });
+
+  // Opt-in UV V flip only (Blender export mismatch). Idempotent.
+  let uvInverted = false;
+  if (opts.invertUvV === true) {
+    uvInverted = invertGeometryUVV(root);
+  }
+
+  const atlasVariant = opts.atlasVariant || 'default';
+  const hasUsable = kitHasUsableMaps(root);
+
+  // PLAY Toon: never forceAtlas unless allowForceAtlas (lab emergency only)
+  let forceAtlas = opts.forceAtlas === true;
+  if (isPlay && forceAtlas && opts.allowForceAtlas !== true) {
+    console.warn(
+      '[grudge6-kit] PLAY ignored forceAtlas (set allowForceAtlas:true only for lab emergencies)',
+    );
+    forceAtlas = false;
+  }
+
+  const mustRebind =
+    forceAtlas ||
+    isFbxUrl ||
+    !hasUsable ||
+    (atlasVariant && atlasVariant !== 'default');
+
+  let tex = null;
+  let matCount = 0;
+  let materialMode = 'none';
+
+  if (mustRebind) {
+    tex = await loadRaceTexture(THREE, raceId, atlasVariant);
+    if (tex) {
+      matCount = bindRaceAtlas(THREE, root, tex);
+      materialMode = uvInverted ? 'atlas-rebind+invert' : 'atlas-rebind';
+    } else if (hasUsable) {
+      matCount = normalizeEmbeddedMaps(THREE, root);
+      materialMode = 'embedded-fallback';
+    }
+  } else {
+    matCount = normalizeEmbeddedMaps(THREE, root);
+    materialMode = 'embedded';
+    tex = await loadRaceTexture(THREE, raceId, atlasVariant);
+  }
+
+  root.userData.grudge6MaterialMode = materialMode;
+  root.userData.grudge6UvVInverted = !!root.userData.grudge6UvVInverted;
+  root.userData.grudge6Play = isPlay;
+  root.userData.grudge6Source = isFbxUrl ? 'fbx' : source;
+  root.userData.grudge6KitUrl = url;
+  root.userData.warlordsPlayContract = WARLORDS_PLAY_CONTRACT_VERSION;
+  root.userData.importPipeline = isPlay ? 'toon-rts-glb' : source;
+  root.userData.footIk = {
+    enabled: !!isPlay,
+    module: 'js/grudge6-foot-ik.js',
+    order: 'beginFrame → mixer.update → apply',
+    sampler: 'same-height-field',
+  };
 
   const equip = new EquipmentManager(race.prefix);
   equip.catalog(root);
   let equipResult = null;
   if (opts.meshIds?.length) equipResult = equip.applyMeshIds(opts.meshIds);
-  else equip.applyDefaultLoadout();
+  else if (opts.skipDefaultLoadout) {
+    // Leave all equippable hidden — caller applies paperdoll loadout
+  } else equip.applyDefaultLoadout();
+
+  // Harden exclusive visibility after equip
+  if (typeof equip.hardenVisibility === 'function' && !opts.skipDefaultLoadout) {
+    equip.hardenVisibility();
+  }
 
   let ground = null;
-  if (opts.ground !== false) ground = groundYHip(root, THREE, opts.targetHeight ?? 1.7);
+  if (opts.ground !== false) {
+    // Bone structural SI — not setFromObject(SkinnedMesh)
+    ground = fitRootUniformSi(THREE, root, opts.targetHeight ?? 1.8, {
+      characterType: opts.characterType || 'infantry',
+      centerXZ: opts.centerXZ !== false,
+    });
+    // Toon play faces camera with yaw 0 (never π/2 by default)
+    if (isPlay && opts.facePlusZ !== true) {
+      faceRootTowardCamera(root, { artFacesPlusX: false });
+    } else if (opts.facePlusZ === true) {
+      faceRootTowardCamera(root, { artFacesPlusX: true });
+    }
+  }
 
   return {
     root,
@@ -633,10 +1425,65 @@ export async function loadRaceKit(THREE, loaders, raceId, opts = {}) {
     equip,
     race,
     url,
-    source,
+    source: isFbxUrl ? 'fbx' : source,
+    play: isPlay,
+    contract: WARLORDS_PLAY_CONTRACT_VERSION,
     atlas: tex,
     matCount,
+    materialMode,
+    uvInverted,
     equipResult,
     ground,
+  };
+}
+
+/** Machine-readable contract blob for API / agents. */
+export function warlordsPlayContract() {
+  return {
+    version: WARLORDS_PLAY_CONTRACT_VERSION,
+    cdn: CDN,
+    playKitPath: WARLORDS_PLAY_KIT_PATH,
+    raceIds: [...WARLORDS_PLAY_RACE_IDS],
+    kitUrlTemplate: `${CDN}/${WARLORDS_PLAY_KIT_PATH}{raceId}.glb`,
+    code: 'ObjectStore/js/grudge6-kit.js#loadRaceKit',
+    banned: [...WARLORDS_PLAY_BANNED],
+    siHumanM: 1.8,
+    faceCameraYawPlay: GRUDGE6_FACE_CAMERA_YAW,
+    materialsPlay: 'embedded-normalize',
+    equip: 'mesh_ids_visibility',
+    skeleton: 'Bip001_no_multi_pose',
+    measure: 'bone_structural_bbox',
+    footIk: {
+      module: 'ObjectStore/js/grudge6-foot-ik.js',
+      order: 'beginFrame → mixer.update → apply',
+      sampler: 'same MapSurface height field as Rapier CCT / body Y',
+      place: 'placeRootFeetAt Vector3/Matrix4 — never root.y = terrainY',
+      bones: 'Bip001 L/R Thigh+Calf+Foot + Pelvis (never L Hip as pelvis)',
+    },
+    tps: {
+      camera: 'combat TPS owns camera — no OrbitControls.update in combat',
+      mixer: 'one AnimationMixer on kit root',
+      loco: 'weight blend idle/walk/run then one-shot overlay',
+      generate: 'bake Mixamo → Bip001 rotation-only packs; never mixamorig on play kit',
+    },
+    rapier: {
+      package: '@dimforge/rapier3d-compat ^0.19',
+      player: 'kinematic CCT capsule, fixed 1/60, SI metres',
+    },
+    playClasses: {
+      product: ['warrior', 'raider', 'mage', 'priest', 'ranger', 'thief', 'worge', 'verduror'],
+      collider: ['cct', 'heightfield', 'convex', 'trimesh', 'followConvex', 'sensor', 'hurtbox'],
+      travel: ['melee', 'bullet', 'linear', 'bend'],
+    },
+    gltfPlay: {
+      xyz: { up: '+Y', ground: 'XZ', forward: '+Z', right: '+X', unit: '1=1m' },
+      colliders: {
+        player: 'cct',
+        terrain: 'heightfield',
+        staticGltf: 'convex|trimesh-fixed',
+        weapon: 'followConvex',
+      },
+      ray: 'Raycaster firstHitOnly + three-mesh-bvh + Rapier.castRay',
+    },
   };
 }
