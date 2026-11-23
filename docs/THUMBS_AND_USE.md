@@ -32,13 +32,14 @@ production GLBs embed the map (do not rely on viewer rebind in games).
 
 ## Thumbnail resolution order (cards)
 
-1. **CDN (shared)** — HEAD in order:
+1. **CDN (shared)** — one HEAD per asset, once per session:
    - `https://assets.grudge-studio.com/thumbs/{grudgeUuid}.jpg`
-   - `…/thumbs/{grudgeUuid}.webp`
-   - `…/thumbs/pipeline/{grudgeUuid}.jpg`
-   - `…/thumbs/by-path/{safePath}.jpg`
+   - `grudgeUuid` is the fleet asset id: UUID v5 of `sha1("grudge-asset:" + r2Key)`
+     (RTS-Grudge `asset_registry.grudge_uuid`, ObjectStore `gn_assets.grudge_uuid`).
+   - No `.webp`, `pipeline/` or `by-path/` retries, and no other hosts.
 2. **IndexedDB** (this browser’s prior snapshots)
-3. **Live WebGL snap** (offscreen, queued)
+3. **Live WebGL snap** of the CDN mesh (offscreen, queued)
+4. Otherwise the card shows the studio **"icon missing"** marker. No emoji, no stand-in art.
 
 ## Upload shared thumbs to R2
 

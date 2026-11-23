@@ -63,7 +63,7 @@ See [docs/AVATAR-SPEC.md](docs/AVATAR-SPEC.md) for full spec.
 
 ## Integration
 
-- **ObjectStore**: [molochdagod.github.io/ObjectStore](https://molochdagod.github.io/ObjectStore)
+- **ObjectStore catalog**: `objectstore.grudge-studio.com/api/v1/models3d.json` (definitions only; binaries come from the CDN)
 - **R2 CDN**: `assets.grudge-studio.com/models/`
 - **Registry**: `api/v1/models3d.json` (1,053+ models)
 - **SDK**: `@grudge-studio/core`
@@ -72,12 +72,7 @@ See [docs/AVATAR-SPEC.md](docs/AVATAR-SPEC.md) for full spec.
 
 **Live:** [grudge-pipeline.vercel.app](https://grudge-pipeline.vercel.app)
 
-The web viewer loads the model registry (`models3d.json`) and resolves GLB files through a 4-step fallback chain:
-
-1. **R2 CDN** (`assets.grudge-studio.com`) — fastest, has CORS `*`
-2. **R2 Worker** (`grudgeassets.grudge.workers.dev`) — API endpoint
-3. **GitHack CDN** (`raw.githack.com`) — raw GitHub with proper CORS
-4. **GitHub Pages** (`molochdagod.github.io/ObjectStore`) — last resort (most models too large for git)
+The web viewer loads the model registry (`models3d.json`) and resolves every GLB, texture, baked clip and thumb from the **R2 CDN** (`assets.grudge-studio.com`) only. There are no fallback hosts: a miss shows the studio "icon missing" marker. Asset identity is the fleet `grudgeUuid` (UUID v5 of `sha1("grudge-asset:" + r2Key)`).
 
 Models with Draco compression are automatically decoded using Google's Draco WASM decoder.
 
