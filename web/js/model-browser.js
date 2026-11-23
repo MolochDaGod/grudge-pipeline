@@ -115,6 +115,7 @@ import {
   d1Offsets,
   truthSummary,
   normalizeR2Key,
+  cdnOnlyUrl,
 } from './fleetTruth.js';
 import { mountCodexView, showCodex } from './codexShelves.js';
 import { mountConvertView, showConvert } from './convertQueue.js';
@@ -124,9 +125,8 @@ import { mountConvertView, showConvert } from './convertQueue.js';
 // Author FBX is fallback only. Anim clips: baked Bip001 JSON.
 // KILL: grudge-arena …/cdn/assets/characters/* as character host (wrong scale / stale).
 // Truth: D1 + grudgeUuid + production labels (see fleetTruth.js / FLEET_ASSET_TRUTH.md)
+// Asset law: every model, texture, thumb and baked clip loads from R2 only.
 const R2 = FLEET_TRUTH_HOSTS.cdn;
-const ARENA = 'https://grudge-arena.grudge-studio.com';
-const OPEN = FLEET_TRUTH_HOSTS.open;
 const D1_API = FLEET_TRUTH_HOSTS.d1;
 const OBJECTSTORE_MODELS = FLEET_TRUTH_HOSTS.objectStoreModels;
 const PAGE_SIZE = 48;
@@ -294,10 +294,11 @@ function normalizeEntry(raw, source) {
   const sizeKB =
     raw.sizeKB ??
     (raw.fileSize ? Math.round(raw.fileSize / 1024) : 0);
+  // Catalog rows (ObjectStore models3d.json) still carry github.io _cdnUrl values; drop them.
   const cdnUrl =
-    raw.cdnUrl ||
-    raw._cdnUrl ||
-    raw._gameReadyUrl ||
+    cdnOnlyUrl(raw.cdnUrl) ||
+    cdnOnlyUrl(raw._cdnUrl) ||
+    cdnOnlyUrl(raw._gameReadyUrl) ||
     (path ? `${R2}/${path}` : null);
   const grudgeUuid = raw.grudgeUuid || raw.uuid || null;
   const m = {
@@ -319,7 +320,7 @@ function normalizeEntry(raw, source) {
     source,
     sources: [source],
     cdnUrl,
-    altUrls: [raw._gameReadyUrl, raw._cdnUrl, raw.cdnUrl].filter(Boolean),
+    altUrls: [raw._gameReadyUrl, raw._cdnUrl, raw.cdnUrl].map(cdnOnlyUrl).filter(Boolean),
     boneMap: raw.boneMap || raw.metadata?.boneMap || null,
     scaleProfile: raw.scaleProfile || raw.metadata?.scaleProfile || null,
     supportedSkeletons: raw.supportedSkeletons || raw.metadata?.supportedSkeletons || null,
@@ -400,11 +401,8 @@ function curatedGrudge6() {
           bakePipeline: 'anim_bake',
           deployReady: true,
           scaleBaked: true,
-          cdnUrl: `${ARENA}/anims/baked/${encodeURI(clip.id)}.json`,
-          altUrls: [
-            `${OPEN}/anims/baked/${encodeURI(clip.id)}.json`,
-            `${ARENA}/anims/baked/${encodeURI(clip.id)}.json`,
-          ],
+          cdnUrl: `${R2}/anims/baked/${encodeURI(clip.id)}.json`,
+          altUrls: [],
         },
         'baked-bip001',
       ),
@@ -482,11 +480,8 @@ async function fetchD1Catalog() {
 }
 
 async function fetchObjectStoreModels() {
-  // Prefer production ObjectStore host, then GitHub Pages mirror
-  const urls = [
-    'https://objectstore.grudge-studio.com/api/v1/models3d.json',
-    OBJECTSTORE_MODELS,
-  ];
+  // ObjectStore catalog (definitions). No GitHub Pages mirror.
+  const urls = [OBJECTSTORE_MODELS];
   for (const url of urls) {
     try {
       const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -835,18 +830,10 @@ function renderFilters() {
   if (prodSel) prodSel.value = activeProd || '';
 }
 
-function glyphFor(m) {
-  return (
-    {
-      character: '🧍',
-      animation: '🎬',
-      weapon: '⚔️',
-      environment: '🌲',
-      creature: '🐉',
-      prop: '📦',
-      other: '📄',
-    }[m.kind] || '📄'
-  );
+/** Studio "icon missing" marker (same as ObjectStore/info). No substitute art. */
+function iconMissingHtml(m) {
+  const label = esc(m?.path || m?.name || '');
+  return `<span class="icon-missing" role="img" aria-label="icon missing" title="${label}">icon missing</span>`;
 }
 
 function canSnapshot(m) {
@@ -855,15 +842,17 @@ function canSnapshot(m) {
   return ['glb', 'gltf', 'fbx'].includes(m.format);
 }
 
+/** Thumb identity is the fleet grudgeUuid; path/id only until the uuid is derived. */
 function thumbKeyOf(m) {
-  return m.thumbKey || m.grudgeUuid || m.path || m.id;
+  return m.grudgeUuid || m.thumbKey || m.path || m.id;
 }
 
 function setCardThumb(card, dataUrl) {
   if (!card || !dataUrl) return;
   const icon = card.querySelector('.model-icon');
   if (!icon) return;
-  icon.querySelector('.glyph')?.remove();
+  icon.querySelector('.icon-missing')?.remove();
+  icon.classList.remove('has-icon-missing');
   icon.querySelector('.thumb-pending')?.remove();
   let img = icon.querySelector('img.thumb');
   if (!img) {
@@ -897,8 +886,17 @@ function queueCardSnapshot(m, card) {
     setCardThumb(card, thumbCacheMem.get(key));
     return;
   }
-  // 1) CDN shared thumbs → 2) IndexedDB → 3) live WebGL snap
+  // 1) CDN thumbs/{grudgeUuid}.jpg → 2) IndexedDB → 3) live WebGL snap of the CDN mesh
+  //    → else keep the "icon missing" marker.
   (async () => {
+    if (!m.grudgeUuid && m.path && !m.isBakedClip && m.format !== 'json') {
+      try {
+        m.grudgeUuid = await grudgeUuidFromR2Key(m.path);
+        if (!m.uuidStatus || m.uuidStatus === 'pending') m.uuidStatus = 'derived';
+      } catch {
+        /* keep path key */
+      }
+    }
     const cdn = await resolveCdnThumb(m);
     if (cdn) {
       thumbCacheMem.set(key, cdn);
@@ -993,12 +991,12 @@ function renderPage() {
         .join(' · ');
       const thumbHtml = mem
         ? `<img class="thumb" alt="" src="${mem}">`
-        : `<span class="glyph">${glyphFor(m)}</span>`;
+        : iconMissingHtml(m);
       const statusBadge = ready
         ? `<span class="badge prod-ready" title="Score ${prod.score}">Ready</span>`
         : `<span class="badge prod-raw" title="Score ${prod.score}">Bake</span>`;
       return `<article class="model-card ${ready ? 'card-prod' : 'card-raw'}" data-idx="${idx}" data-thumb-key="${esc(key || '')}" title="${esc(m.path || m.name)}">
-        <div class="model-icon">
+        <div class="model-icon${mem ? '' : ' has-icon-missing'}">
           <span class="badge badge-fmt">${esc((m.format || '?').toUpperCase())}</span>
           ${statusBadge}
           ${thumbHtml}
@@ -1856,14 +1854,12 @@ async function resolveUrl(entry) {
   for (const u of entry.altUrls || []) if (u) candidates.push(u);
   if (entry.path) {
     candidates.push(`${R2}/${entry.path}`);
-    candidates.push(`https://molochdagod.github.io/ObjectStore/${entry.path}`);
   }
   if (entry.isBakedClip && entry.bakedRel) {
-    candidates.push(`${ARENA}/anims/baked/${encodeURI(entry.bakedRel)}.json`);
-    candidates.push(`${OPEN}/anims/baked/${encodeURI(entry.bakedRel)}.json`);
+    candidates.push(`${R2}/anims/baked/${encodeURI(entry.bakedRel)}.json`);
   }
-  // Prefer R2 over secondary hosts; skip forbidden character CDNs entirely
-  const ordered = [...new Set(candidates)].sort((a, b) => {
+  // Asset law: R2 (or a local blob:) only. Everything else is dropped, not retried.
+  const ordered = [...new Set(candidates.map(cdnOnlyUrl).filter(Boolean))].sort((a, b) => {
     const ar = a.includes('assets.grudge-studio.com') ? 0 : 1;
     const br = b.includes('assets.grudge-studio.com') ? 0 : 1;
     return ar - br;
@@ -1975,10 +1971,7 @@ async function playBakedOnCharacter(entry, raceId) {
   setDiag(info, mats, `baked-on-grudge6 (${raceId})`, hostEntry);
 
   const rel = entry.bakedRel;
-  const urls = [
-    `${ARENA}/anims/baked/${encodeURI(rel)}.json`,
-    `${OPEN}/anims/baked/${encodeURI(rel)}.json`,
-  ];
+  const urls = [`${R2}/anims/baked/${encodeURI(rel)}.json`];
   let clip = null;
   for (const url of urls) {
     try {
@@ -1986,9 +1979,10 @@ async function playBakedOnCharacter(entry, raceId) {
       if (!r.ok) continue;
       const json = await r.json();
       clip = THREE.AnimationClip.parse(json);
-      // Best practice: baked Bip001 = quaternion-only on grounded kit
+      // Best practice: baked Bip001 = quaternion-only on grounded kit.
+      // R2 copies of some clips are named "mixamo.com"; keep the pack id as the name.
       clip = new THREE.AnimationClip(
-        clip.name,
+        rel || clip.name,
         clip.duration,
         clip.tracks.filter((t) => t.name.endsWith('.quaternion')),
         clip.blendMode,

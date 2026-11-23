@@ -36,21 +36,17 @@ export function cdnUrlOf(m) {
   return key ? `https://assets.grudge-studio.com/${key}` : '';
 }
 
-/** Prefer shared CDN thumbs (R2), then local capture. */
+/**
+ * Shared CDN thumb, keyed by grudgeUuid only:
+ *   https://assets.grudge-studio.com/thumbs/{grudgeUuid}.jpg
+ * grudgeUuid = UUID v5 of sha1("grudge-asset:" + r2Key), the fleet asset id
+ * (RTS-Grudge asset_registry, ObjectStore gn_assets, asset-deploy-ai).
+ * One URL per asset: no .webp / pipeline / by-path retries, no other hosts.
+ */
 export function cdnThumbCandidates(m) {
-  const uuid = (m.grudgeUuid || '').toLowerCase();
-  const key = r2KeyOf(m);
-  const out = [];
-  if (uuid) {
-    out.push(`https://assets.grudge-studio.com/thumbs/${uuid}.jpg`);
-    out.push(`https://assets.grudge-studio.com/thumbs/${uuid}.webp`);
-    out.push(`https://assets.grudge-studio.com/thumbs/pipeline/${uuid}.jpg`);
-  }
-  if (key) {
-    const safe = key.replace(/[^a-zA-Z0-9._/-]+/g, '_').replace(/\//g, '__');
-    out.push(`https://assets.grudge-studio.com/thumbs/by-path/${safe}.jpg`);
-  }
-  return out;
+  const uuid = String(m?.grudgeUuid || '').toLowerCase();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(uuid)) return [];
+  return [`https://assets.grudge-studio.com/thumbs/${uuid}.jpg`];
 }
 
 export function openImportSnippet(m) {
@@ -205,9 +201,22 @@ export async function copyText(text) {
   }
 }
 
-/** HEAD check first existing CDN thumb URL. */
+/** uuid → resolved thumb URL or null (miss). Never re-probe a known miss. */
+const cdnThumbSeen = new Map();
+
+/** HEAD check the CDN thumb for this grudgeUuid (one probe per uuid per session). */
 export async function resolveCdnThumb(m, timeoutMs = 2500) {
-  for (const url of cdnThumbCandidates(m)) {
+  const urls = cdnThumbCandidates(m);
+  if (!urls.length) return null;
+  const uuidKey = String(m.grudgeUuid).toLowerCase();
+  if (cdnThumbSeen.has(uuidKey)) return cdnThumbSeen.get(uuidKey);
+  const hit = await probeCdnThumb(urls, timeoutMs);
+  cdnThumbSeen.set(uuidKey, hit);
+  return hit;
+}
+
+async function probeCdnThumb(urls, timeoutMs) {
+  for (const url of urls) {
     try {
       const r = await fetch(url, {
         method: 'HEAD',

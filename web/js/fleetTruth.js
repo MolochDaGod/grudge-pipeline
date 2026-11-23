@@ -24,8 +24,7 @@ export const FLEET_TRUTH_HOSTS = {
   cdn: 'https://assets.grudge-studio.com',
   d1: 'https://api.grudge-studio.com/assets',
   objectStore: 'https://objectstore.grudge-studio.com/api/v1',
-  objectStoreModels:
-    'https://molochdagod.github.io/ObjectStore/api/v1/models3d.json',
+  objectStoreModels: 'https://objectstore.grudge-studio.com/api/v1/models3d.json',
   id: 'https://id.grudge-studio.com',
   builderApi: 'https://grudge-api-production-0d46.up.railway.app',
   forge: 'https://forge.grudge-studio.com',
@@ -35,6 +34,26 @@ export const FLEET_TRUTH_HOSTS = {
   warlords: 'https://grudgewarlords.com',
   foundry: 'https://character.grudge-studio.com',
 };
+
+/**
+ * Asset law: images, models, textures and clips load only from
+ * https://assets.grudge-studio.com. A local drag-and-drop file (blob:) is the
+ * one exception. Any other host (github.io mirrors, game hosts, dead hosts)
+ * returns null, and the caller shows the missing marker instead.
+ * @param {string|null|undefined} url
+ * @returns {string|null}
+ */
+export function cdnOnlyUrl(url) {
+  if (!url) return null;
+  const s = String(url);
+  if (s.startsWith('blob:')) return s;
+  try {
+    const u = new URL(s);
+    return u.protocol === 'https:' && u.host === 'assets.grudge-studio.com' ? s : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Source priority (higher wins fields when merging). */
 export const SOURCE_PRIORITY = {
@@ -227,8 +246,8 @@ export function mergeTruthEntries(a, b) {
     path: normalizeR2Key(primary.path || secondary.path),
     r2Key: normalizeR2Key(primary.r2Key || secondary.r2Key || primary.path || secondary.path),
     cdnUrl:
-      primary.cdnUrl ||
-      secondary.cdnUrl ||
+      cdnOnlyUrl(primary.cdnUrl) ||
+      cdnOnlyUrl(secondary.cdnUrl) ||
       (primary.path || secondary.path
         ? `${FLEET_TRUTH_HOSTS.cdn}/${normalizeR2Key(primary.path || secondary.path)}`
         : null),
@@ -243,7 +262,7 @@ export function mergeTruthEntries(a, b) {
     bakePipeline: primary.bakePipeline || secondary.bakePipeline || null,
     d1Indexed: !!(primary.d1Indexed || secondary.d1Indexed || primary.source === 'd1' || secondary.source === 'd1'),
     sources: unique([...(primary.sources || [primary.source]), ...(secondary.sources || [secondary.source])].filter(Boolean)),
-    altUrls: unique([...(primary.altUrls || []), ...(secondary.altUrls || [])].filter(Boolean)),
+    altUrls: unique([...(primary.altUrls || []), ...(secondary.altUrls || [])].map(cdnOnlyUrl).filter(Boolean)),
   };
 
   // Keep kind from inference if missing

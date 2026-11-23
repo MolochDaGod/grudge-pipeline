@@ -274,7 +274,16 @@ body.app {
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-.model-icon .glyph { font-size: 1.6rem; opacity: 0.35; }
+.model-icon.has-icon-missing { outline: 1px dashed rgba(243,193,74,.85); outline-offset: -1px; }
+/* Studio "icon missing" marker (matches ObjectStore/info). No substitute art. */
+.model-icon .icon-missing {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 3px 4px; box-sizing: border-box;
+  font: 700 0.6rem/1.15 Inter, system-ui, sans-serif; letter-spacing: .04em;
+  text-transform: uppercase; text-align: center; color: #f3c14a;
+  background: rgba(80,16,16,.72); border: 1px solid rgba(243,193,74,.7);
+}
 .model-icon img.thumb {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
 }
