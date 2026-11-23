@@ -280,11 +280,8 @@ export function findCatalogDuplicates(models) {
   };
 }
 
-/** workers.dev is live. The custom host is not in DNS; try it second. */
-export const DEPLOY_AI_SLOTS = [
-  'https://grudge-asset-deploy-ai.grudge.workers.dev',
-  'https://asset-deploy.grudge-studio.com',
-];
+/** Live Asset Deploy AI worker (workers.dev). The old custom host never resolved and is gone. */
+export const DEPLOY_AI_SLOTS = ['https://grudge-asset-deploy-ai.grudge.workers.dev'];
 
 /** Deploy AI worker base (override via window.GRUDGE_ASSET_DEPLOY_AI). */
 export function deployAiBase() {

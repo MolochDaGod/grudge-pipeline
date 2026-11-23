@@ -37,7 +37,6 @@ function statusMagicHex(pathHint) {
   }
   return 0x9aa3b5;
 }
-const GH = 'https://molochdagod.github.io/ObjectStore';
 
 /** Material-name / path → candidate atlas URLs (first HEAD that works wins). */
 export const ATLAS_BINDINGS = [
@@ -49,7 +48,6 @@ export const ATLAS_BINDINGS = [
     urls: [
       `${R2}/models/weapons/bow/Texture_MAp_bow.png`,
       `${R2}/models/weapons/bow/Texture_Map_bow.png`,
-      `${GH}/models/weapons/bow/Texture_MAp_bow.png`,
     ],
   },
   {
